@@ -15,10 +15,16 @@ npm run tauri ios init
 ```
 
 For Desktop development, run:
-  npm run tauri dev
+```bash
+npm run tauri dev
+```
 
 For Android development, run:
-  npm run tauri android dev
+```bash
+npm run tauri android dev
+```
 
 For iOS development, run:
-  npm run tauri ios dev
+```bash
+npm run tauri ios dev
+```
