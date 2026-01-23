@@ -4,14 +4,24 @@
 
 ---
 
-## 📦 Tech Stack
+## 🧱 Tech Stack
 
-- **Tauri**
-- **Rust**
-- **Node.js / npm**
-- **TypeScript**
-- **React**
-- **Android & iOS support**
+### 🎨 Frontend
+- **TypeScript** – Type-safe JavaScript for better developer experience
+- **React** – Component-based UI library
+
+### 🗂️ Project Management
+- **Node.js** – JavaScript runtime
+- **npm** – Package manager and script runner
+
+### 🦀 Backend
+- **Rust** – High-performance, memory-safe backend logic
+
+### 🌍 Cross-platform Tool
+- **Tauri** – Lightweight framework for building desktop & mobile apps using web technologies
+
+### 🗄️ Database
+- **Firebase** – Cloud-based database and backend services
 
 ---
 
