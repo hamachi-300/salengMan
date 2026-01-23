@@ -9,7 +9,8 @@
 - **Tauri**
 - **Rust**
 - **Node.js / npm**
-- **Web Frontend** (framework-agnostic)
+- **TypeScript**
+- **React**
 - **Android & iOS support**
 
 ---
