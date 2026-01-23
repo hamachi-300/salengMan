@@ -17,9 +17,10 @@
 ### 🦀 Backend
 - **Rust** – High-performance, memory-safe backend logic
 
-### 🌍 Cross-platform Tool
+### 🌍 Tools
 - **Tauri** – Lightweight framework for building desktop & mobile apps using web technologies
-
+- **Vite** - Build and Developement tool
+  
 ### 🗄️ Database
 - **Firebase** – Cloud-based database and backend services
 
