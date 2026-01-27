@@ -1,7 +1,10 @@
 import "./SignIn.css";
 import reactLogo from "../assets/icon/logo.svg";
+import { useNavigate } from "react-router-dom";
 
 function SignIn() {
+  const navigate = useNavigate();
+
   return (
     <div className="signin">
       <div className="signin-content">
@@ -11,7 +14,7 @@ function SignIn() {
             <button type="submit" className="signin-btn dark-btn">
                 Login
             </button>
-            <button type="submit" className="signin-btn orange-btn">
+            <button type="submit" className="signin-btn orange-btn" onClick={() => navigate("/signup-google")}>
                 Sign Up
             </button>
         </div>
