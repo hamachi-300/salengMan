@@ -1,0 +1,387 @@
+:root {
+  --main-orange: #ff8533;
+  --bg-beige: #f2ede9; /* สีเดียวกับหน้า Signin ของคุณ */
+  --text-dark: #333;
+}
+
+.post-item-container {
+  background-color: var(--bg-beige);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', 'Kanit', sans-serif;
+  overflow: hidden; /* ป้องกันหน้าจอสั่นเวลาเลื่อน */
+}
+
+/* Header: จัดวางปุ่ม Back และ Title */
+.post-header {
+  padding: 50px 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: var(--bg-beige);
+}
+
+.back-button {
+  position: absolute;
+  left: 20px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text-dark);
+}
+
+.header-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-dark);
+}
+
+/* ส่วนเนื้อหาที่เลื่อนได้ */
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 100px; /* เว้นล่างไว้เผื่อปุ่ม Next */
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.main-label {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--text-dark);
+}
+
+.tag-required {
+  background: #e0dedc;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* ช่องอัปโหลดรูป (Dashed Box) */
+.upload-area {
+  background: white;
+  border: 2px dashed var(--main-orange);
+  border-radius: 24px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.upload-placeholder {
+  text-align: center;
+}
+
+.icon-up {
+  background: #fff0e6;
+  color: var(--main-orange);
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-weight: bold;
+}
+
+.text-orange {
+  color: var(--main-orange);
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.text-small {
+  color: #aaa;
+  font-size: 12px;
+}
+
+/* ส่วนเลข 1 2 3 */
+.type-grid {
+  display: flex;
+  gap: 12px;
+}
+
+.type-item {
+  width: 65px;
+  height: 65px;
+  background: white;
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-item.active {
+  border: 2px solid var(--main-orange);
+  background: #fff0e6;
+  color: var(--main-orange);
+}
+
+/* Card กรอกข้อมูล (Weight/Category) */
+.form-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 15px;
+}
+
+.category-chip {
+  background: #fff0e6;
+  color: var(--main-orange);
+  border: 1px solid var(--main-orange);
+  padding: 6px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.close-x {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.category-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 120px;
+  font-size: 14px;
+}
+
+.custom-select {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #f9f9f9;
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: var(--text-dark);
+}
+
+.custom-textarea {
+  width: 100%;
+  height: 110px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-family: inherit;
+  resize: none;
+}
+
+.char-limit {
+  text-align: right;
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 5px;
+}
+
+/* ปุ่ม Next ด้านล่าง */
+.footer-action {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 20px 24px 30px;
+  background: var(--bg-beige);
+}
+
+.btn-next {
+  width: 100%;
+  background: var(--main-orange);
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 8px 20px rgba(255, 133, 51, 0.3);
+}
+/* ส่วนที่เลือกแล้ว */
+.selected-tags {
+  min-height: 40px;
+  border-bottom: 2px solid #f2ede9;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+}
+
+.placeholder-text {
+  color: #ccc;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* รายการทั้งหมดให้เลือกกด */
+.category-selection-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 200px; /* จำกัดความสูงให้ scroll ภายใน card ได้ */
+  overflow-y: auto;
+  padding-top: 10px;
+}
+
+.category-option {
+  background: #f8f8f8;
+  border: 1px solid #eee;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-option:hover {
+  background: #fff0e6;
+}
+
+.category-option.selected {
+  background: var(--main-orange);
+  color: white;
+  border-color: var(--main-orange);
+}
+
+/* ปรับแต่ง Scrollbar ของลิสต์ให้ดูเรียบร้อย */
+.category-selection-list::-webkit-scrollbar {
+  width: 4px;
+}
+.category-selection-list::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
+}
+.char-limit {
+  text-align: right;
+  font-size: 12px;
+  color: #ff8533; /* ใช้สีส้มเพื่อให้เห็นชัดว่ามีการเปลี่ยนแปลง */
+  font-weight: 500;
+  margin-top: 5px;
+  transition: color 0.2s ease;
+}
+
+/* ถ้าพิมพ์ใกล้จะเต็ม 300 อาจจะเปลี่ยนเป็นสีแดงเตือน (Optional) */
+.char-limit.near-limit {
+  color: #ff4d4d;
+}
+/* สถานะจำนวนรูปในช่องอัปโหลด */
+.image-count-status {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff8533;
+  background: #fff0e6;
+  padding: 2px 12px;
+  border-radius: 12px;
+}
+
+/* Thumbnail Grid */
+.thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.thumb-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.thumb-item {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  cursor: pointer;
+}
+
+.remove-thumb {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Modal ดูรูปขยาย */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  text-align: center;
+  max-width: 90%;
+}
+
+.modal-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 12px;
+}
+
+.modal-content p {
+  color: #ccc;
+  margin-top: 15px;
+  font-size: 14px;
+}
