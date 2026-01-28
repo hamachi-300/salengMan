@@ -1,16 +1,33 @@
-:root {
-  --main-orange: #ff8533;
-  --bg-beige: #f2ede9; /* สีเดียวกับหน้า Signin ของคุณ */
-  --text-dark: #333;
+/* Use global theme variables from App.css */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .post-item-container {
-  background-color: var(--bg-beige);
+  background-color: var(--color-bg);
   height: 100vh;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', 'Kanit', sans-serif;
-  overflow: hidden; /* ป้องกันหน้าจอสั่นเวลาเลื่อน */
+  font-family: var(--font-family);
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 /* Header: จัดวางปุ่ม Back และ Title */
@@ -20,7 +37,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  background-color: var(--bg-beige);
+  background-color: var(--color-bg);
 }
 
 .back-button {
@@ -30,20 +47,21 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: var(--text-dark);
+  color: var(--color-text);
 }
 
 .header-title {
   font-size: 1.2rem;
   font-weight: bold;
-  color: var(--text-dark);
+  color: var(--color-text);
 }
 
 /* ส่วนเนื้อหาที่เลื่อนได้ */
 .scrollable-content {
   flex: 1;
   overflow-y: auto;
-  padding: 0 24px 100px; /* เว้นล่างไว้เผื่อปุ่ม Next */
+  padding: 0 24px 100px;
+  animation: slideUp 0.6s ease-out;
 }
 
 .section {
@@ -60,7 +78,7 @@
 .main-label {
   font-weight: bold;
   font-size: 1.1rem;
-  color: var(--text-dark);
+  color: var(--color-text);
 }
 
 .tag-required {
@@ -74,7 +92,7 @@
 /* ช่องอัปโหลดรูป (Dashed Box) */
 .upload-area {
   background: white;
-  border: 2px dashed var(--main-orange);
+  border: 2px dashed var(--orange-button);
   border-radius: 24px;
   height: 200px;
   display: flex;
@@ -91,7 +109,7 @@
 
 .icon-up {
   background: #fff0e6;
-  color: var(--main-orange);
+  color: var(--orange-button);
   width: 45px;
   height: 45px;
   border-radius: 50%;
@@ -103,7 +121,7 @@
 }
 
 .text-orange {
-  color: var(--main-orange);
+  color: var(--orange-button);
   font-weight: bold;
   margin-bottom: 4px;
 }
@@ -135,9 +153,9 @@
 }
 
 .type-item.active {
-  border: 2px solid var(--main-orange);
+  border: 2px solid var(--orange-button);
   background: #fff0e6;
-  color: var(--main-orange);
+  color: var(--orange-button);
 }
 
 /* Card กรอกข้อมูล (Weight/Category) */
@@ -159,8 +177,8 @@
 
 .category-chip {
   background: #fff0e6;
-  color: var(--main-orange);
-  border: 1px solid var(--main-orange);
+  color: var(--orange-button);
+  border: 1px solid var(--orange-button);
   padding: 6px 14px;
   border-radius: 10px;
   display: flex;
@@ -190,7 +208,7 @@
   background: #f9f9f9;
   margin-bottom: 15px;
   font-size: 16px;
-  color: var(--text-dark);
+  color: var(--color-text);
 }
 
 .custom-textarea {
@@ -217,13 +235,13 @@
   bottom: 0;
   width: 100%;
   padding: 20px 24px 30px;
-  background: var(--bg-beige);
+  background: var(--color-bg);
 }
 
 .btn-next {
   width: 100%;
-  background: var(--main-orange);
-  color: white;
+  background: var(--orange-button);
+  color: var(--orange-button-text);
   border: none;
   padding: 16px;
   border-radius: 30px;
@@ -234,12 +252,17 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 8px 20px rgba(255, 133, 51, 0.3);
+  box-shadow: 0 8px 20px rgba(255, 122, 48, 0.3);
+  transition: opacity 0.2s ease;
+}
+
+.btn-next:hover {
+  opacity: 0.85;
 }
 /* ส่วนที่เลือกแล้ว */
 .selected-tags {
   min-height: 40px;
-  border-bottom: 2px solid #f2ede9;
+  border-bottom: 2px solid var(--color-bg);
   margin-bottom: 15px;
   padding-bottom: 10px;
 }
@@ -276,9 +299,9 @@
 }
 
 .category-option.selected {
-  background: var(--main-orange);
-  color: white;
-  border-color: var(--main-orange);
+  background: var(--orange-button);
+  color: var(--orange-button-text);
+  border-color: var(--orange-button);
 }
 
 /* ปรับแต่ง Scrollbar ของลิสต์ให้ดูเรียบร้อย */
@@ -292,7 +315,7 @@
 .char-limit {
   text-align: right;
   font-size: 12px;
-  color: #ff8533; /* ใช้สีส้มเพื่อให้เห็นชัดว่ามีการเปลี่ยนแปลง */
+  color: var(--orange-button);
   font-weight: 500;
   margin-top: 5px;
   transition: color 0.2s ease;
@@ -307,7 +330,7 @@
   margin-top: 8px;
   font-size: 14px;
   font-weight: bold;
-  color: #ff8533;
+  color: var(--orange-button);
   background: #fff0e6;
   padding: 2px 12px;
   border-radius: 12px;
