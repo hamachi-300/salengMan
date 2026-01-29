@@ -77,3 +77,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
+
+/* ===== Loading Screen ===== */
+.loading-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--font-eng-fun);
+  font-size: 1.5rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}

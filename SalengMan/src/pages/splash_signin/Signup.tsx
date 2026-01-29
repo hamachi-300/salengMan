@@ -30,7 +30,7 @@ function Signup() {
 
     try {
       await signUp(email, password);
-      navigate("/"); // Navigate to home after signup
+      navigate("/home"); // Navigate to home after signup
     } catch (err: any) {
       const errorCode = err.code;
       switch (errorCode) {

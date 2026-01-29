@@ -18,7 +18,7 @@ function Login() {
 
     try {
       await signIn(email, password);
-      navigate("/");
+      navigate("/home");
     } catch (err: any) {
       const errorCode = err.code;
       switch (errorCode) {

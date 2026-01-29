@@ -1,0 +1,71 @@
+.page-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #333;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #3a3a3a;
+}
+
+.back-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.page-title {
+  font-family: var(--font-eng-fun);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.page-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.placeholder-text {
+  font-family: var(--font-eng-fun);
+  font-size: 1.25rem;
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+@media (prefers-color-scheme: light) {
+  .page-header {
+    border-bottom: 1px solid #ddd;
+  }
+
+  .back-btn:hover {
+    background-color: #d9d3cf;
+  }
+}
