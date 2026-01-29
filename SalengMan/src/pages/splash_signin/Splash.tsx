@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Splash.css";
-import reactLogo from "../assets/icon/logo.svg";
+import reactLogo from "../../assets/icon/logo.svg";
 
 function Splash() {
   const navigate = useNavigate();
