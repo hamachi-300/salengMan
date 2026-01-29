@@ -53,6 +53,70 @@
   margin: 0;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.token-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.token-label {
+  font-family: var(--font-eng-fun);
+  font-size: 0.85rem;
+  color: var(--color-text);
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.token-box {
+  width: 32px;
+  height: 32px;
+  background-color: #3a3a3a;
+  border: 2px solid var(--orange-button);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-eng-fun);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--orange-button);
+}
+
+.token-buy-btn {
+  width: 28px;
+  height: 28px;
+  background-color: var(--orange-button);
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.token-buy-btn:hover {
+  background-color: #ff8a2f;
+  transform: scale(1.05);
+}
+
+.token-buy-btn:active {
+  transform: scale(0.95);
+}
+
+.token-buy-btn svg {
+  width: 16px;
+  height: 16px;
+  color: white;
+}
+
 .profile-avatar {
   width: 50px;
   height: 50px;
@@ -289,5 +353,10 @@
 
   .avatar-placeholder {
     background-color: #999;
+  }
+
+  .token-box {
+    background-color: #e8e8e8;
+    border-color: #ff7a30;
   }
 }
