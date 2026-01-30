@@ -31,10 +31,22 @@ const saveUserToDatabase = async (user: User) => {
 };
 
 // Sign Up - create user data
-export const signUp = async (email: string, password: string) => {
+export const signUp = async (email: string, password: string, username: string, gender: string) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  await saveUserToDatabase(userCredential.user);
-  return userCredential.user;
+  const user = userCredential.user;
+
+  // Save user with username and gender
+  const userRef = doc(db, "users", user.uid);
+  await setDoc(userRef, {
+    uid: user.uid,
+    email: user.email,
+    username: username,
+    gender: gender,
+    createdAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp(),
+  });
+
+  return user;
 };
 
 // Sign In - update last login

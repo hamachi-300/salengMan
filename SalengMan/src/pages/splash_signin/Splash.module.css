@@ -7,14 +7,14 @@
   align-items: center;
   background-color: var(--color-bg);
   position: relative;
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeInAnim 0.5s ease-in-out;
 }
 
-.splash.fade-out {
-  animation: fadeOut 0.5s ease-in-out forwards;
+.fadeOut {
+  animation: fadeOutAnim 0.5s ease-in-out forwards;
 }
 
-@keyframes fadeIn {
+@keyframes fadeInAnim {
   from {
     opacity: 0;
   }
@@ -23,7 +23,7 @@
   }
 }
 
-@keyframes fadeOut {
+@keyframes fadeOutAnim {
   from {
     opacity: 1;
   }
@@ -32,14 +32,14 @@
   }
 }
 
-.splash-content {
+.splashContent {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 24px;
 }
 
-.splash-text {
+.splashText {
   font-family: var(--font-thai-fun);
   font-size: 1.25rem;
   font-weight: 700;
@@ -55,7 +55,7 @@
   height: 200px;
 }
 
-.splash-title {
+.splashTitle {
   font-family: var(--font-eng-fun);
   font-size: 2.5rem;
   font-weight: 700;

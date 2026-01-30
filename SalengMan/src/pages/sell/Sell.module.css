@@ -1,4 +1,4 @@
-.page-container {
+.pageContainer {
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -6,7 +6,7 @@
   background-color: var(--color-bg);
 }
 
-.page-header {
+.pageHeader {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -14,7 +14,7 @@
   border-bottom: 1px solid #333;
 }
 
-.back-btn {
+.backBtn {
   width: 40px;
   height: 40px;
   border: none;
@@ -28,16 +28,16 @@
   transition: background-color 0.2s ease;
 }
 
-.back-btn:hover {
+.backBtn:hover {
   background-color: #3a3a3a;
 }
 
-.back-btn svg {
+.backBtn svg {
   width: 24px;
   height: 24px;
 }
 
-.page-title {
+.pageTitle {
   font-family: var(--font-eng-fun);
   font-size: 1.25rem;
   font-weight: 600;
@@ -45,7 +45,7 @@
   margin: 0;
 }
 
-.page-content {
+.pageContent {
   flex: 1;
   display: flex;
   align-items: center;
@@ -53,7 +53,7 @@
   padding: 24px;
 }
 
-.placeholder-text {
+.placeholderText {
   font-family: var(--font-eng-fun);
   font-size: 1.25rem;
   color: var(--color-text);
@@ -61,11 +61,11 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .page-header {
+  .pageHeader {
     border-bottom: 1px solid #ddd;
   }
 
-  .back-btn:hover {
+  .backBtn:hover {
     background-color: #d9d3cf;
   }
 }

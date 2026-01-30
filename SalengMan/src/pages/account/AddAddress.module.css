@@ -1,0 +1,101 @@
+.addAddress {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.backButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.backButton svg {
+    width: 28px;
+    height: 28px;
+}
+
+.title {
+    font-family: var(--font-eng-fun);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.label {
+    font-size: 1rem;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.textarea {
+    flex: 1;
+    background-color: #2a2a2a;
+    /* Match card bg */
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    resize: none;
+    outline: none;
+}
+
+.textarea:focus {
+    border-color: var(--color-text-secondary);
+}
+
+.saveButton {
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 1rem;
+    font-family: var(--font-eng-fun);
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.saveButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+    .textarea {
+        background-color: #fff;
+        border-color: #ddd;
+    }
+}

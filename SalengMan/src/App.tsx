@@ -11,6 +11,7 @@ import Dispose from "./pages/dispose/Dispose";
 import History from "./pages/history/History";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
+import AddAddress from "./pages/account/AddAddress";
 import { onAuthChange } from "./services/auth";
 import { User } from "firebase/auth";
 
@@ -69,6 +70,10 @@ function App() {
         <Route
           path="/account"
           element={user ? <Account /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/add-address"
+          element={user ? <AddAddress /> : <Navigate to="/signin" />}
         />
       </Routes>
     </BrowserRouter>

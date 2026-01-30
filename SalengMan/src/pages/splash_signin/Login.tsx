@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./Login.css";
+import styles from "./Login.module.css";
 import reactLogo from "../../assets/icon/logo.svg";
 import { useNavigate } from "react-router-dom";
 import { signIn } from "../../services/auth";
@@ -43,18 +43,18 @@ function Login() {
   };
 
   return (
-    <div className="login">
-      <div className="login-content">
-        <img src={reactLogo} alt="Logo" className="logo" />
-        <h1 className="login-title">Welcome Back</h1>
-        <p className="login-subtitle">Sign in with your email</p>
-        <form onSubmit={handleLogin} className="login-form">
+    <div className={styles.login}>
+      <div className={styles.loginContent}>
+        <img src={reactLogo} alt="Logo" className={styles.logo} />
+        <h1 className={styles.loginTitle}>Welcome Back</h1>
+        <p className={styles.loginSubtitle}>Sign in with your email</p>
+        <form onSubmit={handleLogin} className={styles.loginForm}>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="login-input"
+            className={styles.loginInput}
             required
           />
           <input
@@ -62,22 +62,22 @@ function Login() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="login-input"
+            className={styles.loginInput}
             required
           />
-          {error && <p className="error-message">{error}</p>}
-          <div className="button-div">
-            <button type="submit" className="login-btn dark-btn" disabled={loading}>
+          {error && <p className={styles.errorMessage}>{error}</p>}
+          <div className={styles.buttonDiv}>
+            <button type="submit" className={`${styles.loginBtn} ${styles.darkBtn}`} disabled={loading}>
               {loading ? (
                 <>
-                  <span className="spinner"></span>
+                  <span className={styles.spinner}></span>
                   Signing in...
                 </>
               ) : (
                 "Login"
               )}
             </button>
-            <p className="signup-link">
+            <p className={styles.signupLink}>
               Don't have an account?{" "}
               <span onClick={() => navigate("/signup")}>Sign Up</span>
             </p>

@@ -1,4 +1,4 @@
-import "./SignIn.css";
+import styles from "./Signin.module.css";
 import reactLogo from "../../assets/icon/logo.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -6,19 +6,19 @@ function SignIn() {
   const navigate = useNavigate();
 
   return (
-    <div className="signin">
-      <div className="signin-content">
-        <h1 className="signin-title">Sign In</h1>
-        <img src={reactLogo} alt="Logo" className="logo" />
-        <div className="button-div">
+    <div className={styles.signin}>
+      <div className={styles.signinContent}>
+        <h1 className={styles.signinTitle}>Sign In</h1>
+        <img src={reactLogo} alt="Logo" className={styles.logo} />
+        <div className={styles.buttonDiv}>
           <button
-            className="signin-btn dark-btn"
+            className={`${styles.signinBtn} ${styles.darkBtn}`}
             onClick={() => navigate("/login")}
           >
             Login
           </button>
           <button
-            className="signin-btn orange-btn"
+            className={`${styles.signinBtn} ${styles.orangeBtn}`}
             onClick={() => navigate("/signup")}
           >
             Sign Up

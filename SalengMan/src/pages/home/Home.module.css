@@ -16,7 +16,7 @@
   }
 }
 
-.home-content {
+.homeContent {
   flex: 1;
   padding: 24px;
   padding-bottom: 100px;
@@ -24,20 +24,20 @@
 }
 
 /* Header */
-.home-header {
+.homeHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
 }
 
-.welcome-text {
+.welcomeText {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.welcome-label {
+.welcomeLabel {
   font-family: var(--font-eng-fun);
   font-size: 1rem;
   color: var(--color-text);
@@ -45,7 +45,7 @@
   margin: 0;
 }
 
-.welcome-name {
+.welcomeName {
   font-family: var(--font-eng-fun);
   font-size: 1.75rem;
   font-weight: 700;
@@ -53,7 +53,7 @@
   margin: 0;
 }
 
-.profile-avatar {
+.profileAvatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -65,7 +65,12 @@
   background-color: #3a3a3a;
 }
 
-.avatar-placeholder {
+.logo {
+  width: 40px;
+  height: 40px;
+}
+
+.avatarPlaceholder {
   width: 30px;
   height: 30px;
   background-color: #666;
@@ -73,7 +78,7 @@
 }
 
 /* Banner Card */
-.banner-card {
+.bannerCard {
   background-color: #3a3a3a;
   border-radius: 16px;
   padding: 24px;
@@ -83,13 +88,13 @@
   min-height: 120px;
 }
 
-.banner-content {
+.bannerContent {
   position: relative;
   z-index: 1;
   max-width: 60%;
 }
 
-.banner-title {
+.bannerTitle {
   font-family: var(--font-eng-fun);
   font-size: 1.5rem;
   font-weight: 600;
@@ -97,7 +102,7 @@
   margin: 0 0 8px 0;
 }
 
-.banner-text {
+.bannerText {
   font-size: 0.95rem;
   color: var(--color-text);
   opacity: 0.9;
@@ -105,7 +110,7 @@
   line-height: 1.5;
 }
 
-.banner-decoration {
+.bannerDecoration {
   position: absolute;
   right: -20px;
   top: 50%;
@@ -117,11 +122,11 @@
 }
 
 /* Services Section */
-.services-section {
+.servicesSection {
   margin-top: 16px;
 }
 
-.section-title {
+.sectionTitle {
   font-family: var(--font-eng-fun);
   font-size: 1.25rem;
   font-weight: 700;
@@ -129,13 +134,13 @@
   margin: 0 0 20px 0;
 }
 
-.services-grid {
+.servicesGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
-.service-card {
+.serviceCard {
   background-color: #3a3a3a;
   border-radius: 16px;
   padding: 24px 16px;
@@ -147,16 +152,16 @@
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.service-card:hover {
+.serviceCard:hover {
   transform: translateY(-2px);
   background-color: #444;
 }
 
-.service-card:active {
+.serviceCard:active {
   transform: scale(0.98);
 }
 
-.service-icon-wrapper {
+.serviceIconWrapper {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -166,13 +171,13 @@
   justify-content: center;
 }
 
-.service-icon {
+.serviceIcon {
   width: 32px;
   height: 32px;
   color: var(--orange-button);
 }
 
-.service-title {
+.serviceTitle {
   font-family: var(--font-eng-fun);
   font-size: 1.1rem;
   font-weight: 600;
@@ -181,7 +186,7 @@
   text-align: center;
 }
 
-.service-subtitle {
+.serviceSubtitle {
   font-family: var(--font-thai-fun);
   font-size: 0.9rem;
   color: var(--color-text);
@@ -190,7 +195,7 @@
 }
 
 /* Bottom Navigation */
-.bottom-nav {
+.bottomNav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -204,7 +209,7 @@
   border-top: 1px solid #333;
 }
 
-.nav-item {
+.navItem {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -214,37 +219,37 @@
   transition: opacity 0.2s ease;
 }
 
-.nav-item:hover {
+.navItem:hover {
   opacity: 0.8;
 }
 
-.nav-icon {
+.navIcon {
   width: 24px;
   height: 24px;
   color: #666;
 }
 
-.nav-item.active .nav-icon {
+.active .navIcon {
   color: var(--orange-button);
 }
 
-.nav-label {
+.navLabel {
   font-size: 0.75rem;
   color: #666;
 }
 
-.nav-item.active .nav-label {
+.active .navLabel {
   color: var(--orange-button);
 }
 
-.nav-icon-wrapper {
+.navIconWrapper {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.notification-dot {
+.notificationDot {
   position: absolute;
   top: -2px;
   right: -2px;
@@ -256,38 +261,38 @@
 
 /* Light mode adjustments */
 @media (prefers-color-scheme: light) {
-  .banner-card,
-  .service-card {
+  .bannerCard,
+  .serviceCard {
     background-color: #d9d3cf;
   }
 
-  .service-card:hover {
+  .serviceCard:hover {
     background-color: #ccc6c0;
   }
 
-  .banner-decoration {
+  .bannerDecoration {
     background: radial-gradient(circle, #c9c3bf 0%, transparent 70%);
   }
 
-  .service-icon-wrapper {
+  .serviceIconWrapper {
     background-color: rgba(255, 122, 48, 0.2);
   }
 
-  .bottom-nav {
+  .bottomNav {
     background-color: #f5f0ec;
     border-top: 1px solid #ddd;
   }
 
-  .nav-icon,
-  .nav-label {
+  .navIcon,
+  .navLabel {
     color: #999;
   }
 
-  .profile-avatar {
+  .profileAvatar {
     background-color: #ccc;
   }
 
-  .avatar-placeholder {
+  .avatarPlaceholder {
     background-color: #999;
   }
 }

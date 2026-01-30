@@ -1,4 +1,4 @@
-.signup {
+.login {
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -8,7 +8,27 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
-.signup-content {
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loginContent {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,28 +39,28 @@
   animation: slideUp 0.6s ease-out;
 }
 
-.signup-title {
+.loginTitle {
   font-size: 2rem;
   font-weight: 700;
   color: var(--color-text);
   margin: 0;
 }
 
-.signup-subtitle {
+.loginSubtitle {
   font-size: 0.95rem;
   color: var(--color-text);
   opacity: 0.7;
   margin: 0 0 16px 0;
 }
 
-.signup-form {
+.loginForm {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.signup-input {
+.loginInput {
   width: 100%;
   padding: 12px 16px;
   font-size: 1rem;
@@ -53,16 +73,23 @@
   box-sizing: border-box;
 }
 
-.signup-input:focus {
+.loginInput:focus {
   border-color: var(--orange-button);
 }
 
-.signup-input::placeholder {
+.loginInput::placeholder {
   color: var(--color-text);
   opacity: 0.5;
 }
 
-.signup-btn {
+.buttonDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.loginBtn {
   width: 100%;
   padding: 12px;
   margin-top: 8px;
@@ -76,26 +103,26 @@
   transition: opacity 0.2s ease;
 }
 
-.signup-btn:hover {
+.loginBtn:hover {
   opacity: 0.85;
 }
 
-.signup-btn:disabled {
+.loginBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.signup-btn.dark-btn {
+.darkBtn {
   background-color: var(--dark-button);
   color: var(--dark-button-text);
 }
 
-.signup-btn.orange-btn {
+.orangeBtn {
   background-color: var(--orange-button);
   color: var(--orange-button-text);
 }
 
-.error-message {
+.errorMessage {
   color: #e74c3c;
   font-size: 0.875rem;
   margin: 0;
@@ -106,7 +133,6 @@
   width: 200px;
   height: 200px;
 }
-
 
 /* Loading Spinner */
 .spinner {
@@ -124,4 +150,22 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.signupLink {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.8;
+  margin: 8px 0 0 0;
+}
+
+.signupLink span {
+  color: var(--orange-button);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signupLink span:hover {
+  text-decoration: underline;
 }
