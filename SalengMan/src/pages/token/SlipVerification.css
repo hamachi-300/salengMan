@@ -1,0 +1,417 @@
+.slip-verification {
+  width: 100%;
+  padding: 0;
+}
+
+.slip-container {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.slip-container h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+/* Payment Info */
+.payment-info {
+  background: #f0f8ff;
+  border-left: 4px solid #667eea;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.payment-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.info-item .value {
+  color: #333;
+  font-weight: 600;
+}
+
+.info-item .amount {
+  color: #d32f2f;
+  font-size: 18px;
+}
+
+/* Upload Section */
+.upload-section h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.instruction {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+/* Upload Area */
+.upload-area {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: block;
+  border: 2px dashed #667eea;
+  border-radius: 8px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fafbff;
+}
+
+.upload-label:hover {
+  border-color: #764ba2;
+  background: #f0f8ff;
+}
+
+.upload-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.upload-label p {
+  margin: 10px 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.upload-label small {
+  display: block;
+  color: #999;
+  font-size: 12px;
+}
+
+.file-input:disabled ~ .upload-label {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Preview */
+.preview-section {
+  margin-bottom: 20px;
+}
+
+.preview-section h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.slip-preview {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* Buttons */
+.btn-verify {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-verify:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-verify:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.error-message {
+  background: #ffebee;
+  border-left: 4px solid #d32f2f;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+/* Success */
+.verification-success {
+  text-align: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #f0fff4 0%, #e0f7fa 100%);
+  border-radius: 12px;
+  border: 2px solid #4caf50;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  margin: 0 auto 20px;
+  animation: popIn 0.5s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.verification-success h3 {
+  margin: 0 0 20px 0;
+  color: #2e7d32;
+  font-size: 20px;
+}
+
+.verification-details {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.detail-row .value {
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+}
+
+.redirect-msg {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Help Section */
+.help-section {
+  background: #fffbf0;
+  border-left: 4px solid #ff9800;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.help-section h4 {
+  margin: 0 0 10px 0;
+  color: #e65100;
+  font-size: 14px;
+}
+
+.help-section ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.help-section li {
+  margin-bottom: 6px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .slip-container {
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .slip-container h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .upload-label {
+    padding: 25px 15px;
+  }
+
+  .upload-icon {
+    font-size: 36px;
+  }
+
+  .upload-label p {
+    font-size: 14px;
+  }
+
+  .upload-label small {
+    font-size: 11px;
+  }
+
+  .btn-verify {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .payment-info {
+    padding: 12px;
+  }
+
+  .payment-info h3 {
+    font-size: 14px;
+  }
+
+  .info-item .label,
+  .info-item .value {
+    font-size: 13px;
+  }
+
+  .info-item .amount {
+    font-size: 16px;
+  }
+
+  .verification-details {
+    padding: 15px;
+  }
+
+  .detail-row {
+    padding: 8px 0;
+    font-size: 13px;
+  }
+
+  .help-section {
+    padding: 12px;
+  }
+
+  .help-section h4 {
+    font-size: 13px;
+  }
+
+  .help-section ul {
+    font-size: 12px;
+    padding-left: 18px;
+  }
+
+  .help-section li {
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .slip-container {
+    padding: 12px;
+  }
+
+  .slip-container h2 {
+    font-size: 16px;
+  }
+
+  .payment-info {
+    padding: 10px;
+    border-radius: 6px;
+  }
+
+  .upload-label {
+    padding: 20px 10px;
+  }
+
+  .upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .upload-label p {
+    margin: 8px 0;
+    font-size: 13px;
+  }
+
+  .btn-verify {
+    padding: 10px;
+    font-size: 13px;
+    margin-bottom: 15px;
+  }
+
+  .slip-preview {
+    max-height: 250px;
+  }
+
+  .error-message {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .success-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 40px;
+  }
+
+  .verification-success h3 {
+    font-size: 18px;
+  }
+
+  .help-section ul {
+    padding-left: 15px;
+  }
+}

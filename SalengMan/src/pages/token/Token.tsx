@@ -7,7 +7,6 @@ function Token() {
   const location = useLocation();
   const initial = location.state?.tokens ?? 0;
   const [tokens, setTokens] = useState<number>(initial);
-  const [hasMonthlyPacket, setHasMonthlyPacket] = useState<boolean>(false);
 
   useEffect(() => {
     // if navigated in with tokens in state, initialize
@@ -30,18 +29,35 @@ function Token() {
     { id: "s5", tokens: 5, price: 215 },
   ];
 
-  function buyMain(p: { tokens: number; price: number }) {
-    setTokens((s) => s + p.tokens);
-    setHasMonthlyPacket(true);
+  function buyMain(p: { id: string; label: string; tokens: number; price: number }) {
+    navigate("/payment-flow", {
+      state: {
+        amount: p.price,
+        tokens: p.tokens,
+        packageName: p.label,
+      },
+    });
   }
 
   function buySingle() {
-    setTokens((s) => s + singlePacket.tokens);
+    navigate("/payment-flow", {
+      state: {
+        amount: singlePacket.price,
+        tokens: singlePacket.tokens,
+        packageName: "Single Token",
+      },
+    });
   }
 
-  function buySupplement(p: { tokens: number; price: number }) {
-    if (!hasMonthlyPacket) return;
-    setTokens((s) => s + p.tokens);
+  function buySupplement(p: { id: string; tokens: number; price: number }) {
+    const packageName = p.id === "s3" ? "3 Tokens" : "5 Tokens";
+    navigate("/payment-flow", {
+      state: {
+        amount: p.price,
+        tokens: p.tokens,
+        packageName: packageName,
+      },
+    });
   }
 
   return (
@@ -113,12 +129,12 @@ function Token() {
           <p className="section-subtitle">ซื้อเพิ่มเฉพาะลูกค้าที่มีแพ็คเกจรายเดือน</p>
           <div className="packet-grid">
             {supplementary.map((s) => (
-              <div key={s.id} className={`packet-card ${!hasMonthlyPacket ? "disabled" : ""}`}>
+              <div key={s.id} className="packet-card">
                 <div className="packet-info">
                   <h3>{s.tokens} token</h3>
                   <p>{s.price} บาท</p>
                 </div>
-                <button className="buy-btn orange-btn" onClick={() => buySupplement(s)} disabled={!hasMonthlyPacket}>
+                <button className="buy-btn orange-btn" onClick={() => buySupplement(s)}>
                   ซื้อ
                 </button>
               </div>

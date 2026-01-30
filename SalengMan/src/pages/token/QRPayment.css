@@ -1,0 +1,473 @@
+.payment-content {
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Payment Details */
+.payment-details {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.payment-details h2 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.detail-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.detail-amount {
+  font-size: 20px;
+  color: #ffd700;
+}
+
+/* QR Code Section */
+.qr-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.qr-timer {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f0f8ff;
+  border-radius: 8px;
+  border: 2px solid #667eea;
+}
+
+.timer-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+.timer-text.warning {
+  color: #d32f2f;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.loading p {
+  font-size: 16px;
+  margin: 0;
+}
+
+.qr-container {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-code {
+  width: 300px;
+  height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.3s ease;
+}
+
+.qr-code.expired {
+  filter: grayscale(100%);
+}
+
+/* Instruction */
+.instruction {
+  text-align: left;
+  background: #f0f8ff;
+  border-left: 4px solid #667eea;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.instruction h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.instruction ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.instruction li {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Error Message */
+.error-message {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: #856404;
+}
+
+.error-message p {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+}
+
+.error-message button {
+  background: #ffc107;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.error-message button:hover {
+  background: #ffb300;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #d0d0d0;
+}
+
+/* Note Section */
+.note {
+  background: #e8f4f8;
+  border-left: 4px solid #17a2b8;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.note p {
+  margin: 0;
+  color: #0c5460;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+  padding: 20px;
+  text-align: center;
+  color: #d32f2f;
+  font-size: 18px;
+}
+
+.error-container button {
+  padding: 10px 30px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.error-container button:hover {
+  background: #764ba2;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-content {
+    padding: 15px;
+    max-width: 100%;
+    gap: 15px;
+  }
+
+  .qr-code {
+    width: 280px;
+    height: 280px;
+  }
+
+  .payment-details {
+    padding: 15px;
+  }
+
+  .payment-details h2 {
+    font-size: 16px;
+  }
+
+  .detail-item {
+    padding: 8px 0;
+    font-size: 14px;
+  }
+
+  .detail-amount {
+    font-size: 18px;
+  }
+
+  .timer-text {
+    font-size: 14px;
+  }
+
+  .instruction li {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 600px) {
+  .payment-content {
+    padding: 12px;
+    max-width: 100%;
+  }
+
+  .qr-code {
+    width: 260px;
+    height: 260px;
+  }
+
+  .qr-container {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .qr-section {
+    padding: 15px;
+  }
+
+  .payment-details h2 {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .timer-text {
+    font-size: 13px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .instruction {
+    padding: 10px;
+    margin-top: 15px;
+  }
+
+  .instruction h3 {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .instruction li {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .error-container {
+    min-height: 300px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-content {
+    padding: 10px;
+    gap: 12px;
+  }
+
+  .qr-code {
+    width: 240px;
+    height: 240px;
+  }
+
+  .qr-container {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .qr-section {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .payment-details {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .payment-details h2 {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .detail-item {
+    padding: 6px 0;
+    font-size: 12px;
+  }
+
+  .detail-amount {
+    font-size: 16px;
+  }
+
+  .qr-timer {
+    padding: 8px;
+    margin-bottom: 12px;
+  }
+
+  .timer-text {
+    font-size: 12px;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+  }
+
+  .btn {
+    padding: 10px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .instruction {
+    padding: 10px;
+    margin-top: 12px;
+    border-radius: 4px;
+  }
+
+  .instruction h3 {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .instruction ol {
+    padding-left: 18px;
+  }
+
+  .instruction li {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  .note {
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .note p {
+    font-size: 11px;
+  }
+
+  .error-message {
+    padding: 15px;
+  }
+
+  .error-message p {
+    font-size: 13px;
+  }
+}

@@ -12,6 +12,8 @@ import History from "./pages/history/History";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
 import Token from "./pages/token/Token";
+import QRPayment from "./pages/token/QRPayment";
+import PaymentFlow from "./pages/token/PaymentFlow";
 import { onAuthChange } from "./services/auth";
 import { User } from "firebase/auth";
 
@@ -74,6 +76,14 @@ function App() {
         <Route
           path="/token"
           element={user ? <Token /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/qr-payment"
+          element={user ? <QRPayment /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/payment-flow"
+          element={user ? <PaymentFlow /> : <Navigate to="/signin" />}
         />
       </Routes>
     </BrowserRouter>

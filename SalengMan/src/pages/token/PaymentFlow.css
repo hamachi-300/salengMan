@@ -1,0 +1,213 @@
+.payment-flow-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 0;
+}
+
+/* Progress Bar */
+.progress-bar {
+  max-width: 600px;
+  margin: 0 auto 30px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.progress-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active .step-number {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.progress-step.completed .step-number {
+  background: #4caf50;
+  color: white;
+}
+
+.progress-step.completed .step-number::after {
+  content: "✓";
+  position: absolute;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  font-weight: 500;
+}
+
+.progress-step.active .step-label {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.progress-step.completed .step-label {
+  color: #4caf50;
+}
+
+/* Progress Line */
+.progress-line {
+  flex: 1;
+  height: 2px;
+  background: #e0e0e0;
+  margin: 0 -10px;
+  transition: background 0.3s ease;
+}
+
+.progress-step.completed ~ .progress-line {
+  background: #4caf50;
+}
+
+/* Step Content */
+.step-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+  padding: 20px;
+  text-align: center;
+  color: #d32f2f;
+  font-size: 18px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.error-container button {
+  padding: 10px 30px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.error-container button:hover {
+  background: #764ba2;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .progress-bar {
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+
+  .step-number {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .step-label {
+    font-size: 11px;
+  }
+
+  .step-content {
+    padding-bottom: 30px;
+  }
+}
+
+@media (max-width: 600px) {
+  .progress-bar {
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+  }
+
+  .step-number {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .step-label {
+    font-size: 10px;
+  }
+
+  .progress-line {
+    height: 1.5px;
+  }
+
+  .step-content {
+    padding: 0 15px 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-flow-container {
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .progress-bar {
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 12px;
+  }
+
+  .step-number {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+    min-width: 30px;
+  }
+
+  .step-label {
+    font-size: 9px;
+    margin-top: 3px;
+  }
+
+  .progress-line {
+    height: 1px;
+    margin: 0 -8px;
+  }
+
+  .step-content {
+    padding: 0 10px 20px;
+  }
+
+  .error-container {
+    min-height: 300px;
+    padding: 15px;
+  }
+}
