@@ -1,0 +1,146 @@
+/* ใช้โครงสร้างเดียวกับ Sell.css */
+.post-item-container {
+  background-color: var(--color-bg);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #333;
+  background-color: var(--color-bg);
+}
+
+.back-button {
+  width: 40px; height: 40px;
+  border: none; background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.header-title {
+  font-family: var(--font-eng-fun);
+  font-size: 1.25rem; font-weight: 600;
+  color: var(--color-text);
+}
+
+.scrollable-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  padding-bottom: 120px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.section { margin-bottom: 24px; }
+
+.label-row {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 12px;
+}
+
+.main-label {
+  font-family: var(--font-eng-fun);
+  font-weight: 600; font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.tag-required {
+  background: #3a3a3a; padding: 4px 10px;
+  border-radius: 6px; font-size: 12px;
+  color: var(--color-text); opacity: 0.7;
+}
+
+/* Map Style */
+.map-fixed-wrapper {
+  width: 100%; aspect-ratio: 4 / 3;
+  border-radius: 16px; overflow: hidden;
+  border: 2px solid #3a3a3a;
+}
+
+.leaflet-container { height: 100% !important; width: 100% !important; }
+
+/* Form Card */
+.form-card {
+  background-color: #3a3a3a;
+  border-radius: 16px; padding: 20px;
+}
+
+.custom-textarea {
+  width: 100%; background-color: #2a2a2a;
+  border: 1px solid #444; border-radius: 12px;
+  padding: 12px; color: var(--color-text);
+  font-family: inherit; resize: none;
+}
+
+.text-orange { color: var(--orange-button); font-weight: bold; }
+
+.error-text-simple {
+  color: #ff4d4d; font-size: 13px; margin-bottom: 10px;
+}
+
+/* Footer Action */
+.footer-action {
+  position: fixed; bottom: 0; width: 100%;
+  padding: 20px 24px 30px;
+  background: var(--color-bg);
+  border-top: 1px solid #333;
+}
+
+.btn-next {
+  width: 100%; background: var(--orange-button);
+  color: var(--orange-button-text); border: none;
+  padding: 16px; border-radius: 16px;
+  font-size: 18px; font-weight: bold;
+  cursor: pointer;
+}
+
+/* Choose Address button style */
+.choose-address-btn {
+  margin-top: 12px;
+  background: var(--orange-button);
+  color: var(--orange-button-text);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-thai-polite);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.choose-address-btn .material-icons-round { font-size: 1.1rem; }
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+  .post-header, .footer-action { border-color: #ddd; }
+  .form-card, .tag-required { background-color: #d9d3cf; }
+  .custom-textarea { background-color: #f5f0ec; border-color: #ccc; color: #333; }
+  .map-fixed-wrapper { border-color: #ccc; }
+}
+/* ปุ่มกดเพื่อซิงค์ที่อยู่กับแผนที่ */
+.sync-map-btn {
+  background: var(--orange-button);
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sync-map-btn:disabled {
+  opacity: 0.5;
+}
