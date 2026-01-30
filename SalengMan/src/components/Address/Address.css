@@ -1,0 +1,310 @@
+/* Container for the address display box */
+.address-display-container {
+    background-color: white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    /* Soft shadow */
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Remove the stripe */
+.address-stripe {
+    display: none;
+}
+
+.address-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    color: #ff5722;
+    /* Orange */
+    font-weight: 600;
+}
+
+.address-header svg {
+    fill: #ff5722;
+}
+
+.address-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.address-info {
+    font-size: 0.95rem;
+    color: #333;
+    line-height: 1.5;
+}
+
+.address-name-phone {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #000;
+    margin-right: 8px;
+}
+
+.address-details-text {
+    color: #666;
+    margin-top: 4px;
+    display: block;
+}
+
+.address-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.default-badge-outline {
+    border: 1px solid #ff5722;
+    color: #ff5722;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background-color: #fff;
+    display: inline-block;
+}
+
+.change-btn-outlined {
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #333;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.change-btn-outlined:hover {
+    background-color: #f9f9f9;
+    border-color: #ccc;
+}
+
+/* Modal Styles Refined */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    width: 90%;
+    max-width: 450px;
+    max-height: 85vh;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #888;
+    padding: 0;
+    line-height: 1;
+}
+
+.address-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+}
+
+.address-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.address-item:hover {
+    background-color: #fffcfb;
+}
+
+.address-radio {
+    margin-top: 4px;
+    margin-right: 16px;
+    width: 20px;
+    height: 20px;
+    accent-color: #ff5722;
+    cursor: pointer;
+}
+
+.address-item-details {
+    flex: 1;
+}
+
+.item-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+.item-name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.item-name {
+    font-weight: 700;
+    color: #222;
+    font-size: 1rem;
+}
+
+.item-phone {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.item-address {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.badges-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.badge-default {
+    border: 1px solid #ff5722;
+    color: #ff5722;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.badge-tag {
+    border: 1px solid #ddd;
+    color: #666;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.edit-link {
+    color: #2a6bb8;
+    /* Blue */
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 10px;
+}
+
+/* Modal Footer for Button */
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    background-color: white;
+}
+
+.add-new-btn-full {
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.add-new-btn-full:hover {
+    background-color: #e64a19;
+}
+
+/* Edit/Add Form in Modal */
+.address-form-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+.form-group-modal {
+    margin-bottom: 16px;
+}
+
+.form-label-modal {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-input-modal {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.form-input-modal:focus {
+    border-color: #ff5722;
+    outline: none;
+}
+
+.form-actions-modal {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
