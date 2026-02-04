@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import styles from "./AddAddress.module.css";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { getToken } from "../../services/auth";
+import { api } from "../../config/api";
 
 function AddAddress() {
     const navigate = useNavigate();
@@ -12,11 +12,12 @@ function AddAddress() {
 
     useEffect(() => {
         const fetchAddress = async () => {
-            if (auth.currentUser) {
+            const token = getToken();
+            if (token) {
                 try {
-                    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-                    if (userDoc.exists()) {
-                        setAddress(userDoc.data().address || "");
+                    const user = await api.getMe(token);
+                    if ((user as any).address) {
+                        setAddress((user as any).address);
                     }
                 } catch (error) {
                     console.error("Error fetching address:", error);
@@ -29,13 +30,12 @@ function AddAddress() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!auth.currentUser) return;
+        const token = getToken();
+        if (!token) return;
 
         setLoading(true);
         try {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), {
-                address: address
-            });
+            await api.updateUser(token, { address: address } as any);
             navigate("/account");
         } catch (error) {
             console.error("Error saving address:", error);

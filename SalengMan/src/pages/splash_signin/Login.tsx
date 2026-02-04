@@ -20,23 +20,7 @@ function Login() {
       await signIn(email, password);
       navigate("/home");
     } catch (err: any) {
-      const errorCode = err.code;
-      switch (errorCode) {
-        case "auth/user-not-found":
-          setError("No account found with this email.");
-          break;
-        case "auth/wrong-password":
-          setError("Incorrect password.");
-          break;
-        case "auth/invalid-email":
-          setError("Invalid email address.");
-          break;
-        case "auth/invalid-credential":
-          setError("Invalid email or password.");
-          break;
-        default:
-          setError(err.message || "Failed to sign in");
-      }
+      setError(err.message || "Failed to sign in");
     } finally {
       setLoading(false);
     }

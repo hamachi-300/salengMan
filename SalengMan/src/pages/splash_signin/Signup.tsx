@@ -28,20 +28,7 @@ function Signup() {
       await signUp(email, password, username, gender);
       navigate("/home");
     } catch (err: any) {
-      const errorCode = err.code;
-      switch (errorCode) {
-        case "auth/email-already-in-use":
-          setError("Email already in use. Please sign in instead.");
-          break;
-        case "auth/invalid-email":
-          setError("Invalid email address.");
-          break;
-        case "auth/weak-password":
-          setError("Password is too weak.");
-          break;
-        default:
-          setError(err.message || "Failed to create account");
-      }
+      setError(err.message || "Failed to create account");
     } finally {
       setLoading(false);
     }

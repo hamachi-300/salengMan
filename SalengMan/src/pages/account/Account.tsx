@@ -2,10 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import styles from "./Account.module.css";
 import profileLogo from "../../assets/icon/profile.svg";
 import { useNavigate } from "react-router-dom";
-import { auth, db, storage } from "../../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthChange, logOut, getToken } from "../../services/auth";
+import { api } from "../../config/api";
 
 interface UserData {
   username: string;
@@ -24,23 +22,29 @@ function Account() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-          if (userDoc.exists()) {
-            setUserData(userDoc.data() as UserData);
-          } else {
-            // Fallback if doc doesn't exist, use auth profile
+    // Subscribe to auth changes
+    const unsubscribe = onAuthChange((user) => {
+      if (user) {
+        setUserData({
+          username: user.full_name,
+          email: user.email,
+          gender: user.gender || "Not specified",
+          address: undefined,
+          photoURL: user.avatar_url
+        });
+
+        // Fetch full details if needed
+        const token = getToken();
+        if (token) {
+          api.getMe(token).then(fullUser => {
             setUserData({
-              username: currentUser.displayName || "User",
-              email: currentUser.email || "",
-              gender: "Not specified",
-              photoURL: currentUser.photoURL || undefined
+              username: fullUser.full_name,
+              email: fullUser.email,
+              gender: fullUser.gender || "Not specified",
+              address: (fullUser as any).address,
+              photoURL: fullUser.avatar_url
             });
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+          }).catch(console.error);
         }
       } else {
         navigate("/signin");
@@ -53,7 +57,7 @@ function Account() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logOut();
       navigate("/signin");
     } catch (error) {
       console.error("Error signing out:", error);
@@ -62,30 +66,18 @@ function Account() {
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !auth.currentUser) return;
+    const token = getToken();
+
+    if (!file || !token) return;
 
     setUploading(true);
     console.log("Starting upload...");
     try {
-      const storagePath = `profile_pictures/${auth.currentUser.uid}`;
-      console.log("Upload path:", storagePath);
+      const { url } = await api.uploadFile(token, file);
+      console.log("Upload completed. URL:", url);
 
-      const storageRef = ref(storage, storagePath);
-      const snapshot = await uploadBytes(storageRef, file);
-      console.log("Upload completed. Bytes transferred:", snapshot.metadata.size);
-
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log("Download URL generated:", downloadURL);
-
-      // Update Firestore
-      const userRef = doc(db, "users", auth.currentUser.uid);
-      await updateDoc(userRef, {
-        photoURL: downloadURL
-      });
-      console.log("Firestore updated with new photoURL");
-
-      // Update local state
-      setUserData(prev => prev ? { ...prev, photoURL: downloadURL } : null);
+      // Update local state (backend already saves avatar_url)
+      setUserData(prev => prev ? { ...prev, photoURL: url } : null);
       alert("Image uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);

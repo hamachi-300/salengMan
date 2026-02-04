@@ -12,8 +12,7 @@ import History from "./pages/history/History";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
-import { onAuthChange } from "./services/auth";
-import { User } from "firebase/auth";
+import { onAuthChange, User } from "./services/auth";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
