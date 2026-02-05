@@ -13,6 +13,7 @@ export interface User {
   phone?: string;
   avatar_url?: string;
   gender?: string;
+  default_address?: string;
 }
 
 // Get stored token

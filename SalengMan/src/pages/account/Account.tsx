@@ -1,66 +1,38 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import styles from "./Account.module.css";
 import profileLogo from "../../assets/icon/profile.svg";
 import { useNavigate } from "react-router-dom";
-import { onAuthChange, logOut, getToken } from "../../services/auth";
+import { getToken } from "../../services/auth";
 import { api } from "../../config/api";
-
-interface UserData {
-  username: string;
-  email: string;
-  gender: string;
-  address?: string;
-  photoURL?: string;
-}
+import { useUser } from "../../context/UserContext";
 
 function Account() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, refreshUser, updateUserLocal } = useUser();
   const [uploading, setUploading] = useState(false);
+  const [defaultAddress, setDefaultAddress] = useState<string | null>(null);
 
+  // Refresh user data and fetch default address every time page loads
   useEffect(() => {
-    // Subscribe to auth changes
-    const unsubscribe = onAuthChange((user) => {
-      if (user) {
-        setUserData({
-          username: user.full_name,
-          email: user.email,
-          gender: user.gender || "Not specified",
-          address: undefined,
-          photoURL: user.avatar_url
-        });
+    refreshUser();
+    fetchDefaultAddress();
+  }, []);
 
-        // Fetch full details if needed
-        const token = getToken();
-        if (token) {
-          api.getMe(token).then(fullUser => {
-            setUserData({
-              username: fullUser.full_name,
-              email: fullUser.email,
-              gender: fullUser.gender || "Not specified",
-              address: (fullUser as any).address,
-              photoURL: fullUser.avatar_url
-            });
-          }).catch(console.error);
-        }
-      } else {
-        navigate("/signin");
-      }
-      setLoading(false);
-    });
+  const fetchDefaultAddress = async () => {
+    const token = getToken();
+    if (!token) return;
 
-    return () => unsubscribe();
-  }, [navigate]);
-
-  const handleLogout = async () => {
     try {
-      await logOut();
-      navigate("/signin");
+      const addresses = await api.getAddresses(token);
+      const defaultAddr = addresses.find(addr => addr.is_default);
+      if (defaultAddr) {
+        setDefaultAddress(defaultAddr.address);
+      } else {
+        setDefaultAddress(null);
+      }
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Error fetching addresses:", error);
     }
   };
 
@@ -71,13 +43,10 @@ function Account() {
     if (!file || !token) return;
 
     setUploading(true);
-    console.log("Starting upload...");
     try {
       const { url } = await api.uploadFile(token, file);
-      console.log("Upload completed. URL:", url);
-
-      // Update local state (backend already saves avatar_url)
-      setUserData(prev => prev ? { ...prev, photoURL: url } : null);
+      // Update user locally (no need to refetch from API)
+      updateUserLocal({ avatar_url: url });
       alert("Image uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -95,6 +64,11 @@ function Account() {
 
   if (loading) {
     return <div className="loading-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    navigate("/signin");
+    return null;
   }
 
   return (
@@ -115,7 +89,7 @@ function Account() {
           <div className={styles.avatarWrapper}>
             <div className={styles.profileAvatar}>
               <img
-                src={userData?.photoURL || profileLogo}
+                src={user.avatar_url || profileLogo}
                 alt="Profile"
                 className={styles.profileImage}
                 onError={(e) => {
@@ -143,7 +117,7 @@ function Account() {
               />
             </div>
           </div>
-          <h2 className={styles.profileName}>{userData?.username || "Saleng Man"}</h2>
+          <h2 className={styles.profileName}>{user.full_name || "Saleng Man"}</h2>
           <span className={styles.profileStatus}>Green Member</span>
         </div>
 
@@ -156,39 +130,36 @@ function Account() {
             </div>
             <div className={styles.cardContent}>
               <span className={styles.cardLabel}>USERNAME</span>
-              <span className={styles.cardValue}>{userData?.username}</span>
+              <span className={styles.cardValue}>{user.full_name}</span>
             </div>
           </div>
-          {/* <div className={styles.cardEdit}>
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-            </div> */}
         </div>
 
-        {/* Address */}
-        <div className={styles.infoCard}>
+        {/* Address - entire card is clickable */}
+        <div className={`${styles.infoCard} ${styles.clickable}`} onClick={() => navigate("/add-address")}>
           <div className={styles.cardLeft}>
             <div className={styles.cardIcon}>
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
             </div>
             <div className={styles.cardContent}>
               <span className={styles.cardLabel}>ADDRESS</span>
-              {userData?.address ? (
-                <span className={`${styles.cardValue} ${styles.multiline}`}>{userData.address}</span>
+              {defaultAddress ? (
+                <span className={`${styles.cardValue} ${styles.multiline}`}>{defaultAddress}</span>
               ) : (
                 <span className={styles.cardValue} style={{ color: '#888', fontStyle: 'italic' }}>No address set</span>
               )}
             </div>
           </div>
-          <div className={styles.cardEdit} onClick={() => navigate("/add-address")}>
-            {userData?.address ? (
+          <div className={styles.cardEdit}>
+            {defaultAddress ? (
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
             ) : (
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg> // Plus icon
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
             )}
           </div>
         </div>
 
-        {/* Phone/Email */}
+        {/* Email */}
         <div className={styles.infoCard}>
           <div className={styles.cardLeft}>
             <div className={styles.cardIcon}>
@@ -196,7 +167,7 @@ function Account() {
             </div>
             <div className={styles.cardContent}>
               <span className={styles.cardLabel}>EMAIL</span>
-              <span className={styles.cardValue}>{userData?.email}</span>
+              <span className={styles.cardValue}>{user.email}</span>
             </div>
           </div>
         </div>
@@ -205,21 +176,14 @@ function Account() {
         <div className={styles.infoCard}>
           <div className={styles.cardLeft}>
             <div className={styles.cardIcon}>
-              {/* Gender Icon based on value usually, but using generic user for now */}
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
             </div>
             <div className={styles.cardContent}>
               <span className={styles.cardLabel}>GENDER</span>
-              <span className={styles.cardValue}>{userData?.gender}</span>
+              <span className={styles.cardValue}>{user.gender || "Not specified"}</span>
             </div>
           </div>
         </div>
-
-
-        <button className={styles.logoutButton} onClick={handleLogout}>
-          <svg style={{ width: '24px', height: '24px' }} viewBox="0 0 24 24" fill="currentColor"><path d="M9 21h9c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H9c-.55 0-1 .45-1 1v1H6V4c0-1.66 1.34-3 3-3h9c1.66 0 3 1.34 3 3v16c0 1.66-1.34 3-3 3H9c-1.66 0-3-1.34-3-3v-1h2v1c0 .55.45 1 1 1zm-4-8.99L9 12l-4 .01V9l-5 4 5 4v-3l4-.01-4 .01V12.01z" /></svg>
-          Log Out
-        </button>
 
       </div>
 

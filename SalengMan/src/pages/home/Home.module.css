@@ -1,6 +1,7 @@
 .home {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--color-bg);
@@ -19,8 +20,11 @@
 .homeContent {
   flex: 1;
   padding: 24px;
-  padding-bottom: 100px;
+  padding-top: calc(24px + var(--safe-area-top, 0px));
+  padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Header */

@@ -26,7 +26,7 @@
   --color-bg: #E9E3DF;
   --color-text: #222;
   --color-text-secondary: #FF7A30;
-  
+
   --dark-button: #444;
   --dark-button-text: #E9E3DF;
 
@@ -40,6 +40,12 @@
   --font-thai-polite: 'Anuphan', sans-serif;
   --font-size-base: 16px;
   --line-height: 24px;
+
+  /* Safe Area (for phone notch/status bar) */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }
 
 /* ===== Dark Mode ===== */

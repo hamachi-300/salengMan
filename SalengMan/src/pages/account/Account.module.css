@@ -23,10 +23,11 @@
 .homeContent {
   flex: 1;
   padding: 24px;
-  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(24px + var(--safe-area-top, 0px));
+  padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
-  overscroll-behavior-y: contain; /* Prevent pull-to-refresh and scroll chaining */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* Header */
@@ -145,6 +146,19 @@
   justify-content: space-between;
   margin-bottom: 16px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.infoCard.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.infoCard.clickable:hover {
+  background-color: #333;
+}
+
+.infoCard.clickable:active {
+  transform: scale(0.98);
 }
 
 .cardLeft {

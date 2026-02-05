@@ -57,7 +57,36 @@ async function initBucket() {
   }
 }
 
+// Initialize Database
+async function initDB() {
+  try {
+    // Create addresses table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS addresses (
+        id SERIAL PRIMARY KEY,
+        user_id UUID REFERENCES users(id),
+        label VARCHAR(255) NOT NULL,
+        address TEXT NOT NULL,
+        lat DECIMAL(10, 8),
+        lng DECIMAL(11, 8),
+        phone VARCHAR(20),
+        note TEXT,
+        is_default BOOLEAN DEFAULT false,
+        province VARCHAR(100),
+        district VARCHAR(100),
+        sub_district VARCHAR(100),
+        zipcode VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('Database tables ready');
+  } catch (err) {
+    console.error('DB init error:', err);
+  }
+}
+
 initBucket();
+initDB();
 
 // Middleware to verify JWT
 const authMiddleware = (req, res, next) => {
@@ -228,6 +257,235 @@ app.post('/upload/avatar', authMiddleware, async (req, res) => {
 
     res.json({ url: imageUrl });
 
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/* ADDRESS SECTION */
+
+// Get user addresses
+app.get('/addresses', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM addresses WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC',
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Add new address
+app.post('/addresses', authMiddleware, async (req, res) => {
+  try {
+    const { label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode } = req.body;
+
+    // 1. Check limit (max 10)
+    const countResult = await pool.query(
+      'SELECT COUNT(*) FROM addresses WHERE user_id = $1',
+      [req.user.user_id]
+    );
+
+    if (parseInt(countResult.rows[0].count) >= 10) {
+      return res.status(400).json({ error: 'Maximum 10 addresses allowed' });
+    }
+
+    // 2. Handle default address logic
+    if (is_default) {
+      await pool.query(
+        'UPDATE addresses SET is_default = false WHERE user_id = $1',
+        [req.user.user_id]
+      );
+    }
+
+    // If first address, force default
+    let finalIsDefault = is_default;
+    if (parseInt(countResult.rows[0].count) === 0) {
+      finalIsDefault = true;
+    }
+
+    const result = await pool.query(
+      `INSERT INTO addresses 
+       (user_id, label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       RETURNING *`,
+      [req.user.user_id, label, address, lat, lng, phone, note, finalIsDefault, province, district, sub_district, zipcode]
+    );
+
+    // Sync with users table default_address
+    if (finalIsDefault) {
+      try {
+        await pool.query(
+          'UPDATE users SET default_address = $1 WHERE id = $2',
+          [address, req.user.user_id]
+        );
+      } catch (syncError) {
+        console.error('Failed to sync default_address:', syncError.message);
+        // Do not fail the request if this minor part fails
+      }
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Set default address
+app.patch('/addresses/:id/default', authMiddleware, async (req, res) => {
+  try {
+    const addressId = req.params.id;
+
+    // 1. Verify ownership
+    const check = await pool.query(
+      'SELECT * FROM addresses WHERE id = $1 AND user_id = $2',
+      [addressId, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    // 2. Unset all others
+    await pool.query(
+      'UPDATE addresses SET is_default = false WHERE user_id = $1',
+      [req.user.user_id]
+    );
+
+    // 3. Set new default
+    const result = await pool.query(
+      'UPDATE addresses SET is_default = true WHERE id = $1 RETURNING *',
+      [addressId]
+    );
+
+    // 4. Sync with users table
+    try {
+      await pool.query(
+        'UPDATE users SET default_address = $1 WHERE id = $2',
+        [result.rows[0].address, req.user.user_id]
+      );
+    } catch (syncError) {
+      console.error('Failed to sync default_address:', syncError.message);
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+
+// Get single address
+app.get('/addresses/:id', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM addresses WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.user.user_id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Address not found' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update address
+app.put('/addresses/:id', authMiddleware, async (req, res) => {
+  try {
+    const { label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode } = req.body;
+    const addressId = req.params.id;
+
+    // Check ownership
+    const check = await pool.query(
+      'SELECT * FROM addresses WHERE id = $1 AND user_id = $2',
+      [addressId, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    // Handle default logic
+    if (is_default) {
+      await pool.query(
+        'UPDATE addresses SET is_default = false WHERE user_id = $1',
+        [req.user.user_id]
+      );
+    } else {
+      // Check if this is the ONLY address. If so, it MUST be default.
+      const countResult = await pool.query(
+        'SELECT COUNT(*) FROM addresses WHERE user_id = $1',
+        [req.user.user_id]
+      );
+      if (parseInt(countResult.rows[0].count) <= 1) {
+        // If we are updating the only address, it has to be default
+        is_default = true;
+      }
+    }
+
+    const result = await pool.query(
+      `UPDATE addresses SET
+       label = $1, address = $2, lat = $3, lng = $4, phone = $5, note = $6, is_default = $7, province = $8, district = $9, sub_district = $10, zipcode = $11
+       WHERE id = $12 RETURNING *`,
+      [label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode, addressId]
+    );
+
+    // Sync user default address if set to true
+    if (is_default) {
+      try {
+        await pool.query(
+          'UPDATE users SET default_address = $1 WHERE id = $2',
+          [address, req.user.user_id]
+        );
+      } catch (err) { console.error('Sync error', err); }
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete specific address
+app.delete('/addresses/:id', authMiddleware, async (req, res) => {
+  try {
+    const addressId = req.params.id;
+
+    // Check ownership
+    const check = await pool.query(
+      'SELECT * FROM addresses WHERE id = $1 AND user_id = $2',
+      [addressId, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Address not found' });
+    }
+
+    // Delete address
+    await pool.query('DELETE FROM addresses WHERE id = $1', [addressId]);
+
+    res.json({ message: 'Address deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete user account
+app.delete('/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    // Delete addresses
+    await pool.query('DELETE FROM addresses WHERE user_id = $1', [userId]);
+
+    // Delete user
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+
+    res.json({ message: 'Account deleted successfully' });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

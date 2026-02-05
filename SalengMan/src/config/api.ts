@@ -29,6 +29,37 @@ interface UserResponse {
   role: string;
   avatar_url?: string;
   gender?: string;
+  default_address?: string;
+}
+
+export interface Address {
+  id: number;
+  label: string;
+  address: string; // Matches DB column
+  phone?: string;
+  is_default: boolean;
+  icon: 'home' | 'office' | 'other';
+  note?: string;
+  lat?: number;
+  lng?: number;
+  province?: string;
+  district?: string;
+  sub_district?: string;
+  zipcode?: string;
+}
+
+export interface CreateAddressData {
+  label: string;
+  phone: string;
+  note?: string;
+  address: string;
+  lat: number;
+  lng: number;
+  is_default: boolean;
+  province?: string;
+  district?: string;
+  sub_district?: string;
+  zipcode?: string;
 }
 
 export const api = {
@@ -101,5 +132,111 @@ export const api = {
     }
 
     return res.json();
+  },
+
+  // Get Addresses (Real)
+  getAddresses: async (token: string): Promise<Address[]> => {
+    const res = await fetch(`${API_URL}/addresses`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      // Fallback mock
+      console.warn("API /addresses failed, using fallback");
+      return [
+        {
+          id: 1,
+          label: "Home",
+          address: "128/95 Moo 4, Soi Sukhumvit 42, Phra Khanong, Khlong Toei, Bangkok 24240",
+          phone: "081-234-5678",
+          is_default: true,
+          icon: "home"
+        }
+      ];
+    }
+    return res.json();
+  },
+
+  // Create Address
+  createAddress: async (token: string, data: CreateAddressData): Promise<Address> => {
+    const res = await fetch(`${API_URL}/addresses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to create address');
+    }
+
+    return res.json();
+  },
+
+  // Set Default Address
+  setDefaultAddress: async (token: string, id: number): Promise<void> => {
+    const res = await fetch(`${API_URL}/addresses/${id}/default`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error('Failed to set default address');
+  },
+
+  // Deprecated shim (removed as we updated the main methods)
+  // Get Address (Single)
+  getAddress: async (token: string, id: string): Promise<Address> => {
+    const res = await fetch(`${API_URL}/addresses/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch address');
+    return res.json();
+  },
+
+  // Update Address
+  updateAddress: async (token: string, id: string, data: CreateAddressData): Promise<Address> => {
+    const res = await fetch(`${API_URL}/addresses/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to update address');
+    }
+    return res.json();
+  },
+
+  // Delete Address
+  deleteAddress: async (token: string, id: number): Promise<void> => {
+    const res = await fetch(`${API_URL}/addresses/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to delete address');
+    }
+  },
+
+  // Delete Account
+  deleteAccount: async (token: string): Promise<void> => {
+    const res = await fetch(`${API_URL}/auth/me`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to delete account');
+    }
   },
 };
