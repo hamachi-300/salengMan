@@ -158,7 +158,7 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
             // Use Nominatim OpenStreetMap API
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-                { headers: { 'Accept-Language': 'en' } }
+                { headers: { 'Accept-Language': 'th' } }
             );
             const data = await response.json();
 

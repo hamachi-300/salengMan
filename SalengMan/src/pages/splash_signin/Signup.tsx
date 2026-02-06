@@ -39,7 +39,7 @@ function Signup() {
       <div className={styles.signupContent}>
         <img src={reactLogo} alt="Logo" className={styles.logo} />
         <h1 className={styles.signupTitle}>Create Account</h1>
-        <p className={styles.signupSubtitle}>Sign up with your email</p>
+        <p className={styles.signupSubtitle}>Sign up ด้วยอีเมลของคุณ</p>
         <form onSubmit={handleSignup} className={styles.signupForm}>
           {/* Username */}
           <input
@@ -52,7 +52,7 @@ function Signup() {
           />
           {/* Gender */}
           <div className={styles.genderSection}>
-            <div className={styles.genderLabel}>Gender</div>
+            <div className={styles.genderLabel}>เพศ</div>
             <div className={styles.genderOptions}>
               <label className={styles.radioOption}>
                 <input
@@ -63,7 +63,7 @@ function Signup() {
                   onChange={(e) => setGender(e.target.value)}
                 />
                 <span className={styles.radioCustom}></span>
-                <span className={styles.radioText}>Male</span>
+                <span className={styles.radioText}>ชาย</span>
               </label>
               <label className={styles.radioOption}>
                 <input
@@ -74,7 +74,7 @@ function Signup() {
                   onChange={(e) => setGender(e.target.value)}
                 />
                 <span className={styles.radioCustom}></span>
-                <span className={styles.radioText}>Female</span>
+                <span className={styles.radioText}>หญิง</span>
               </label>
               <label className={styles.radioOption}>
                 <input
@@ -85,7 +85,7 @@ function Signup() {
                   onChange={(e) => setGender(e.target.value)}
                 />
                 <span className={styles.radioCustom}></span>
-                <span className={styles.radioText}>Other</span>
+                <span className={styles.radioText}>อื่นๆ</span>
               </label>
             </div>
           </div>

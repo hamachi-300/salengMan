@@ -74,7 +74,7 @@ function AddAddress() {
         {/* Section Title */}
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Select Location</h2>
-          <p className={styles.sectionSubtitle}>Manage your saved addresses</p>
+          <p className={styles.sectionSubtitle}>จัดการที่อยู่ของคุณ</p>
         </div>
 
         {/* Address List */}

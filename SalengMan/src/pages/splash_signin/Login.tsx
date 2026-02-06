@@ -31,7 +31,7 @@ function Login() {
       <div className={styles.loginContent}>
         <img src={reactLogo} alt="Logo" className={styles.logo} />
         <h1 className={styles.loginTitle}>Welcome Back</h1>
-        <p className={styles.loginSubtitle}>Sign in with your email</p>
+        <p className={styles.loginSubtitle}>Sign in ด้วยอีเมลของคุณ</p>
         <form onSubmit={handleLogin} className={styles.loginForm}>
           <input
             type="email"
@@ -62,7 +62,7 @@ function Login() {
               )}
             </button>
             <p className={styles.signupLink}>
-              Don't have an account?{" "}
+              ยังไม่มี Account ใช่ไหม?{" "}
               <span onClick={() => navigate("/signup")}>Sign Up</span>
             </p>
           </div>

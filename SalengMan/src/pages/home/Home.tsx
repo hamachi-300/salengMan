@@ -1,9 +1,17 @@
+import { useEffect } from "react";
 import styles from "./Home.module.css";
 import { useNavigate } from "react-router-dom";
 import profileLogo from "../../assets/icon/profile.svg";
+import { useUser } from "../../context/UserContext";
 
 function Home() {
   const navigate = useNavigate();
+  const { user, refreshUser } = useUser();
+
+  // Refresh user data when page loads
+  useEffect(() => {
+    refreshUser();
+  }, []);
 
   return (
     <div className={styles.home}>
@@ -12,10 +20,20 @@ function Home() {
         <div className={styles.homeHeader}>
           <div className={styles.welcomeText}>
             <p className={styles.welcomeLabel}>Welcome back,</p>
-            <h1 className={styles.welcomeName}>Saleng Man</h1>
+            <h1 className={styles.welcomeName}>{user?.full_name || "Saleng Man"}</h1>
           </div>
-          <div className={styles.profileAvatar}>
-            <img src={profileLogo} alt="Logo" className={styles.logo} />
+          <div className={styles.profileAvatar} onClick={() => navigate("/account")}>
+            <img
+              src={user?.avatar_url || profileLogo}
+              alt="Profile"
+              className={styles.logo}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== profileLogo) {
+                  target.src = profileLogo;
+                }
+              }}
+            />
           </div>
         </div>
 
@@ -24,7 +42,7 @@ function Home() {
           <div className={styles.bannerContent}>
             <h2 className={styles.bannerTitle}>Green World</h2>
             <p className={styles.bannerText}>
-              Turn your trash into treasure and save the planet.
+              มาเปลี่ยนขยะที่ว่าเปลื้องพื้นที่อยู่ที่บ้านมาเป็นเงินกันเถอะ
             </p>
           </div>
           <div className={styles.bannerDecoration}></div>

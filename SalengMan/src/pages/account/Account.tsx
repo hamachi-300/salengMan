@@ -62,6 +62,20 @@ function Account() {
     }
   };
 
+  // Map gender to Thai text
+  const getGenderText = (gender: string | undefined) => {
+    switch (gender?.toLowerCase()) {
+      case 'male':
+        return 'เพศชาย';
+      case 'female':
+        return 'เพศหญิง';
+      case 'other':
+        return 'อื่นๆ';
+      default:
+        return 'ไม่ระบุ';
+    }
+  };
+
   if (loading) {
     return <div className="loading-screen">Loading...</div>;
   }
@@ -180,7 +194,7 @@ function Account() {
             </div>
             <div className={styles.cardContent}>
               <span className={styles.cardLabel}>GENDER</span>
-              <span className={styles.cardValue}>{user.gender || "Not specified"}</span>
+              <span className={`${styles.cardValue} ${styles.thaiText}`}>{getGenderText(user.gender)}</span>
             </div>
           </div>
         </div>

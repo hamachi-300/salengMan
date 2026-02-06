@@ -212,6 +212,10 @@
   white-space: normal;
 }
 
+.cardValue.thaiText {
+  font-family: var(--font-thai-polite);
+}
+
 .cardEdit {
   color: #666;
   cursor: pointer;

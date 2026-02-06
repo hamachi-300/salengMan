@@ -190,7 +190,7 @@ function NewAddress() {
                 <div className={styles.modalOverlay}>
                     <div className={styles.modal}>
                         <h3>Delete Address?</h3>
-                        <p>Are you sure you want to delete this address? This action cannot be undone.</p>
+                        <p>คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่อีเมลนี้ การกระทำนี้ไม่สามารถย้อนกลับได้</p>
                         <div className={styles.modalActions}>
                             <button
                                 className={styles.cancelButton}
@@ -251,7 +251,7 @@ function NewAddress() {
                 <div className={styles.form}>
                     {/* Label */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Name of Address (Start with Home, Office, etc.)</label>
+                        <label className={styles.label}>ชื่อที่อยู่ (ex. บ้านหนองอีหรี)</label>
                         <input
                             type="text"
                             className={styles.input}
@@ -263,7 +263,7 @@ function NewAddress() {
 
                     {/* Phone */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Phone Number</label>
+                        <label className={styles.label}>หมายเลขโทรศัพท์</label>
                         <input
                             type="tel"
                             className={styles.input}
@@ -276,7 +276,7 @@ function NewAddress() {
 
                     {/* Address Selector */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Address</label>
+                        <label className={styles.label}>ตำแหน่งที่อยู่</label>
                         <div className={styles.addressSelector} onClick={() => setShowMap(true)}>
                             <div className={styles.addressIcon}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -298,10 +298,10 @@ function NewAddress() {
 
                     {/* Note */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Note (Optional)</label>
+                        <label className={styles.label}>หมายเหตุ (Optional)</label>
                         <textarea
                             className={`${styles.input} ${styles.textarea}`}
-                            placeholder="Detail for rider (e.g. near the big tree, white fence)"
+                            placeholder="รายละเอียดเกี่ยวกับที่อยู่เพิ่มเติม"
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                         />
@@ -309,7 +309,7 @@ function NewAddress() {
 
                     {/* Default Address Toggle */}
                     <div className={styles.toggleRow}>
-                        <span className={styles.toggleLabel}>Set as Default Address</span>
+                        <span className={styles.toggleLabel}>ตั้งเป็นที่อยู่เริ่มต้น (Default)</span>
                         <label className={styles.toggle}>
                             <input
                                 type="checkbox"
