@@ -1,0 +1,197 @@
+/* TokenConfirm.css */
+
+.token-confirm-page {
+    background-color: #fff9f0;
+    /* Light cream background from screenshot */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.token-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.token-badge {
+    background: #fff;
+    border-radius: 20px;
+    padding: 6px 6px 6px 16px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #333;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-eng-fun);
+}
+
+.token-value {
+    color: #ff5722;
+    font-size: 1.1rem;
+    margin-right: 4px;
+}
+
+.add-token-mini-btn {
+    background: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-title-center {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 20px 0 40px 0;
+    color: #333;
+    /* Dark brown/black text */
+    font-family: var(--font-family);
+}
+
+.counter-card {
+    background: #fff;
+    margin: 0 24px;
+    border-radius: 24px;
+    padding: 40px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.counter-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.counter-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.counter-btn:active {
+    transform: scale(0.95);
+}
+
+.counter-btn.minus {
+    background: #fff;
+    border: 2px solid #ffccbc;
+    color: #ff5722;
+}
+
+.counter-btn.plus {
+    background: #ff5722;
+    color: white;
+    box-shadow: 0 4px 10px rgba(255, 87, 34, 0.3);
+}
+
+.counter-value {
+    font-size: 3rem;
+    font-weight: 700;
+    width: 100px;
+    /* Fixed width to prevent jumping */
+    text-align: center;
+    border: 2px solid #ff5722;
+    padding: 10px 0;
+    color: #000;
+}
+
+.counter-label {
+    color: #888;
+    font-size: 1rem;
+    font-family: var(--font-family);
+}
+
+.bottom-actions-column {
+    margin-top: auto;
+    /* Push to bottom */
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.action-btn-outline {
+    width: 100%;
+    padding: 16px;
+    background: #fff;
+    border: 2px solid #ff9a4d;
+    color: #ff5722;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--font-family);
+}
+
+.action-btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--font-family);
+}
+
+.coin-icon {
+    background: #ff5722;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.check-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: white;
+    color: #ff5722;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

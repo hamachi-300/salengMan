@@ -15,7 +15,9 @@ function Dispose() {
         <h1 className="page-title">Dispose Trash</h1>
       </div>
       <div className="page-content">
-        <p className="placeholder-text">Coming soon...</p>
+        <button className="primary-btn" onClick={() => navigate("/select-package")}>
+          Select Package
+        </button>
       </div>
     </div>
   );

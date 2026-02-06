@@ -89,6 +89,8 @@
   display: flex;
   gap: 12px;
   justify-content: center;
+  flex-wrap: wrap;
+  /* Allow wrapping for many slots */
   margin-bottom: 16px;
 }
 
@@ -172,4 +174,89 @@
   background-color: #ff5722;
   /* Deep orange */
   color: white;
+}
+
+/* Schedule Section Styles */
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* แบ่งเป็น 2 คอลัมน์เท่าๆ กัน */
+  gap: 12px;
+  /* ระยะห่างระหว่างปุ่ม */
+  margin-top: 16px;
+  margin-bottom: 24px;
+  /* เว้นระยะด้านล่างไม่ให้ชิดปุ่ม submit เกินไป */
+}
+
+.time-slot-btn {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  /* ใช้ฟอนต์เดียวกับทั้งแอป */
+}
+
+/* Hover Effect */
+.time-slot-btn:hover {
+  border-color: #ff853f;
+  background-color: #fff5f0;
+}
+
+/* Active / Selected State */
+.time-slot-btn.selected {
+  background-color: #ff853f;
+  /* สีส้มตามธีมปุ่ม Next */
+  color: white;
+  border-color: #ff853f;
+  box-shadow: 0 4px 12px rgba(255, 133, 63, 0.2);
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.time-slot-btn {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.time-slot-btn:hover:not(:disabled) {
+  /* hover ได้เฉพาะปุ่มที่ไม่ disabled */
+  border-color: #ff853f;
+  background-color: #fff5f0;
+}
+
+.time-slot-btn.selected {
+  background-color: #ff853f;
+  color: white;
+  border-color: #ff853f;
+  box-shadow: 0 4px 12px rgba(255, 133, 63, 0.2);
+}
+
+/* เพิ่ม Style สำหรับปุ่มที่ Disabled (จองไม่ได้) */
+.time-slot-btn.disabled {
+  background-color: #f5f5f5;
+  color: #bbbbbb;
+  border-color: #eeeeee;
+  cursor: not-allowed;
+  pointer-events: none;
+  /* ป้องกันการกด */
 }

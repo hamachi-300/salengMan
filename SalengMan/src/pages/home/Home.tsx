@@ -33,7 +33,7 @@ function Home() {
         <div className="services-section">
           <h2 className="section-title">Services</h2>
           <div className="services-grid">
-            <div className="service-card" onClick={() => navigate("/sell")}>
+            <div className="service-card" onClick={() => navigate("/dispose")}>
               <div className="service-icon-wrapper">
                 <svg className="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -43,7 +43,7 @@ function Home() {
               <h3 className="service-title">Sell Old Items</h3>
               <p className="service-subtitle">ขายของเก่า</p>
             </div>
-            <div className="service-card" onClick={() => navigate("/dispose")}>
+            <div className="service-card" onClick={() => navigate("/select-package")}>
               <div className="service-icon-wrapper">
                 <svg className="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />

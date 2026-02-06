@@ -39,7 +39,10 @@ function SellOldItemLocat() {
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    setImages(prev => [...prev, ev.target?.result || null]);
+                    setImages(prev => {
+                        if (prev.length >= 10) return prev;
+                        return [...prev, ev.target?.result || null];
+                    });
                 };
                 reader.readAsDataURL(file);
             });
@@ -49,7 +52,7 @@ function SellOldItemLocat() {
     return (
         <div className="page-container">
             <div className="page-header">
-                <button className="back-btn" onClick={() => navigate("/selectpackage")}>
+                <button className="back-btn" onClick={() => navigate("/select-package")}>
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
                     </svg>
@@ -64,21 +67,42 @@ function SellOldItemLocat() {
                     <span className="required-label">Required</span>
                 </div>
                 <div className="upload-photo-box">
-                    <label className="upload-label">
-                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageUpload} />
-                        <div className="upload-area small-upload-area">
-                            <div className="upload-icon">↑</div>
-                            <div className="upload-text-main">Upload Photos</div>
-                            <div className="upload-text-sub">Tap here to add images</div>
+                    <label className="upload-label" htmlFor="image-upload-input">
+                        <input
+                            id="image-upload-input"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            style={{ display: 'none' }}
+                            onChange={handleImageUpload}
+                        />
+                        <div className="upload-area small-upload-area" style={images.length > 0 ? { padding: 0, overflow: 'hidden', border: 'none' } : {}}>
+                            {images.length > 0 ? (
+                                <img
+                                    src={images[0]?.toString()}
+                                    alt="Main Display"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }}
+                                />
+                            ) : (
+                                <>
+                                    <div className="upload-icon">↑</div>
+                                    <div className="upload-text-main">Upload Photos</div>
+                                    <div className="upload-text-sub">Tap here to add images</div>
+                                </>
+                            )}
                         </div>
                     </label>
                     <div className="image-slots-row">
-                        {[0, 1, 2].map(idx => (
+                        {images.map((imgSrc, idx) => (
                             <div className="image-slot" key={idx}>
-                                {images[idx] ? <img src={images[idx]?.toString()} alt="uploaded" className="preview-img" /> : (idx + 1)}
+                                <img src={imgSrc?.toString()} alt={`uploaded-${idx}`} className="preview-img" />
                             </div>
                         ))}
-                        <div className="image-slot add-slot">+</div>
+                        {images.length < 10 && (
+                            <label className="image-slot add-slot" htmlFor="image-upload-input">
+                                +
+                            </label>
+                        )}
                     </div>
                     <div className="photo-note">
                         หมายเหตุ<br />
@@ -161,7 +185,7 @@ function SellOldItemLocat() {
 
                 </div>
             </div>
-            <button className="next-btn" onClick={() => { console.log(formData) }}>
+            <button className="next-btn" onClick={() => navigate("/token-confirm")}>
                 Next <span className="arrow">→</span>
             </button>
         </div>

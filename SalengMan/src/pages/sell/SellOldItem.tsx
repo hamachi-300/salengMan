@@ -1,19 +1,43 @@
-
 import "./SellOldItem.css";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // เพิ่ม useEffect เพื่อใช้ re-render เวลาได้
 
 import AddressDisplay from "../../components/Address/AddressDisplay";
 import { Address } from "../../types/address";
 
 function SellOldItem() {
   const navigate = useNavigate();
+  const handleBack = () => navigate("/select-package");
+
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [images, setImages] = useState<(string | ArrayBuffer | null)[]>([]);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     note: ""
   });
+
+  // สร้าง Array เวลา 08:00 - 23:00
+  const timeSlots = Array.from({ length: 16 }, (_, i) => {
+    const hour = 8 + i;
+    return `${hour.toString().padStart(2, '0')}:00`;
+  });
+
+  // --- ฟังก์ชันเช็คเวลา (Logic 2 ชั่วโมง) ---
+  const isTimeDisabled = (timeStr: string) => {
+    const now = new Date(); // เวลาปัจจุบัน (Timezone เครื่อง)
+
+    // สร้าง Date Object ของ Slot เวลาที่จะเช็ค (โดยใช้วันที่ปัจจุบัน)
+    const [slotHour, slotMinute] = timeStr.split(':').map(Number);
+    const slotDate = new Date();
+    slotDate.setHours(slotHour, slotMinute, 0, 0);
+
+    // เวลาขั้นต่ำที่จองได้ = เวลาปัจจุบัน + 2 ชั่วโมง
+    const minBookingTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+    // ถ้าเวลาของ Slot น้อยกว่า เวลาขั้นต่ำ -> ให้ Disable
+    return slotDate < minBookingTime;
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -21,7 +45,10 @@ function SellOldItem() {
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          setImages(prev => [...prev, ev.target?.result || null]);
+          setImages(prev => {
+            if (prev.length >= 10) return prev;
+            return [...prev, ev.target?.result || null];
+          });
         };
         reader.readAsDataURL(file);
       });
@@ -31,7 +58,7 @@ function SellOldItem() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <button className="back-btn" onClick={() => navigate("/selectpackage")}>
+        <button className="back-btn" onClick={handleBack}>
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
           </svg>
@@ -46,21 +73,42 @@ function SellOldItem() {
           <span className="required-label">Required</span>
         </div>
         <div className="upload-photo-box">
-          <label className="upload-label">
-            <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageUpload} />
-            <div className="upload-area small-upload-area">
-              <div className="upload-icon">↑</div>
-              <div className="upload-text-main">Upload Photos</div>
-              <div className="upload-text-sub">Tap here to add images</div>
+          <label className="upload-label" htmlFor="image-upload-input">
+            <input
+              id="image-upload-input"
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleImageUpload}
+            />
+            <div className="upload-area small-upload-area" style={images.length > 0 ? { padding: 0, overflow: 'hidden', border: 'none' } : {}}>
+              {images.length > 0 ? (
+                <img
+                  src={images[0]?.toString()}
+                  alt="Main Display"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }}
+                />
+              ) : (
+                <>
+                  <div className="upload-icon">↑</div>
+                  <div className="upload-text-main">Upload Photos</div>
+                  <div className="upload-text-sub">Tap here to add images</div>
+                </>
+              )}
             </div>
           </label>
           <div className="image-slots-row">
-            {[0, 1, 2].map(idx => (
+            {images.map((imgSrc, idx) => (
               <div className="image-slot" key={idx}>
-                {images[idx] ? <img src={images[idx]?.toString()} alt="uploaded" className="preview-img" /> : (idx + 1)}
+                <img src={imgSrc?.toString()} alt={`uploaded-${idx}`} className="preview-img" />
               </div>
             ))}
-            <div className="image-slot add-slot">+</div>
+            {images.length < 10 && (
+              <label className="image-slot add-slot" htmlFor="image-upload-input">
+                +
+              </label>
+            )}
           </div>
           <div className="photo-note">
             หมายเหตุ<br />
@@ -82,15 +130,35 @@ function SellOldItem() {
           />
         </div>
 
+        {/* Schedule Pickup */}
+        <div className="section-label-row" style={{ marginTop: 32 }}>
+          <span className="section-label">Schedule Pickup</span>
+        </div>
+
+        <div className="schedule-grid">
+          {timeSlots.map((time) => {
+            const disabled = isTimeDisabled(time); // เช็คสถานะ disable
+            return (
+              <button
+                key={time}
+                disabled={disabled} // ใส่ attribute disabled
+                className={`time-slot-btn ${selectedTime === time ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}
+                onClick={() => !disabled && setSelectedTime(time)}
+              >
+                {time}
+              </button>
+            );
+          })}
+        </div>
+
       </div>
 
       <div className="bottom-actions">
-        <button className="action-btn amount-btn" onClick={() => console.log("Amount clicked")}>
+        <button className="action-btn amount-btn" onClick={() => navigate("/token-confirm")}>
           ระบุจำนวน (Amount)
         </button>
         <button className="action-btn submit-btn" onClick={() => {
-          console.log({ ...formData, selectedAddress, images });
-          // Submit logic here
+          console.log({ ...formData, selectedAddress, images, selectedTime });
         }}>
           ยืนยัน (Submit Post)
         </button>

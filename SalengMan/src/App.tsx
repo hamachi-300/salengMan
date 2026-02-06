@@ -11,8 +11,12 @@ import Dispose from "./pages/dispose/Dispose";
 import History from "./pages/history/History";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
+import SelectPackage from "./pages/dispose/selectpackage";
 import { onAuthChange } from "./services/auth";
 import { User } from "firebase/auth";
+import SellOldItem from "./pages/sell/SellOldItem";
+import SellOldItemLocat from "./pages/dispose/package/selloldItem-locat";
+import TokenConfirm from "./pages/sell/TokenConfirm";
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -57,6 +61,22 @@ function App() {
         <Route
           path="/dispose"
           element={user ? <Dispose /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/select-package"
+          element={user ? <SelectPackage /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/sell-old-item"
+          element={user ? <SellOldItem /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/sell-old-item-locat"
+          element={user ? <SellOldItemLocat /> : <Navigate to="/signin" />}
+        />
+        <Route
+          path="/token-confirm"
+          element={user ? <TokenConfirm /> : <Navigate to="/signin" />}
         />
         <Route
           path="/history"
