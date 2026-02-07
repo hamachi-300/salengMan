@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Splash from "./pages/splash_signin/Splash";
 import SignIn from "./pages/splash_signin/Signin";
@@ -14,9 +14,10 @@ import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
 import { UserProvider, useUser } from "./context/UserContext";
+import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
 function AppRoutes() {
-  const { user, loading } = useUser();
+  const { loading } = useUser();
 
   if (loading) {
     return <div className="loading-screen">Loading...</div>;
@@ -24,57 +25,29 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Public - accessible to everyone */}
       <Route path="/" element={<Splash />} />
-      <Route path="/new-address" element={<NewAddress />} />
       <Route path="/address/:id" element={<NewAddress />} />
-      <Route
-        path="/signin"
-        element={user ? <Navigate to="/home" /> : <SignIn />}
-      />
-      <Route
-        path="/signup"
-        element={user ? <Navigate to="/home" /> : <Signup />}
-      />
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/home" /> : <Login />}
-      />
-      <Route
-        path="/home"
-        element={user ? <Home /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/sell"
-        element={user ? <Sell /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/dispose"
-        element={user ? <Dispose /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/history"
-        element={user ? <History /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/notify"
-        element={user ? <Notify /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/account"
-        element={user ? <Account /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/add-address"
-        element={user ? <AddAddress /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/new-address"
-        element={user ? <NewAddress /> : <Navigate to="/signin" />}
-      />
-      <Route
-        path="/settings"
-        element={user ? <Settings /> : <Navigate to="/signin" />}
-      />
+
+      {/* Auth pages - redirect to /home if already logged in */}
+      <Route element={<PublicRoute />}>
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+      </Route>
+
+      {/* Protected pages - redirect to /signin if not logged in */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/home" element={<Home />} />
+        <Route path="/sell" element={<Sell />} />
+        <Route path="/dispose" element={<Dispose />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/notify" element={<Notify />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/add-address" element={<AddAddress />} />
+        <Route path="/new-address" element={<NewAddress />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
     </Routes>
   );
 }
