@@ -239,4 +239,30 @@ export const api = {
       throw new Error(error.error || 'Failed to delete account');
     }
   },
+  // Create Old Item Post
+  createPost: async (token: string, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/old-item-posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      // Try to parse JSON, if fails, use status text
+      let errorMessage = 'Failed to create post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        // If not JSON (e.g. HTML 413/404/500), use status text
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
 };

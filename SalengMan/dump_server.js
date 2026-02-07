@@ -15,7 +15,8 @@ const MINIO_URL = process.env.MINIO_URL || 'http://localhost:9000';
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(fileUpload());
 
 // MinIO Client
@@ -76,6 +77,18 @@ async function initDB() {
         district VARCHAR(100),
         sub_district VARCHAR(100),
         zipcode VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS old_item_posts (
+        id SERIAL PRIMARY KEY,
+        user_id UUID REFERENCES users(id),
+        images TEXT[],
+        categories TEXT[],
+        remarks TEXT,
+        address_snapshot JSONB,
+        pickup_time JSONB,
+        status VARCHAR(50) DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -487,6 +500,55 @@ app.delete('/auth/me', authMiddleware, async (req, res) => {
 
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/* SELL OLD ITEM SECTION */
+
+app.post('/old-item-posts', authMiddleware, async (req, res) => {
+  try {
+    const { images, categories, remarks, address, pickupTime } = req.body;
+    const bucketName = 'salengman';
+    const uploadedImageUrls = [];
+
+    // 1. Upload images to MinIO
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const base64Data = images[i];
+        // Remove header if present (e.g., "data:image/jpeg;base64,")
+        const base64Image = base64Data.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
+
+        await minioClient.putObject(bucketName, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        const imageUrl = `${MINIO_URL}/${bucketName}/${fileName}`;
+        uploadedImageUrls.push(imageUrl);
+      }
+    }
+
+    // 2. Insert into database
+    const result = await pool.query(
+      `INSERT INTO old_item_posts 
+       (user_id, images, categories, remarks, address_snapshot, pickup_time)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        req.user.user_id,
+        uploadedImageUrls,
+        categories,
+        remarks,
+        JSON.stringify(address),
+        JSON.stringify(pickupTime)
+      ]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating post:', error);
     res.status(400).json({ error: error.message });
   }
 });

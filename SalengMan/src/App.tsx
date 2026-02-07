@@ -6,6 +6,9 @@ import Signup from "./pages/splash_signin/Signup";
 import Login from "./pages/splash_signin/Login";
 import Home from "./pages/home/Home";
 import Sell from "./pages/sell/Sell";
+import SelectAddress from "./pages/sell/SelectAddress";
+import SelectTime from "./pages/sell/SelectTime";
+import Confirm from "./pages/sell/Confirm";
 import Dispose from "./pages/dispose/Dispose";
 import History from "./pages/history/History";
 import Notify from "./pages/notify/Notify";
@@ -40,6 +43,9 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/sell" element={<Sell />} />
+        <Route path="/sell/select-address" element={<SelectAddress />} />
+        <Route path="/sell/select-time" element={<SelectTime />} />
+        <Route path="/sell/confirm" element={<Confirm />} />
         <Route path="/dispose" element={<Dispose />} />
         <Route path="/history" element={<History />} />
         <Route path="/notify" element={<Notify />} />

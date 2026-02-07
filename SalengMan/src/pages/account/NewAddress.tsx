@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./NewAddress.module.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getToken } from "../../services/auth";
 import { api, CreateAddressData } from "../../config/api";
 import MapSelector from "../../components/MapSelector";
@@ -8,8 +8,10 @@ import { useUser } from "../../context/UserContext";
 
 function NewAddress() {
     const navigate = useNavigate();
+    const routeLocation = useLocation();
     const { id } = useParams<{ id: string }>();
     const { updateUserLocal } = useUser();
+    const returnPath = (routeLocation.state as { from?: string })?.from || "/add-address";
     const [loading, setLoading] = useState(false);
     const [showMap, setShowMap] = useState(false);
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -77,7 +79,7 @@ function NewAddress() {
         } catch (error) {
             console.error("Error fetching address:", error);
             alert("Failed to load address details");
-            navigate("/add-address");
+            navigate(returnPath);
         } finally {
             setLoading(false);
         }
@@ -145,7 +147,7 @@ function NewAddress() {
                 updateUserLocal({ default_address: location.address });
             }
 
-            navigate("/add-address");
+            navigate(returnPath);
         } catch (error) {
             console.error("Error saving address:", error);
             alert("Failed to save address. Please try again.");
@@ -161,7 +163,7 @@ function NewAddress() {
 
         try {
             await api.deleteAddress(token, parseInt(id));
-            navigate("/add-address");
+            navigate(returnPath);
         } catch (e) {
             console.error(e);
             alert("Failed to delete address");
@@ -240,7 +242,7 @@ function NewAddress() {
             <div className={styles.content}>
                 {/* Header */}
                 <div className={styles.header}>
-                    <button className={styles.backButton} onClick={() => navigate("/add-address")}>
+                    <button className={styles.backButton} onClick={() => navigate(returnPath)}>
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
                         </svg>
