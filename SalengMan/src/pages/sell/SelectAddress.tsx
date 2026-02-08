@@ -2,22 +2,19 @@ import { useState, useEffect } from "react";
 import styles from "./SelectAddress.module.css";
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../../services/auth";
-import { api } from "../../config/api";
-
-interface Address {
-  id: number;
-  label: string;
-  address: string;
-  phone?: string;
-  is_default: boolean;
-  icon: 'home' | 'office' | 'other';
-}
+import { api, Address } from "../../config/api";
+import { useSell } from "../../context/SellContext";
+import PageHeader from "../../components/PageHeader";
+import PageFooter from "../../components/PageFooter";
 
 function SelectAddress() {
   const navigate = useNavigate();
+  const { sellData, setAddress } = useSell();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(sellData.address?.id || null);
+
+  const isEditing = sellData.editingPostId !== null;
 
   useEffect(() => {
     fetchAddresses();
@@ -63,11 +60,8 @@ function SelectAddress() {
     }
     const selectedAddress = addresses.find(addr => addr.id === selectedId);
     if (selectedAddress) {
-      // Save selected address to localStorage for the sell flow
-      const sellData = JSON.parse(localStorage.getItem('sellItemData') || '{}');
-      sellData.address = selectedAddress;
-      localStorage.setItem('sellItemData', JSON.stringify(sellData));
-      // Navigate to select time
+      // Save to context (in-memory only)
+      setAddress(selectedAddress);
       navigate('/sell/select-time');
     }
   };
@@ -78,15 +72,7 @@ function SelectAddress() {
 
   return (
     <div className={styles['page']}>
-      {/* Header */}
-      <div className={styles['header']}>
-        <button className={styles['back-button']} onClick={() => navigate('/sell')}>
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-          </svg>
-        </button>
-        <h1 className={styles['title']}>Post Item</h1>
-      </div>
+      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo="/sell" />
 
       <div className={styles['content']}>
         {/* Section Title */}
@@ -135,15 +121,11 @@ function SelectAddress() {
       </div>
 
       {/* Footer Actions */}
-      <div className={styles['footer']}>
-        <button
-          className={`${styles['btn-select']} ${!selectedId ? styles['btn-disabled'] : ''}`}
-          onClick={handleSelect}
-          disabled={!selectedId}
-        >
-          Select
-        </button>
-      </div>
+      <PageFooter
+        title="Select"
+        onClick={handleSelect}
+        disabled={!selectedId}
+      />
     </div>
   );
 }

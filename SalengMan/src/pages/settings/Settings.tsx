@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logOut, getToken } from "../../services/auth";
 import { api } from "../../config/api";
+import ConfirmPopup from "../../components/ConfirmPopup";
 import styles from "./Settings.module.css";
 
 function Settings() {
@@ -30,7 +31,7 @@ function Settings() {
     try {
       await api.deleteAccount(token);
       await logOut();
-      navigate("/signin");
+      navigate("/");
     } catch (error) {
       console.error("Error deleting account:", error);
       alert("Failed to delete account. Please try again.");
@@ -43,30 +44,16 @@ function Settings() {
   return (
     <div className={styles.settings}>
       {/* Confirmation Modal */}
-      {showConfirm && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h3>Delete Account?</h3>
-            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-            <div className={styles.modalActions}>
-              <button
-                className={styles.cancelButton}
-                onClick={() => setShowConfirm(false)}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.deleteButton}
-                onClick={handleDeleteAccount}
-                disabled={loading}
-              >
-                {loading ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmPopup
+        isOpen={showConfirm}
+        title="Delete Account?"
+        message="คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีของคุณ? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowConfirm(false)}
+        isLoading={loading}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
 
       <div className={styles.settingsContent}>
         {/* Header */}

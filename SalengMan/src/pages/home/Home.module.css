@@ -12,6 +12,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -204,107 +205,4 @@
   color: var(--color-text);
   opacity: 0.6;
   margin: 0;
-}
-
-/* Bottom Navigation */
-.bottomNav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  background-color: #1a1a1a;
-  padding: 12px 0;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-  border-top: 1px solid #333;
-}
-
-.navItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  padding: 8px 16px;
-  transition: opacity 0.2s ease;
-}
-
-.navItem:hover {
-  opacity: 0.8;
-}
-
-.navIcon {
-  width: 24px;
-  height: 24px;
-  color: #666;
-}
-
-.active .navIcon {
-  color: var(--orange-button);
-}
-
-.navLabel {
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.active .navLabel {
-  color: var(--orange-button);
-}
-
-.navIconWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.notificationDot {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 8px;
-  height: 8px;
-  background-color: #e74c3c;
-  border-radius: 50%;
-}
-
-/* Light mode adjustments */
-@media (prefers-color-scheme: light) {
-  .bannerCard,
-  .serviceCard {
-    background-color: #d9d3cf;
-  }
-
-  .serviceCard:hover {
-    background-color: #ccc6c0;
-  }
-
-  .bannerDecoration {
-    background: radial-gradient(circle, #c9c3bf 0%, transparent 70%);
-  }
-
-  .serviceIconWrapper {
-    background-color: rgba(255, 122, 48, 0.2);
-  }
-
-  .bottomNav {
-    background-color: #f5f0ec;
-    border-top: 1px solid #ddd;
-  }
-
-  .navIcon,
-  .navLabel {
-    color: #999;
-  }
-
-  .profileAvatar {
-    background-color: #ccc;
-  }
-
-  .avatarPlaceholder {
-    background-color: #999;
-  }
 }

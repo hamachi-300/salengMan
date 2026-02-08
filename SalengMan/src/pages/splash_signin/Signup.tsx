@@ -22,6 +22,11 @@ function Signup() {
       return;
     }
 
+    if (username.length >= 10) {
+      setError("Username must be less than 10 characters");
+      return;
+    }
+
     setLoading(true);
 
     try {

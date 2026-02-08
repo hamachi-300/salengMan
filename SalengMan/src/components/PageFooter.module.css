@@ -1,0 +1,46 @@
+
+.footer-action {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 20px 24px 30px;
+    background: var(--color-bg);
+    border-top: 1px solid #333;
+    z-index: 10; /* Ensure it stays on top */
+}
+
+.btn-next {
+    width: 100%;
+    background: var(--orange-button);
+    color: var(--orange-button-text);
+    border: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.btn-next:hover {
+    opacity: 0.9;
+}
+
+.btn-next:active {
+    transform: scale(0.98);
+}
+
+.btn-next:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: light) {
+    .footer-action {
+        border-top: 1px solid #ddd;
+    }
+}

@@ -1,15 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./SelectTime.module.css";
 import { useNavigate } from "react-router-dom";
+import { useSell } from "../../context/SellContext";
+import PageHeader from "../../components/PageHeader";
+import PageFooter from "../../components/PageFooter";
 
 function SelectTime() {
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [startTime, setStartTime] = useState<string>("");
-  const [endTime, setEndTime] = useState<string>("");
+  const { sellData, setPickupTime } = useSell();
+
+  const isEditing = sellData.editingPostId !== null;
+
+  // Initialize from context if available
+  const [selectedDate, setSelectedDate] = useState<string | null>(sellData.pickupTime?.date || null);
+  const [startTime, setStartTime] = useState<string>(sellData.pickupTime?.startTime || "");
+  const [endTime, setEndTime] = useState<string>(sellData.pickupTime?.endTime || "");
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
-  const [dateListStart, setDateListStart] = useState(new Date());
+  const [dateListStart, setDateListStart] = useState(() => {
+    if (sellData.pickupTime?.date) {
+      return new Date(sellData.pickupTime.date);
+    }
+    return new Date();
+  });
 
   // Validate time format (HH:MM, 0-24 hours)
   const isValidTimeFormat = (time: string) => {
@@ -174,21 +187,12 @@ function SelectTime() {
       return;
     }
 
-    const selectedDateObj = dates.find(d => d.id === selectedDate);
-
-    // Save to localStorage
-    const sellData = JSON.parse(localStorage.getItem('sellItemData') || '{}');
-    sellData.pickupDate = selectedDate;
-    sellData.pickupTime = {
-      start: startTime,
-      end: endTime,
-      display: `${startTime} - ${endTime}`
-    };
-    // Use quick select display or format from calendar
-    sellData.pickupDateDisplay = selectedDateObj
-      ? `${selectedDateObj.day}, ${selectedDateObj.date} ${selectedDateObj.month}`
-      : formatSelectedDate(selectedDate);
-    localStorage.setItem('sellItemData', JSON.stringify(sellData));
+    // Save to context (in-memory only)
+    setPickupTime({
+      date: selectedDate,
+      startTime,
+      endTime
+    });
 
     // Navigate to confirmation page
     navigate('/sell/confirm');
@@ -196,15 +200,7 @@ function SelectTime() {
 
   return (
     <div className={styles['page']}>
-      {/* Header */}
-      <div className={styles['header']}>
-        <button className={styles['back-button']} onClick={() => navigate('/sell/select-address')}>
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-          </svg>
-        </button>
-        <h1 className={styles['title']}>Post Item</h1>
-      </div>
+      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo="/sell/select-address" />
 
       <div className={styles['content']}>
         {/* Section Title */}
@@ -305,15 +301,11 @@ function SelectTime() {
       </div>
 
       {/* Footer Actions */}
-      <div className={styles['footer']}>
-        <button
-          className={`${styles['btn-confirm']} ${(!selectedDate || !isValidTimeRange()) ? styles['btn-disabled'] : ''}`}
-          onClick={handleConfirm}
-          disabled={!selectedDate || !startTime || !endTime}
-        >
-          Confirm
-        </button>
-      </div>
+      <PageFooter
+        title="Confirm"
+        onClick={handleConfirm}
+        disabled={!selectedDate || !startTime || !endTime}
+      />
 
       {/* Calendar Modal */}
       {showCalendar && (

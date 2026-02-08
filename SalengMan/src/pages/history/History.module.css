@@ -1,0 +1,226 @@
+.page-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: var(--color-bg);
+    padding-bottom: 80px;
+    /* Space for bottom nav */
+}
+
+
+
+/* Filters */
+.filters-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding: 0 16px;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    margin-top: 16px;
+    /* Hide scrollbar */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.filters-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-chip {
+    padding: 8px 20px;
+    border-radius: 20px;
+    background-color: var(--color-bg-2);
+    border: none;
+    color: var(--color-text);
+    font-family: var(--font-eng-fun);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.filter-chip.active {
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
+}
+
+/* List */
+.posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 16px;
+}
+
+.post-card {
+    background-color: var(--color-bg-2);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:active {
+    transform: scale(0.98);
+}
+
+.image-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.post-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.no-image svg {
+    width: 32px;
+    height: 32px;
+    color: #666;
+}
+
+.card-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.post-title {
+    font-family: var(--font-th);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.category-tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--orange-button);
+    font-family: var(--font-th);
+    font-size: 12px;
+    color: var(--orange-button);
+    white-space: nowrap;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-family: var(--font-eng-fun);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+/* Status Colors */
+.status-waiting {
+    background-color: var(--waiting-bg);
+    color: var(--waiting-text);
+    border: 1px solid var(--waiting-border);
+}
+
+.status-pending {
+    background-color: var(--pending-bg);
+    color: var(--pending-text);
+    border: 1px solid var(--pending-border);
+}
+
+.status-completed {
+    background-color: var(--completed-bg);
+    color: var(--completed-text);
+    border: 1px solid var(--completed-border);
+}
+
+.status-cancelled {
+    background-color: var(--cancelled-bg);
+    color: var(--cancelled-text);
+    border: 1px solid var(--cancelled-border);
+}
+
+.post-description {
+    font-family: var(--font-th);
+    font-size: 13px;
+    color: #888;
+    margin: 0;
+}
+
+.post-time {
+    font-family: var(--font-eng-fun);
+    font-size: 12px;
+    color: #666;
+}
+
+/* Empty State */
+.loading {
+    text-align: center;
+    color: #888;
+    margin-top: 40px;
+    font-family: var(--font-eng-fun);
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    margin-top: 40px;
+}
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+    .image-container {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .no-image {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .no-image svg {
+        color: #999;
+    }
+
+    .category-tag {
+        border-color: #666;
+        color: #333;
+    }
+
+    .post-description {
+        color: #666;
+    }
+
+    .post-time {
+        color: #888;
+    }
+}

@@ -135,6 +135,10 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
 
+    if (full_name && full_name.length >= 10) {
+      return res.status(400).json({ error: 'Username must be less than 10 characters' });
+    }
+
     // Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
@@ -491,6 +495,24 @@ app.delete('/addresses/:id', authMiddleware, async (req, res) => {
 app.delete('/auth/me', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.user_id;
+    const bucketName = 'salengman';
+
+    // 1. Get avatar URL
+    const userResult = await pool.query('SELECT avatar_url FROM users WHERE id = $1', [userId]);
+    const avatarUrl = userResult.rows[0]?.avatar_url;
+
+    // 2. Delete avatar from MinIO if exists
+    if (avatarUrl) {
+      try {
+        const objectName = avatarUrl.split(`${bucketName}/`)[1];
+        if (objectName) {
+          await minioClient.removeObject(bucketName, objectName);
+          console.log('Deleted user avatar:', objectName);
+        }
+      } catch (err) {
+        console.error('Failed to delete avatar from MinIO:', err);
+      }
+    }
 
     // Delete addresses
     await pool.query('DELETE FROM addresses WHERE user_id = $1', [userId]);
@@ -506,6 +528,40 @@ app.delete('/auth/me', authMiddleware, async (req, res) => {
 
 /* SELL OLD ITEM SECTION */
 
+// Get user's old item posts
+app.get('/old-item-posts', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM old_item_posts 
+       WHERE user_id = $1 
+       ORDER BY created_at DESC`,
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get a single old item post by ID
+app.get('/old-item-posts/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM old_item_posts WHERE id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.post('/old-item-posts', authMiddleware, async (req, res) => {
   try {
     const { images, categories, remarks, address, pickupTime } = req.body;
@@ -519,7 +575,7 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
         // Remove header if present (e.g., "data:image/jpeg;base64,")
         const base64Image = base64Data.split(';base64,').pop();
         const buffer = Buffer.from(base64Image, 'base64');
-        const fileName = `posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
+        const fileName = `old_item_posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
 
         await minioClient.putObject(bucketName, fileName, buffer, buffer.length, {
           'Content-Type': 'image/jpeg'
@@ -533,8 +589,8 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
     // 2. Insert into database
     const result = await pool.query(
       `INSERT INTO old_item_posts 
-       (user_id, images, categories, remarks, address_snapshot, pickup_time)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       (user_id, images, categories, remarks, address_snapshot, pickup_time, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
         req.user.user_id,
@@ -542,13 +598,65 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
         categories,
         remarks,
         JSON.stringify(address),
-        JSON.stringify(pickupTime)
+        JSON.stringify(pickupTime),
+        'waiting'
       ]
     );
 
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating post:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete old item post
+app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Check ownership and status
+    const check = await pool.query(
+      'SELECT * FROM old_item_posts WHERE id = $1 AND user_id = $2',
+      [id, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found or unauthorized' });
+    }
+
+    const post = check.rows[0];
+
+    // 2. Check if status is 'waiting' (or 'pending' as defined in table schema default)
+    // The schema says default 'pending', but the code uses 'waiting'. Checking both to be safe or just 'waiting' if consistent.
+    // Based on previous code: status IS 'waiting' in POST
+    if (post.status !== 'waiting' && post.status !== 'pending') {
+      return res.status(400).json({ error: 'Only waiting/pending posts can be deleted' });
+    }
+
+    // 3. Delete images from MinIO (Optional but good practice)
+    // post.images is TEXT[] -> array of strings (URLs)
+    if (post.images && post.images.length > 0) {
+      const bucketName = 'salengman';
+      // URL: http://localhost:9000/salengman/old_item_posts/....jpg
+      for (const imgUrl of post.images) {
+        try {
+          const objectName = imgUrl.split(`${bucketName}/`)[1];
+          if (objectName) {
+            await minioClient.removeObject(bucketName, objectName);
+          }
+        } catch (err) {
+          console.error('Failed to delete image from MinIO:', err);
+        }
+      }
+    }
+
+    // 4. Delete from DB
+    await pool.query('DELETE FROM old_item_posts WHERE id = $1', [id]);
+
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting post:', error);
     res.status(400).json({ error: error.message });
   }
 });

@@ -34,7 +34,7 @@ export const signUp = async (email: string, password: string, username: string, 
     password,
     full_name: username,
     gender,
-    role: 'customer',
+    role: 'seller',
   });
 
   if (result.error) {

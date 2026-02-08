@@ -8,15 +8,17 @@ import Home from "./pages/home/Home";
 import Sell from "./pages/sell/Sell";
 import SelectAddress from "./pages/sell/SelectAddress";
 import SelectTime from "./pages/sell/SelectTime";
-import Confirm from "./pages/sell/Confirm";
+import ConfirmPost from "./pages/sell/ConfirmPost";
 import Dispose from "./pages/dispose/Dispose";
 import History from "./pages/history/History";
+import PostDetail from "./pages/history/PostDetail";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
 import { UserProvider, useUser } from "./context/UserContext";
+import { SellProvider } from "./context/SellContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
 function AppRoutes() {
@@ -45,9 +47,10 @@ function AppRoutes() {
         <Route path="/sell" element={<Sell />} />
         <Route path="/sell/select-address" element={<SelectAddress />} />
         <Route path="/sell/select-time" element={<SelectTime />} />
-        <Route path="/sell/confirm" element={<Confirm />} />
+        <Route path="/sell/confirm" element={<ConfirmPost />} />
         <Route path="/dispose" element={<Dispose />} />
         <Route path="/history" element={<History />} />
+        <Route path="/history/:id" element={<PostDetail />} />
         <Route path="/notify" element={<Notify />} />
         <Route path="/account" element={<Account />} />
         <Route path="/add-address" element={<AddAddress />} />
@@ -62,7 +65,9 @@ function App() {
   return (
     <BrowserRouter>
       <UserProvider>
-        <AppRoutes />
+        <SellProvider>
+          <AppRoutes />
+        </SellProvider>
       </UserProvider>
     </BrowserRouter>
   );

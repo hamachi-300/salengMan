@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Sell.module.css';
+import { useSell } from '../../context/SellContext';
+import PageHeader from '../../components/PageHeader';
+import PageFooter from '../../components/PageFooter';
 
 const ItemUpload: React.FC = () => {
     const navigate = useNavigate();
-    const [images, setImages] = useState<string[]>([]);
+    const { sellData, setImages: setContextImages, setCategories: setContextCategories, setRemarks: setContextRemarks } = useSell();
+
+    const isEditing = sellData.editingPostId !== null;
+    const [images, setImages] = useState<string[]>(sellData.images);
     const [viewImage, setViewImage] = useState<string | null>(null);
-    const [categories, setCategories] = useState<string[]>([]);
-    const [remarks, setRemarks] = useState('');
+    const [categories, setCategories] = useState<string[]>(sellData.categories);
+    const [remarks, setRemarks] = useState(sellData.remarks);
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [customCategories, setCustomCategories] = useState<string[]>([]);
+
+    // Sync with context when returning from other pages
+    useEffect(() => {
+        if (sellData.images.length > 0) setImages(sellData.images);
+        if (sellData.categories.length > 0) setCategories(sellData.categories);
+        if (sellData.remarks) setRemarks(sellData.remarks);
+    }, []);
 
     const defaultCategories = [
         "เครื่องแก้ว", "เซรามิก", "อุปกรณ์อิเล็กทรอนิกส์", "ของเล่น", "หนังสือ"
@@ -71,17 +84,16 @@ const ItemUpload: React.FC = () => {
             alert('Please select at least one category');
             return;
         }
-        const sellData = { images, categories, remarks, timestamp: new Date().toISOString() };
-        localStorage.setItem('sellItemData', JSON.stringify(sellData));
+        // Save to context (in-memory only)
+        setContextImages(images);
+        setContextCategories(categories);
+        setContextRemarks(remarks);
         navigate('/sell/select-address');
     };
 
     return (
         <div className={styles['post-item-container']}>
-            <div className={styles['post-header']}>
-                <button className={styles['back-button']} onClick={() => navigate('/home')}>❮</button>
-                <span className={styles['header-title']}>Post Item</span>
-            </div>
+            <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo={isEditing ? `/history/${sellData.editingPostId}` : "/home"} />
 
             <div className={styles['scrollable-content']}>
                 <div className={styles['section']}>
@@ -159,9 +171,7 @@ const ItemUpload: React.FC = () => {
                 </div>
             </div>
 
-            <div className={styles['footer-action']}>
-                <button className={styles['btn-next']} onClick={handleNext}>Next ➔</button>
-            </div>
+            <PageFooter title="Next" onClick={handleNext} />
 
             {viewImage && (
                 <div className={styles['image-modal']} onClick={() => setViewImage(null)}>
