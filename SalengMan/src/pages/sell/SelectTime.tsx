@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import styles from "./SelectTime.module.css";
 import { useNavigate } from "react-router-dom";
 import { useSell } from "../../context/SellContext";
@@ -91,13 +91,6 @@ function SelectTime() {
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  // Format date for display when selected from calendar
-  const formatSelectedDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNamesShort[date.getMonth()]}`;
-  };
 
   // Check if a date is in the past
   const isPastDate = (date: Date) => {

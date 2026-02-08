@@ -4,6 +4,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getToken } from "../../services/auth";
 import { api, CreateAddressData } from "../../config/api";
 import MapSelector from "../../components/MapSelector";
+import ConfirmPopup from "../../components/ConfirmPopup";
 import { useUser } from "../../context/UserContext";
 
 function NewAddress() {
@@ -188,30 +189,16 @@ function NewAddress() {
     return (
         <div className={styles.page}>
             {/* Confirmation Modal */}
-            {showConfirmDelete && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modal}>
-                        <h3>Delete Address?</h3>
-                        <p>คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่อีเมลนี้ การกระทำนี้ไม่สามารถย้อนกลับได้</p>
-                        <div className={styles.modalActions}>
-                            <button
-                                className={styles.cancelButton}
-                                onClick={() => setShowConfirmDelete(false)}
-                                disabled={loading}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className={styles.deleteConfirmButton}
-                                onClick={handleDelete}
-                                disabled={loading}
-                            >
-                                {loading ? "Deleting..." : "Delete"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmPopup
+                isOpen={showConfirmDelete}
+                title="Delete Address?"
+                message="คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้ การกระทำนี้ไม่สามารถย้อนกลับได้"
+                onConfirm={handleDelete}
+                onCancel={() => setShowConfirmDelete(false)}
+                isLoading={loading}
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
 
             {/* Map Modal */}
             {showMap && (

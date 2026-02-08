@@ -214,6 +214,19 @@ export const api = {
     return res.json();
   },
 
+  // Delete Address
+  deleteAddress: async (token: string, id: number): Promise<void> => {
+    const res = await fetch(`${API_URL}/addresses/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to delete address');
+    }
+  },
+
   // Delete Account
   deleteAccount: async (token: string): Promise<void> => {
     const res = await fetch(`${API_URL}/auth/me`, {

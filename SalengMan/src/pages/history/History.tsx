@@ -91,11 +91,6 @@ function History() {
     return postType === 'trash_disposal' ? 'ทิ้งขยะ' : 'ขายของเก่า';
   };
 
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + '...';
-  };
-
   const tabs = ["All", "Pending", "Waiting", "Completed", "Cancelled"];
 
   const filteredPosts = posts.filter((post) => {
@@ -158,9 +153,6 @@ function History() {
                     {post.status}
                   </span>
                 </div>
-                <p className={styles["post-description"]}>
-                  {post.remarks ? truncateText(post.remarks, 15) : "-"}
-                </p>
                 <div className={styles["post-time"]}>
                   {formatDate(post.created_at)}
                 </div>
