@@ -19,10 +19,10 @@ function Login() {
     try {
       const user = await signIn(email, password);
 
-      // Only allow seller role to login
-      if (user.role !== 'seller') {
+      // Only allow driver role to login
+      if (user.role !== 'driver') {
         await logOut();
-        setError("เฉพาะบัญชีผู้ขายเท่านั้นที่สามารถเข้าสู่ระบบได้");
+        setError("เฉพาะบัญชีคนขับเท่านั้นที่สามารถเข้าสู่ระบบได้");
         return;
       }
 

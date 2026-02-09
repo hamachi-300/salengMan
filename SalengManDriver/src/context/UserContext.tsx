@@ -23,8 +23,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const freshUser = await api.getMe(token) as User;
 
-      // Auto-logout if role changed to non-seller
-      if (freshUser.role !== 'seller') {
+      // Auto-logout if role changed to non-driver
+      if (freshUser.role !== 'driver') {
         await logOut();
         setUser(null);
         return;
@@ -50,8 +50,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthChange(async (authUser) => {
-      // Auto-logout non-seller users
-      if (authUser && authUser.role !== 'seller') {
+      // Auto-logout non-driver users
+      if (authUser && authUser.role !== 'driver') {
         await logOut();
         setUser(null);
       } else {

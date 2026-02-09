@@ -1,0 +1,142 @@
+/* ===== Font Face ===== */
+@font-face {
+  font-family: 'Sour Gummy';
+  src: url('./assets/fronts/SourGummy-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Itim';
+  src: url('./assets/fronts/Itim-Regular.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Anuphan';
+  src: url('./assets/fronts/Anuphan-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+/* ===== CSS Variables (Theme) ===== */
+:root {
+  /* Colors */
+  --color-bg: #E9E3DF;
+  --color-bg-2: #f5f0ec;
+  --color-text: #222;
+  --color-text-secondary: #FF7A30;
+
+  --dark-button: #444;
+  --dark-button-text: #E9E3DF;
+
+  --orange-button: #FF7A30;
+  --orange-button-text: #E9E3DF;
+
+  /* Status */
+  --waiting-bg: #562F00;
+  --waiting-border: #FF9644;
+  --waiting-text: #FFCE99;
+
+  --pending-bg: #0C2C55;
+  --pending-border: #629FAD;
+  --pending-text: #EDEDCE;
+
+  --completed-bg: #40513B;
+  --completed-border: #628141;
+  --completed-text: #E5D9B6;
+
+  --cancelled-bg: #B31312;
+  --cancelled-border: #EA906C;
+  --cancelled-text: #EEE2DE;
+
+  --expired-bg: #25343F;
+  --expired-border: #BFC9D1;
+  --expired-text: #EAEFEF;
+
+  /* Typography */
+  --font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  --font-eng-fun: 'Sour Gummy', sans-serif;
+  --font-thai-fun: 'Itim', sans-serif;
+  --font-thai-polite: 'Anuphan', sans-serif;
+  --font-size-base: 16px;
+  --line-height: 24px;
+
+  /* Safe Area (for phone notch/status bar) */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* ===== Dark Mode ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #222;
+    --color-bg-2: #333;
+    --color-text: #E9E3DF;
+    --color-text-secondary: #FA8112;
+  }
+}
+
+/* ===== Base Styles ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  font-weight: 400;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  /* Status */
+  --waiting-bg: #FF9644;
+  --waiting-border: #FF9644;
+  --waiting-text: #FFCE99;
+
+  --pending-bg: #629FAD;
+  --pending-border: #629FAD;
+  --pending-text: #EDEDCE;
+
+  --completed-bg: #628141;
+  --completed-border: #628141;
+  --completed-text: #E5D9B6;
+
+  --cancelled-bg: #B31312;
+  --cancelled-border: #B31312;
+  --cancelled-text: #EEE2DE;
+
+  --expired-bg: #BFC9D1;
+  --expired-border: #91a3b0;
+  --expired-text: #EAEFEF;;
+}
+
+/* ===== Loading Screen ===== */
+.loading-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--font-eng-fun);
+  font-size: 1.5rem;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}

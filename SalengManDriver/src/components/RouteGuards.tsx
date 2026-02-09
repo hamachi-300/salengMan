@@ -4,8 +4,8 @@ import { useUser } from "../context/UserContext";
 export function ProtectedRoute() {
   const { user } = useUser();
 
-  // Only allow seller role to access protected routes
-  if (!user || user.role !== 'seller') {
+  // Only allow driver role to access protected routes
+  if (!user || user.role !== 'driver') {
     return <Navigate to="/signin" />;
   }
 
@@ -15,8 +15,8 @@ export function ProtectedRoute() {
 export function PublicRoute() {
   const { user } = useUser();
 
-  // Only redirect to home if user is a seller
-  if (user && user.role === 'seller') {
+  // Only redirect to home if user is a driver
+  if (user && user.role === 'driver') {
     return <Navigate to="/home" />;
   }
 

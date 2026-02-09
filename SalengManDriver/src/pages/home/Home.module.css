@@ -1,0 +1,50 @@
+.home {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-bg);
+}
+
+.homeContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.title {
+  font-family: var(--font-eng-fun);
+  font-size: 2rem;
+  color: var(--color-text);
+}
+
+.welcome {
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+
+.role {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.logoutBtn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dark-button-text);
+  background-color: var(--dark-button);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  margin-top: 16px;
+}
+
+.logoutBtn:hover {
+  opacity: 0.85;
+}

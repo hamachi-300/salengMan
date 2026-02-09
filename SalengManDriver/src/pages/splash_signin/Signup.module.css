@@ -1,0 +1,241 @@
+.signup {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-bg);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.signupContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 320px;
+  padding: 0 24px;
+  animation: slideUp 0.6s ease-out;
+}
+
+.signupTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.signupSubtitle {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  margin: 0 0 16px 0;
+  font-family: var(--font-thai-polite);
+}
+
+.signupForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signupInput {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid var(--color-text);
+  border-radius: 8px;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.signupInput:focus {
+  border-color: var(--orange-button);
+}
+
+.signupInput::placeholder {
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+.signupBtn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-bg);
+  background-color: var(--color-text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.signupBtn:hover {
+  opacity: 0.85;
+}
+
+.signupBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.darkBtn {
+  background-color: var(--dark-button);
+  color: var(--dark-button-text);
+}
+
+.orangeBtn {
+  background-color: var(--orange-button);
+  color: var(--orange-button-text);
+}
+
+.errorMessage {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin: 0;
+  text-align: center;
+}
+
+.logo {
+  width: 200px;
+  height: 200px;
+}
+
+.buttonDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Gender Radio Buttons */
+.genderSection {
+  width: 100%;
+}
+
+.genderLabel {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.7;
+  margin-bottom: 8px;
+  font-family: var(--font-thai-polite);
+}
+
+.genderOptions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  flex: 1;
+  height: 46px;
+  border: 2px solid var(--color-text);
+  border-radius: 8px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+  font-family: var(--font-thai-polite);
+}
+
+.radioOption:hover {
+  border-color: var(--orange-button);
+}
+
+.radioOption:has(input[type="radio"]:checked) {
+  border-color: var(--orange-button);
+}
+
+.radioOption input[type="radio"] {
+  display: none;
+}
+
+.radioCustom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  position: relative;
+  transition: border-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.radioCustom::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 10px;
+  height: 10px;
+  background-color: var(--orange-button);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.radioOption input[type="radio"]:checked + .radioCustom {
+  border-color: var(--orange-button);
+}
+
+.radioOption input[type="radio"]:checked + .radioCustom::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.radioOption input[type="radio"]:checked ~ .radioText {
+  color: var(--orange-button);
+}
+
+.radioText {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  transition: color 0.2s ease;
+}

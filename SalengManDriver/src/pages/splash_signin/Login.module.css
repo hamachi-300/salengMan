@@ -1,0 +1,173 @@
+.login {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-bg);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loginContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 320px;
+  padding: 0 24px;
+  animation: slideUp 0.6s ease-out;
+}
+
+.loginTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.loginSubtitle {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-family: var(--font-thai-polite);
+  opacity: 0.7;
+  margin: 0 0 16px 0;
+}
+
+.loginForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loginInput {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid var(--color-text);
+  border-radius: 8px;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.loginInput:focus {
+  border-color: var(--orange-button);
+}
+
+.loginInput::placeholder {
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+.buttonDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.loginBtn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-bg);
+  background-color: var(--color-text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.loginBtn:hover {
+  opacity: 0.85;
+}
+
+.loginBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.darkBtn {
+  background-color: var(--dark-button);
+  color: var(--dark-button-text);
+}
+
+.orangeBtn {
+  background-color: var(--orange-button);
+  color: var(--orange-button-text);
+}
+
+.errorMessage {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin: 0;
+  text-align: center;
+}
+
+.logo {
+  width: 200px;
+  height: 200px;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.signupLink {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.8;
+  margin: 8px 0 0 0;
+  font-family: var(--font-thai-polite);
+}
+
+.signupLink span {
+  color: var(--orange-button);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signupLink span:hover {
+  text-decoration: underline;
+}
