@@ -649,3 +649,13 @@ SalengMan/
 ├── package.json
 └── README.md
 ```
+
+## Quick Start (Public Server)
+
+### 1. update & install git
+``` bash
+sudo apt-get update
+sudo apt install git
+```
+
+## Quick Start (Local)
