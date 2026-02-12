@@ -321,3 +321,80 @@ SalengMan/
 ├── package.json
 └── README.md
 ```
+
+## Quick Start (App)
+### 1. add .env
+``` bash
+cp .env.example .env
+nano .env
+```
+
+```
+# Backend API URL
+# Replace with your actual server IP address
+VITE_API_URL=http://YOUR_VM_IP:3000
+```
+#### change YOUR_VM_IP to server ip address or localhost if run in local
+
+
+## Quick Start (Server)
+
+### 1. update & install git
+``` bash
+sudo apt-get update
+sudo apt install git
+```
+
+### 2. pull this repository
+``` bash
+git clone https://github.com/hamachi-300/salengMan.git
+```
+
+### 3. install docker
+``` bash
+sudo snap install docker
+docker compose up
+```
+
+### 4. add .env file in /backend folder
+``` bash
+cp .env.example .env
+nano .env
+```
+
+```
+# PostgreSQL Configuration
+POSTGRES_USER=salengman
+POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_DB=salengman
+
+# JWT Secret (min 32 characters)
+JWT_SECRET=your_super_secret_jwt_key_min_32_chars
+
+# MinIO Configuration
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=your_minio_password_here
+
+# Supabase Realtime
+SECRET_KEY_BASE=your_secret_key_base_for_realtime_min_64_chars_recommended
+
+# Optional: Public URLs (for production)
+# MINIO_PUBLIC_URL=http://your-server-ip:9000
+# API_URL=http://your-server-ip:3000
+```
+
+#### POSTGRES_PASSWORD and MINIO_ROOT_PASSWORD
+```
+openssl rand -base64 24
+```
+
+#### JWT_SECRET
+```
+openssl rand -base64 48
+```
+
+#### SECRET_KEY_BASE
+```
+openssl rand -base64 64 | tr -d '\n'
+```
+
