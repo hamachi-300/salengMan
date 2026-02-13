@@ -1,0 +1,23 @@
+# Environment
+.env
+
+# Node
+node_modules/
+server/node_modules/
+
+# Logs
+*.log
+logs/
+
+# Data volumes (if not using Docker volumes)
+data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
