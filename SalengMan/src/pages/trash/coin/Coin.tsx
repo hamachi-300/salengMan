@@ -209,9 +209,11 @@ export default function Coin() {
               Price: <strong>{selectedPackageDetails.price}{selectedPackageDetails.currency}</strong>
             </p>
             <div className={styles.actionButtons}>
+              {/*
               <button className={styles.btnConfirm} onClick={handleConfirmPurchase}>
                 ✓ Confirm Purchase
               </button>
+              */}
               <button className={styles.btnDetails} onClick={handleReadDetails}>
                 Read More
               </button>
@@ -244,7 +246,7 @@ export default function Coin() {
         </div>
       )}
 
-      <PageFooter title="Done" onClick={() => {}} />
+      <PageFooter title="Confirm Purchase" onClick={handleConfirmPurchase} />
     </div>
   );
 }
