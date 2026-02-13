@@ -1,0 +1,265 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 80px;
+}
+
+.header {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.coinDisplay {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.coinDisplay span {
+  font-size: 24px;
+}
+
+.coinAmount {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ff9500;
+}
+
+.coinInfo {
+  font-size: 12px;
+  color: #999;
+}
+
+.content {
+  padding: 0 16px;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+  padding: 0 4px;
+}
+
+.packageGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.package {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.package:hover {
+  border-color: #ff9500;
+  box-shadow: 0 4px 8px rgba(255, 149, 0, 0.1);
+}
+
+.package.selected {
+  border-color: #ff9500;
+  background: #fff9f0;
+}
+
+.packageName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.packageCoins {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff9500;
+  margin-bottom: 4px;
+}
+
+.packagePrice {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.packageInfo {
+  font-size: 11px;
+  color: #999;
+  line-height: 1.4;
+}
+
+.checkmark {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: #ff9500;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.package.selected .checkmark {
+  opacity: 1;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btnConfirm {
+  flex: 1;
+  background: #ff9500;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btnConfirm:hover {
+  background: #e68a00;
+}
+
+.btnDetails {
+  flex: 1;
+  background: white;
+  color: #ff9500;
+  border: 2px solid #ff9500;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnDetails:hover {
+  background: #fff9f0;
+}
+
+.selectedPackageInfo {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border: 2px solid #ff9500;
+}
+
+.selectedPackageInfo h3 {
+  margin-top: 0;
+  color: #ff9500;
+  font-size: 16px;
+}
+
+.detailsModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.detailsContent {
+  background: white;
+  width: 100%;
+  border-radius: 12px 12px 0 0;
+  padding: 24px;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.detailsContent h3 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.detailsList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.detailsList li {
+  padding: 8px 0;
+  color: #666;
+  font-size: 14px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.detailsList li:last-child {
+  border-bottom: none;
+}
+
+.singlePackageGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.closeBtn {
+  background: white;
+  color: #ff9500;
+  border: 2px solid #ff9500;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 16px;
+  transition: all 0.3s ease;
+}
+
+.closeBtn:hover {
+  background: #fff9f0;
+}
+
+.bagsInfo {
+  background: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #666;
+  margin-top: 8px;
+  line-height: 1.4;
+}
