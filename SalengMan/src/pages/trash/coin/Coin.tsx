@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from './Coin.module.css';
-import PageHeader from '../../components/PageHeader';
-import PageFooter from '../../components/PageFooter';
+import PageHeader from '../../../components/PageHeader';
+import PageFooter from '../../../components/PageFooter';
 
 interface Package {
   id: string;
@@ -96,18 +96,6 @@ export default function Coin() {
     setSelectedPackage(packageId);
   };
 
-  /*
-  const handleConfirmPurchase = () => {
-    if (selectedPackage) {
-      const pkg = getPackageDetails(selectedPackage);
-      if (pkg) {
-        alert(`Confirming purchase: ${pkg.name} for ${pkg.price}฿`);
-        // TODO: Implement purchase logic
-      }
-    }
-  };
-  */
-
   const handleConfirmPurchase = async () => {
   if (selectedPackage) {
     const pkg = getPackageDetails(selectedPackage);
@@ -116,12 +104,16 @@ export default function Coin() {
       return;
     }
     try {
-      // ส่งข้อมูลไปยัง API ของ Backend
+      const userToken = localStorage.getItem('userToken');
+      if (!userToken) {
+        alert("Authentication token not found. Please log in.");
+        return;
+      }
       const response = await fetch('https://api.yourdomain.com/v1/purchase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}` // ส่ง Token ยืนยันตัวตน
+          'Authorization': `Bearer ${userToken}`
         },
         body: JSON.stringify({
           packageId: pkg.id,
@@ -159,7 +151,7 @@ export default function Coin() {
         </div>
       )}
       <div className={styles.bagsInfo}>
-        ⚙️ Limited to 3 large garbage bags per token
+        Limited to 3 large garbage bags per token
       </div>
     </div>
   );
@@ -168,11 +160,10 @@ export default function Coin() {
 
   return (
     <div className={styles.page}>
-      <PageHeader title="Coins & Packages" backTo="/home" />
+      <PageHeader title="Coins & Packages" backTo="/trash" />
 
       <div className={styles.header}>
         <div className={styles.coinDisplay}>
-          <span>💰</span>
           <div>
             <div className={styles.coinAmount}>{userCoins} Coins</div>
             <div className={styles.coinInfo}>Your current coin balance</div>
@@ -183,7 +174,7 @@ export default function Coin() {
       <div className={styles.content}>
         {/* Main Monthly Packages */}
         <div className={styles.section}>
-          <div className={styles.sectionTitle}>📅 Main Monthly Packages</div>
+          <div className={styles.sectionTitle}>Main Monthly Packages</div>
           <div className={styles.packageGrid}>
             {mainMonthlyPackages.map(renderPackageItem)}
           </div>
@@ -191,7 +182,7 @@ export default function Coin() {
 
         {/* One-Time Package */}
         <div className={styles.section}>
-          <div className={styles.sectionTitle}>🎁 One-Time Package</div>
+          <div className={styles.sectionTitle}>One-Time Package</div>
           <div className={styles.singlePackageGrid}>
             {oneTimePackages.map(renderPackageItem)}
           </div>
@@ -200,7 +191,7 @@ export default function Coin() {
         {/* Add-on Packages */}
         {hasMainPackage && (
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>➕ Add-on Packages</div>
+            <div className={styles.sectionTitle}>Add-on Packages</div>
             <p style={{ fontSize: '12px', color: '#666', margin: '0 4px 12px' }}>
               (Available for monthly subscribers only)
             </p>
@@ -222,7 +213,7 @@ export default function Coin() {
                 ✓ Confirm Purchase
               </button>
               <button className={styles.btnDetails} onClick={handleReadDetails}>
-                📖 Read More
+                Read More
               </button>
             </div>
           </div>
