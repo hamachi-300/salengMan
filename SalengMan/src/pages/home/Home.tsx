@@ -43,7 +43,7 @@ function Home() {
           <div className={styles.bannerContent}>
             <h2 className={styles.bannerTitle}>Green World</h2>
             <p className={styles.bannerText}>
-              มาเปลี่ยนขยะที่ว่าเปลื้องพื้นที่อยู่ที่บ้านมาเป็นเงินกันเถอะ
+              มาเปลี่ยนขยะที่ว่าเปลืองพื้นที่อยู่ที่บ้านมาเป็นเงินกันเถอะ
             </p>
           </div>
           <div className={styles.bannerDecoration}></div>

@@ -67,7 +67,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3a3a3a;
+  background-color: #eee;
   cursor: pointer;
   transition: transform 0.2s;
 }
@@ -91,7 +91,7 @@
 
 /* Banner Card */
 .bannerCard {
-  background-color: #3a3a3a;
+  background-color: #fff;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
@@ -130,7 +130,6 @@
   transform: translateY(-50%);
   width: 150px;
   height: 150px;
-  background: radial-gradient(circle, #4a4a4a 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -154,7 +153,7 @@
 }
 
 .serviceCard {
-  background-color: #3a3a3a;
+  background-color: #fff;
   border-radius: 16px;
   padding: 24px 16px;
   display: flex;
