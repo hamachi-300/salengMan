@@ -398,3 +398,7 @@ openssl rand -base64 48
 openssl rand -base64 64 | tr -d '\n'
 ```
 
+#### MINIO_PUBLIC_URL
+```
+MINIO_PUBLIC_URL=http://your-server-ip:9000
+```

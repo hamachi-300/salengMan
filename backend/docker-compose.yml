@@ -136,7 +136,7 @@ services:
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_PUBLIC_URL: http://localhost:9000
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
       REALTIME_URL: http://realtime:4000
       POSTGREST_URL: http://postgrest:3000
     ports:

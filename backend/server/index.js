@@ -122,12 +122,26 @@ app.get('/health', async (req, res) => {
 app.post('/auth/register', async (req, res) => {
   try {
     const { email, password, full_name, phone, role, gender } = req.body;
+    const userRole = role || 'customer';
 
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
     if (!password) {
       return res.status(400).json({ error: 'Password is required' });
     }
     if (full_name && full_name.length >= 10) {
       return res.status(400).json({ error: 'Username must be less than 10 characters' });
+    }
+
+    // Check if user with same email AND same role already exists
+    const existingUser = await pool.query(
+      'SELECT id, role FROM users WHERE email = $1 AND role = $2',
+      [email, userRole]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: `User with this email already exists as ${userRole}` });
     }
 
     const password_hash = await bcrypt.hash(password, 10);
@@ -136,7 +150,7 @@ app.post('/auth/register', async (req, res) => {
       `INSERT INTO users (email, password_hash, full_name, phone, role, gender)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, email, full_name, role, gender`,
-      [email, password_hash, full_name, phone, role || 'customer', gender]
+      [email, password_hash, full_name, phone, userRole, gender]
     );
 
     const user = result.rows[0];
@@ -156,15 +170,34 @@ app.post('/auth/register', async (req, res) => {
 // Login
 app.post('/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
+    let result;
+    if (role) {
+      // If role is specified, find user with that email AND role
+      result = await pool.query(
+        'SELECT * FROM users WHERE email = $1 AND role = $2',
+        [email, role]
+      );
+    } else {
+      // If no role specified, find all users with that email
+      result = await pool.query(
+        'SELECT * FROM users WHERE email = $1',
+        [email]
+      );
+    }
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'User not found' });
+    }
+
+    // If multiple accounts exist with same email, require role specification
+    if (result.rows.length > 1) {
+      const roles = result.rows.map(u => u.role);
+      return res.status(400).json({
+        error: 'Multiple accounts found with this email. Please specify role.',
+        available_roles: roles
+      });
     }
 
     const user = result.rows[0];

@@ -1,7 +1,8 @@
 -- Users table
+-- Note: email + role is unique, allowing same email to register as different roles
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255),
     full_name VARCHAR(100),
     phone VARCHAR(20),
@@ -10,7 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     avatar_url TEXT,
     default_address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(email, role)
 );
 
 -- Addresses table
