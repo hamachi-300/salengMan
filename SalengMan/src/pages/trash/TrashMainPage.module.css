@@ -1,0 +1,178 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  width: 40px;
+  height: 40px;
+}
+
+.backBtn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.backBtn:active {
+  opacity: 0.6;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  flex: 1;
+  color: #333;
+}
+
+.mainContent {
+  padding: 16px;
+  flex: 1;
+}
+
+.banner {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border-radius: 12px;
+  padding: 24px 16px;
+  margin-bottom: 24px;
+  color: white;
+  text-align: center;
+}
+
+.bannerTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.bannerText {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.95;
+}
+
+.servicesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.serviceCard {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.serviceCard:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.serviceIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  color: #4CAF50;
+}
+
+.serviceIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.serviceTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  color: #333;
+}
+
+.serviceDescription {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.infoSection {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.infoTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.infoItem p {
+  font-size: 14px;
+  color: #555;
+  margin: 0;
+  padding-top: 4px;
+}

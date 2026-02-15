@@ -10,6 +10,7 @@ import SelectAddress from "./pages/sell/SelectAddress";
 import SelectTime from "./pages/sell/SelectTime";
 import ConfirmPost from "./pages/sell/ConfirmPost";
 import Dispose from "./pages/dispose/Dispose";
+import TrashMainPage from "./pages/trash/TrashMainPage";
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
 import Notify from "./pages/notify/Notify";
@@ -20,6 +21,7 @@ import Settings from "./pages/settings/Settings";
 import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
+import Coin from "./pages/trash/coin/Coin";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -49,6 +51,8 @@ function AppRoutes() {
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
         <Route path="/dispose" element={<Dispose />} />
+        <Route path="/trash" element={<TrashMainPage />} />
+        <Route path="/coin" element={<Coin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />
         <Route path="/notify" element={<Notify />} />
