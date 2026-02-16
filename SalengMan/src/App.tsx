@@ -22,6 +22,7 @@ import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import Coin from "./pages/trash/coin/Coin";
+import TrashPost from "./pages/trash/post/TrashPost";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="/sell/confirm" element={<ConfirmPost />} />
         <Route path="/dispose" element={<Dispose />} />
         <Route path="/trash" element={<TrashMainPage />} />
+        <Route path="/trash/post" element={<TrashPost />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />

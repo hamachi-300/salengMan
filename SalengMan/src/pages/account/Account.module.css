@@ -3,7 +3,7 @@
   width: 100vw;
   height: 100vh;
   /* For mobile browsers to correctly handle address bar */
-  height: 100dvh; 
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -15,6 +15,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -42,7 +43,8 @@
   font-family: var(--font-eng-fun);
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--color-text-secondary); /* Orange */
+  color: var(--color-text-secondary);
+  /* Orange */
   margin: 0;
 }
 
@@ -110,7 +112,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--color-text);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   transition: background-color 0.2s;
 }
 
@@ -138,14 +140,15 @@
 
 /* Info Cards */
 .infoCard {
-  background-color: #2a2a2a; /* Dark card background */
+  background-color: #2a2a2a;
+  /* Dark card background */
   border-radius: 16px;
   padding: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .infoCard.clickable {
@@ -165,7 +168,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  overflow: hidden; /* Ensure text doesn't flow out */
+  overflow: hidden;
+  /* Ensure text doesn't flow out */
   flex: 1;
 }
 
@@ -190,6 +194,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background-color: #fff;
 }
 
 .cardLabel {
@@ -237,7 +242,8 @@
   padding: 16px;
   border-radius: 16px;
   background-color: #2a2a2a;
-  color: #ff4d4d; /* Red for logout */
+  color: #ff4d4d;
+  /* Red for logout */
   font-size: 1rem;
   font-weight: 600;
   border: none;
@@ -305,24 +311,26 @@
 
 /* Light Mode Overrides */
 @media (prefers-color-scheme: light) {
-  .infoCard, .logoutButton {
+
+  .infoCard,
+  .logoutButton {
     background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
-  
+
   .cardIcon {
-     background-color: #f0f0f0;
+    background-color: #f0f0f0;
   }
-  
+
   .profileAvatar {
     background-color: #eee;
   }
-  
+
   .editIcon {
     background-color: #eee;
     color: #333;
   }
-  
+
   .bottomNav {
     background-color: #fff;
     border-top: 1px solid #eee;
