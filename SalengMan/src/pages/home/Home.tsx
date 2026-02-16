@@ -12,6 +12,7 @@ function Home() {
   // Refresh user data when page loads
   useEffect(() => {
     refreshUser();
+    console.log(user?.avatar_url);
   }, []);
 
   return (
