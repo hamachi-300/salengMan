@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./Login.module.css";
 import reactLogo from "../../assets/icon/logo.svg";
 import { useNavigate } from "react-router-dom";
-import { signIn, logOut } from "../../services/auth";
+import { signIn } from "../../services/auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -17,16 +17,12 @@ function Login() {
     setLoading(true);
 
     try {
-      const user = await signIn(email, password);
+      // Always use 'driver' role for SalengManDriver app
+      const user = await signIn(email, password, 'driver');
 
-      // Only allow driver role to login
-      if (user.role !== 'driver') {
-        await logOut();
-        setError("เฉพาะบัญชีคนขับเท่านั้นที่สามารถเข้าสู่ระบบได้");
-        return;
+      if (user) {
+        navigate("/home");
       }
-
-      navigate("/home");
     } catch (err: any) {
       setError(err.message || "Failed to sign in");
     } finally {

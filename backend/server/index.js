@@ -238,6 +238,24 @@ app.get('/auth/me', authMiddleware, async (req, res) => {
   }
 });
 
+// Get user public profile
+app.get('/users/:id/public', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, full_name, email, phone, avatar_url, created_at FROM users WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Delete account
 app.delete('/auth/me', authMiddleware, async (req, res) => {
   try {
@@ -491,11 +509,39 @@ app.delete('/addresses/:id', authMiddleware, async (req, res) => {
 // OLD ITEM POSTS ENDPOINTS
 // ============================================
 
+// Get user's own posts
 app.get('/old-item-posts', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM old_item_posts WHERE user_id = $1 ORDER BY created_at DESC`,
       [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get all available posts (for drivers) - waiting status only, exclude already contacted
+app.get('/old-item-posts/available/all', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'driver') {
+      return res.status(403).json({ error: 'Only drivers can view available posts' });
+    }
+
+    const driverId = req.user.user_id;
+
+    const result = await pool.query(
+      `SELECT oip.*, u.id as seller_id, u.full_name as seller_name, u.phone as seller_phone, u.avatar_url as seller_avatar
+       FROM old_item_posts oip
+       JOIN users u ON oip.user_id = u.id
+       WHERE oip.status = 'waiting'
+         AND NOT EXISTS (
+           SELECT 1 FROM jsonb_array_elements(COALESCE(oip.contacts, '[]'::JSONB)) elem
+           WHERE elem->>'driver_id' = $1
+         )
+       ORDER BY oip.created_at DESC`,
+      [driverId]
     );
     res.json(result.rows);
   } catch (error) {
@@ -842,6 +888,246 @@ app.patch('/orders/:id/status', authMiddleware, async (req, res) => {
     }
 
     res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ============================================
+// CONTACTS ENDPOINTS
+// ============================================
+
+// Create contact (driver initiates contact with seller)
+app.post('/contacts', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'driver') {
+      return res.status(403).json({ error: 'Only drivers can create contacts' });
+    }
+
+    const { post_ids } = req.body; // Array of post IDs
+
+    if (!post_ids || !Array.isArray(post_ids) || post_ids.length === 0) {
+      return res.status(400).json({ error: 'post_ids array is required' });
+    }
+
+    const createdContacts = [];
+
+    for (const postId of post_ids) {
+      // Get post details to find seller
+      const postResult = await pool.query(
+        'SELECT * FROM old_item_posts WHERE id = $1',
+        [postId]
+      );
+
+      if (postResult.rows.length === 0) {
+        continue; // Skip if post not found
+      }
+
+      const post = postResult.rows[0];
+      const sellerId = post.user_id;
+
+      // Check if contact already exists for this post and buyer
+      const existingContact = await pool.query(
+        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2',
+        [postId, req.user.user_id]
+      );
+
+      if (existingContact.rows.length > 0) {
+        createdContacts.push(existingContact.rows[0]);
+        continue; // Skip if contact already exists
+      }
+
+      // Create chat first
+      const chatResult = await pool.query(
+        `INSERT INTO chats (messages) VALUES ('[]'::JSONB) RETURNING *`
+      );
+      const chatId = chatResult.rows[0].id;
+
+      // Create contact
+      const contactResult = await pool.query(
+        `INSERT INTO contacts (post_id, seller_id, buyer_id, chat_id, status)
+         VALUES ($1, $2, $3, $4, 'pending')
+         RETURNING *`,
+        [postId, sellerId, req.user.user_id, chatId]
+      );
+
+      const contact = contactResult.rows[0];
+
+      // Update old_item_posts with contact info
+      await pool.query(
+        `UPDATE old_item_posts
+         SET contacts = COALESCE(contacts, '[]'::JSONB) || $1::JSONB,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [JSON.stringify([{ contact_id: contact.id, driver_id: req.user.user_id }]), postId]
+      );
+
+      createdContacts.push(contact);
+    }
+
+    res.json(createdContacts);
+  } catch (error) {
+    console.error('Error creating contacts:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get contacts for current user (both seller and driver)
+app.get('/contacts', authMiddleware, async (req, res) => {
+  try {
+    let query;
+    let params;
+
+    if (req.user.role === 'driver') {
+      // Driver sees contacts where they are the buyer
+      query = `
+        SELECT c.*,
+               oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+               u.full_name as seller_name, u.phone as seller_phone, u.avatar_url as seller_avatar
+        FROM contacts c
+        JOIN old_item_posts oip ON c.post_id = oip.id
+        JOIN users u ON c.seller_id = u.id
+        WHERE c.buyer_id = $1
+        ORDER BY c.created_at DESC
+      `;
+      params = [req.user.user_id];
+    } else {
+      // Seller sees contacts where they are the seller
+      query = `
+        SELECT c.*,
+               oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+               u.full_name as buyer_name, u.phone as buyer_phone, u.avatar_url as buyer_avatar
+        FROM contacts c
+        JOIN old_item_posts oip ON c.post_id = oip.id
+        JOIN users u ON c.buyer_id = u.id
+        WHERE c.seller_id = $1
+        ORDER BY c.created_at DESC
+      `;
+      params = [req.user.user_id];
+    }
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get single contact by ID
+app.get('/contacts/:id', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT c.*,
+              oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+              seller.full_name as seller_name, seller.phone as seller_phone, seller.avatar_url as seller_avatar,
+              buyer.full_name as buyer_name, buyer.phone as buyer_phone, buyer.avatar_url as buyer_avatar
+       FROM contacts c
+       JOIN old_item_posts oip ON c.post_id = oip.id
+       JOIN users seller ON c.seller_id = seller.id
+       JOIN users buyer ON c.buyer_id = buyer.id
+       WHERE c.id = $1 AND (c.seller_id = $2 OR c.buyer_id = $2)`,
+      [req.params.id, req.user.user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update contact status
+app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const contactId = req.params.id;
+
+    const result = await pool.query(
+      `UPDATE contacts SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND (seller_id = $3 OR buyer_id = $3)
+       RETURNING *`,
+      [status, contactId, req.user.user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ============================================
+// CHAT ENDPOINTS
+// ============================================
+
+// Get chat messages
+app.get('/chats/:id', authMiddleware, async (req, res) => {
+  try {
+    // Verify user has access to this chat through contacts
+    const contactCheck = await pool.query(
+      `SELECT * FROM contacts WHERE chat_id = $1 AND (seller_id = $2 OR buyer_id = $2)`,
+      [req.params.id, req.user.user_id]
+    );
+
+    if (contactCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const result = await pool.query('SELECT * FROM chats WHERE id = $1', [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Send message to chat
+app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
+  try {
+    const { text, image_url } = req.body;
+
+    // Verify user has access to this chat
+    const contactCheck = await pool.query(
+      `SELECT * FROM contacts WHERE chat_id = $1 AND (seller_id = $2 OR buyer_id = $2)`,
+      [req.params.id, req.user.user_id]
+    );
+
+    if (contactCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const message = {
+      id: Date.now().toString(),
+      sender_id: req.user.user_id,
+      text: text || null,
+      image_url: image_url || null,
+      timestamp: new Date().toISOString()
+    };
+
+    const result = await pool.query(
+      `UPDATE chats
+       SET messages = messages || $1::JSONB,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      [JSON.stringify([message]), req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    res.json({ message, chat: result.rows[0] });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

@@ -55,8 +55,8 @@ export const signUp = async (email: string, password: string, username: string, 
 };
 
 // Sign In - login user
-export const signIn = async (email: string, password: string): Promise<User> => {
-  const result = await api.login(email, password);
+export const signIn = async (email: string, password: string, role?: string): Promise<User> => {
+  const result = await api.login(email, password, role);
 
   if (result.error) {
     throw new Error(result.error);

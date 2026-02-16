@@ -3,7 +3,7 @@ services:
   # PostgreSQL + PostGIS (Port 5432)
   # ============================================
   postgres:
-    image: postgis/postgis:15-3.3-alpine
+    image: postgis/postgis:15-3.3
     container_name: salengman-postgres
     restart: unless-stopped
     environment:

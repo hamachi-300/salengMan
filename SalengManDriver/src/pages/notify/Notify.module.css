@@ -1,0 +1,22 @@
+.pageContainer {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: var(--color-bg);
+    padding-bottom: 80px;
+    /* Space for bottom nav */
+}
+
+
+.content {
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+}
+
+.placeholderText {
+    font-family: var(--font-eng-fun);
+    color: #666;
+    font-size: 1.1rem;
+}

@@ -350,13 +350,7 @@ sudo apt install git
 git clone https://github.com/hamachi-300/salengMan.git
 ```
 
-### 3. install docker
-``` bash
-sudo snap install docker
-docker compose up
-```
-
-### 4. add .env file in /backend folder
+### 3. add .env file in /backend folder
 ``` bash
 cp .env.example .env
 nano .env
@@ -402,3 +396,10 @@ openssl rand -base64 64 | tr -d '\n'
 ```
 MINIO_PUBLIC_URL=http://your-server-ip:9000
 ```
+
+### 4. install docker
+``` bash
+sudo snap install docker
+docker compose up -d --build
+```
+

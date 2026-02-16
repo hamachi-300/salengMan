@@ -1,0 +1,85 @@
+/* Bottom Navigation */
+.bottomNav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #1a1a1a;
+    padding: 12px 0;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid #333;
+    z-index: 1000;
+    /* Ensure it stays on top */
+}
+
+.navItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: opacity 0.2s ease;
+    min-width: 64px;
+    /* Ensure touch target size */
+}
+
+.navItem:hover {
+    opacity: 0.8;
+}
+
+.navIcon {
+    width: 24px;
+    height: 24px;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.active .navIcon {
+    color: var(--orange-button);
+}
+
+.navLabel {
+    font-size: 0.75rem;
+    color: #666;
+    font-family: var(--font-eng-fun);
+    /* Ensure consistent font */
+    transition: color 0.2s ease;
+}
+
+.active .navLabel {
+    color: var(--orange-button);
+}
+
+.navIconWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notificationDot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background-color: #e74c3c;
+    border-radius: 50%;
+}
+
+/* Light mode adjustments */
+@media (prefers-color-scheme: light) {
+    .bottomNav {
+        background-color: #f5f0ec;
+        border-top: 1px solid #ddd;
+    }
+
+    .navIcon,
+    .navLabel {
+        color: #999;
+    }
+}
