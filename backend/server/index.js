@@ -238,6 +238,55 @@ app.get('/auth/me', authMiddleware, async (req, res) => {
   }
 });
 
+// Update current user profile
+app.patch('/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const { full_name, phone, gender, default_address } = req.body;
+    const userId = req.user.user_id;
+
+    if (full_name && full_name.length >= 10) {
+      return res.status(400).json({ error: 'Username must be less than 10 characters' });
+    }
+
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (full_name !== undefined) {
+      updates.push(`full_name = $${paramIndex++}`);
+      values.push(full_name);
+    }
+    if (phone !== undefined) {
+      updates.push(`phone = $${paramIndex++}`);
+      values.push(phone);
+    }
+    if (gender !== undefined) {
+      updates.push(`gender = $${paramIndex++}`);
+      values.push(gender);
+    }
+    if (default_address !== undefined) {
+      updates.push(`default_address = $${paramIndex++}`);
+      values.push(default_address);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No updates provided' });
+    }
+
+    values.push(userId);
+    const result = await pool.query(
+      `UPDATE users SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $${paramIndex}
+       RETURNING id, email, full_name, phone, role, avatar_url, gender, coin, default_address`,
+      values
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Get user public profile
 app.get('/users/:id/public', authMiddleware, async (req, res) => {
   try {
