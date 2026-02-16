@@ -21,7 +21,7 @@ function TrashMainPage() {
       const token = localStorage.getItem('auth_token');
       if (!token) return;
 
-      const response = await fetch(`${API_URL}/api/coins/balance`, {
+      const response = await fetch(`${API_URL}/coins/balance`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -59,7 +59,7 @@ function TrashMainPage() {
               อย่างรับการรีไซเคิลขยะของคุณและรับเหรียญรางวัล
             </p>
               */}
-               
+
           </div>
 
           {/* Services Grid */}

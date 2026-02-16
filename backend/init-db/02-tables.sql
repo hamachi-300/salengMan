@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     default_address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    coin INTEGER DEFAULT 0,
     UNIQUE(email, role)
 );
 

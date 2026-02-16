@@ -7,12 +7,9 @@ import { useUser } from '../../../context/UserContext';
 
 interface CoinTransaction {
   id: number;
-  package_id: string;
-  coins_amount: number;
-  price: number;
-  transaction_type: string;
-  status: string;
-  description?: string;
+  user_id: string;
+  amount: number;
+  type: 'buy' | 'use';
   created_at: string;
 }
 
@@ -40,7 +37,7 @@ export default function HistoryCoin() {
         return;
       }
 
-      const res = await fetch(`${API_URL}/api/coins/transactions`, {
+      const res = await fetch(`${API_URL}/coins/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -77,17 +74,21 @@ export default function HistoryCoin() {
           {transactions.map(tx => (
             <li key={tx.id} className={styles.item}>
               <div className={styles.row}>
-                <div className={styles.package}>{tx.package_id}</div>
-                <div className={styles.status + ' ' + (tx.status === 'completed' ? styles.ok : styles.pending)}>{tx.status}</div>
+                <div className={styles.package}>
+                  {tx.type === 'buy' ? 'Purchased Coins' : 'Used Coins'}
+                </div>
+                <div className={`${styles.status} ${tx.type === 'buy' ? styles.ok : styles.pending}`}>
+                  {tx.type.toUpperCase()}
+                </div>
               </div>
 
               <div className={styles.details}>
-                <div className={styles.coins}>+{tx.coins_amount} coins</div>
-                <div className={styles.price}>{tx.price}฿</div>
+                <div className={styles.coins}>
+                  {tx.type === 'buy' ? '+' : '-'}{tx.amount} coins
+                </div>
+                {/* Price is not stored in history currently, showing date instead */}
                 <div className={styles.date}>{new Date(tx.created_at).toLocaleString()}</div>
               </div>
-
-              {tx.description && <div className={styles.desc}>{tx.description}</div>}
             </li>
           ))}
         </ul>

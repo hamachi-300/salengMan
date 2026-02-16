@@ -216,7 +216,7 @@ app.post('/auth/login', async (req, res) => {
     );
 
     res.json({
-      user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, gender: user.gender },
+      user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, gender: user.gender, coin: user.coin },
       token
     });
   } catch (error) {
@@ -229,7 +229,7 @@ app.post('/auth/login', async (req, res) => {
 app.get('/auth/me', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, full_name, phone, role, avatar_url, gender FROM users WHERE id = $1',
+      'SELECT id, email, full_name, phone, role, avatar_url, gender, coin FROM users WHERE id = $1',
       [req.user.user_id]
     );
     res.json(result.rows[0]);
@@ -674,6 +674,130 @@ app.get('/drivers/nearby', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// ============================================
+// COIN ENDPOINTS
+// ============================================
+
+// Get coin history
+app.get('/coins/history', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM coin_transactions WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get coin balance
+const getCoinBalance = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT coin FROM users WHERE id = $1',
+      [req.user.user_id]
+    );
+    res.json({ balance: result.rows[0]?.coin || 0 });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+app.get('/coins/balance', authMiddleware, getCoinBalance);
+app.get('/api/coins/balance', authMiddleware, getCoinBalance);
+
+// Buy coins
+app.post('/coins/buy', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    await client.query('BEGIN');
+
+    // Update user balance
+    const userUpdate = await client.query(
+      'UPDATE users SET coin = coin + $1 WHERE id = $2 RETURNING coin',
+      [amount, req.user.user_id]
+    );
+
+    // Record transaction
+    await client.query(
+      `INSERT INTO coin_transactions (user_id, amount, type)
+       VALUES ($1, $2, 'buy')`,
+      [req.user.user_id, amount]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Coins purchased successfully',
+      newBalance: userUpdate.rows[0].coin
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Use coins
+app.post('/coins/use', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    await client.query('BEGIN');
+
+    // Check balance
+    const userCheck = await client.query(
+      'SELECT coin FROM users WHERE id = $1 FOR UPDATE',
+      [req.user.user_id]
+    );
+
+    const currentBalance = userCheck.rows[0].coin || 0;
+
+    if (currentBalance < amount) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Insufficient coins' });
+    }
+
+    // Deduct coins
+    const userUpdate = await client.query(
+      'UPDATE users SET coin = coin - $1 WHERE id = $2 RETURNING coin',
+      [amount, req.user.user_id]
+    );
+
+    // Record transaction
+    await client.query(
+      `INSERT INTO coin_transactions (user_id, amount, type)
+       VALUES ($1, $2, 'use')`,
+      [req.user.user_id, amount]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Coins used successfully',
+      newBalance: userUpdate.rows[0].coin
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 

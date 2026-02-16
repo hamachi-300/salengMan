@@ -128,11 +128,40 @@ export default function Coin() {
 
       setIsProcessing(true);
 
-      // Mock purchase success without database connection
-      setUserCoins(prev => prev + pkg.coins);
-      setLastPurchasedCoins(pkg.coins);
-      setShowSuccessPopup(true);
-      setIsProcessing(false);
+      try {
+        setIsProcessing(true);
+
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          setShowLoginPopup(true);
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/coins/buy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount: pkg.coins })
+        });
+
+        if (!response.ok) {
+          throw new Error('Purchase failed');
+        }
+
+        const data = await response.json();
+
+        // Update local state with new balance from server
+        setUserCoins(data.newBalance);
+        setLastPurchasedCoins(pkg.coins);
+        setShowSuccessPopup(true);
+      } catch (error) {
+        console.error('Purchase error:', error);
+        alert('Failed to purchase coins. Please try again.');
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -258,14 +287,14 @@ export default function Coin() {
               {lastPurchasedCoins ? `+${lastPurchasedCoins} coins` : `${userCoins} coins added`}
             </p>
             <div className={styles.successActions}>
-              <button 
-                className={styles.btnSecondary} 
+              <button
+                className={styles.btnSecondary}
                 onClick={handleReturnToMain}
               >
                 Return to Main Page
               </button>
-              <button 
-                className={styles.btnPrimary} 
+              <button
+                className={styles.btnPrimary}
                 onClick={handleViewHistory}
               >
                 View Purchase History
