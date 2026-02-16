@@ -1,7 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Coin.module.css';
 import PageHeader from '../../../components/PageHeader';
 import PageFooter from '../../../components/PageFooter';
+import ConfirmPopup from '../../../components/ConfirmPopup';
+import { useUser } from '../../../context/UserContext';
+import { API_URL } from '../../../config/api';
 
 interface Package {
   id: string;
@@ -13,12 +17,16 @@ interface Package {
 }
 
 export default function Coin() {
-  const [userCoins] = useState(0);
+  const navigate = useNavigate();
+  const { user } = useUser();
+  const [userCoins, setUserCoins] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [hasMainPackage] = useState(false);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const mainMonthlyPackages: Package[] = [
+  const allPackages: Package[] = [
     {
       id: 'standard',
       name: 'Standard',
@@ -50,10 +58,7 @@ export default function Coin() {
       price: 1760,
       period: 'month',
       currency: '฿'
-    }
-  ];
-
-  const oneTimePackages: Package[] = [
+    },
     {
       id: 'onetime',
       name: '1 Coin Package',
@@ -63,30 +68,11 @@ export default function Coin() {
     }
   ];
 
-  const addonPackages: Package[] = [
-    {
-      id: 'addon-3',
-      name: '3 Coins Add-on',
-      coins: 3,
-      price: 139,
-      currency: '฿'
-    },
-    {
-      id: 'addon-5',
-      name: '5 Coins Add-on',
-      coins: 5,
-      price: 215,
-      currency: '฿'
-    }
-  ];
-
   const getPackageDetails = (packageId: string | null) => {
     if (!packageId) return null;
 
     const pkg = [
-      ...mainMonthlyPackages,
-      ...oneTimePackages,
-      ...addonPackages
+      ...allPackages
     ].find(p => p.id === packageId);
 
     return pkg;
@@ -97,43 +83,90 @@ export default function Coin() {
   };
 
   const handleConfirmPurchase = async () => {
-  if (selectedPackage) {
-    const pkg = getPackageDetails(selectedPackage);
-    if (!pkg) {
-      alert("Invalid package selected");
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginPopup(true);
       return;
     }
-    try {
-      const userToken = localStorage.getItem('userToken');
-      if (!userToken) {
-        alert("Authentication token not found. Please log in.");
+
+    if (selectedPackage) {
+      const pkg = getPackageDetails(selectedPackage);
+      if (!pkg) {
+        alert("Invalid package selected");
         return;
       }
-      const response = await fetch('https://api.yourdomain.com/v1/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`
-        },
-        body: JSON.stringify({
-          packageId: pkg.id,
-          price: pkg.price
-        })
-      });
 
-      const data = await response.json();
-      if (data.success) {
-        alert("ซื้อสำเร็จ!");
+      setIsProcessing(true);
+
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          setShowLoginPopup(true);
+          return;
+        }
+
+        // Synchronize data with database using user ID
+        const response = await fetch(`${API_URL}/api/coins/purchase`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            packageId: pkg.id,
+            coins: pkg.coins,
+            price: pkg.price
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update local coin balance
+          setUserCoins(prev => prev + pkg.coins);
+          
+          // Show success popup after 5 seconds
+          setTimeout(() => {
+            setShowSuccessPopup(true);
+            setIsProcessing(false);
+          }, 5000);
+        } else {
+          alert(data.message || "Purchase failed. Please try again.");
+          setIsProcessing(false);
+        }
+      } catch (error) {
+        console.error("Error during purchase:", error);
+        alert("Connection error. Please try again.");
+        setIsProcessing(false);
       }
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการเชื่อมต่อ:", error);
     }
-  }
-};
+  };
 
   const handleReadDetails = () => {
     setShowDetailsModal(true);
   };
+
+  const handleLoginRequired = () => {
+    setShowLoginPopup(false);
+    navigate('/signin');
+  };
+
+  const handleSuccessPopupClose = () => {
+    setShowSuccessPopup(false);
+  };
+
+  const handleViewHistory = () => {
+    setShowSuccessPopup(false);
+    navigate('/history');
+  };
+
+  const handleReturnToMain = () => {
+    setShowSuccessPopup(false);
+    navigate('/trash');
+  };
+
+  const selectedPackageDetails = getPackageDetails(selectedPackage);
 
   const renderPackageItem = (pkg: Package) => (
     <div
@@ -156,8 +189,6 @@ export default function Coin() {
     </div>
   );
 
-  const selectedPackageDetails = getPackageDetails(selectedPackage);
-
   return (
     <div className={styles.page}>
       <PageHeader title="Coins & Packages" backTo="/trash" />
@@ -172,34 +203,13 @@ export default function Coin() {
       </div>
 
       <div className={styles.content}>
-        {/* Main Monthly Packages */}
+        {/* Packages */}
         <div className={styles.section}>
-          <div className={styles.sectionTitle}>Main Monthly Packages</div>
+          <div className={styles.sectionTitle}>Packet</div>
           <div className={styles.packageGrid}>
-            {mainMonthlyPackages.map(renderPackageItem)}
+            {allPackages.map(renderPackageItem)}
           </div>
         </div>
-
-        {/* One-Time Package */}
-        <div className={styles.section}>
-          <div className={styles.sectionTitle}>One-Time Package</div>
-          <div className={styles.singlePackageGrid}>
-            {oneTimePackages.map(renderPackageItem)}
-          </div>
-        </div>
-
-        {/* Add-on Packages */}
-        {hasMainPackage && (
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Add-on Packages</div>
-            <p style={{ fontSize: '12px', color: '#666', margin: '0 4px 12px' }}>
-              (Available for monthly subscribers only)
-            </p>
-            <div className={styles.packageGrid}>
-              {addonPackages.map(renderPackageItem)}
-            </div>
-          </div>
-        )}
 
         {/* Selected Package Info */}
         {selectedPackageDetails && (
@@ -209,11 +219,6 @@ export default function Coin() {
               Price: <strong>{selectedPackageDetails.price}{selectedPackageDetails.currency}</strong>
             </p>
             <div className={styles.actionButtons}>
-              {/*
-              <button className={styles.btnConfirm} onClick={handleConfirmPurchase}>
-                ✓ Confirm Purchase
-              </button>
-              */}
               <button className={styles.btnDetails} onClick={handleReadDetails}>
                 Read More
               </button>
@@ -230,18 +235,49 @@ export default function Coin() {
             <ul className={styles.detailsList}>
               <li><strong>Coins:</strong> {selectedPackageDetails.coins} coins</li>
               <li><strong>Price:</strong> {selectedPackageDetails.price}{selectedPackageDetails.currency}</li>
-              {selectedPackageDetails.period && (
-                <li><strong>Period:</strong> Per {selectedPackageDetails.period}</li>
-              )}
-              <li><strong>Bag Limit:</strong> 3 large garbage bags per token</li>
-              <li><strong>Usage:</strong> Use your coins to dispose of garbage bags</li>
-              {selectedPackageDetails.id.includes('addon') && (
-                <li><strong>Note:</strong> Only available for monthly package subscribers</li>
-              )}
             </ul>
             <button className={styles.closeBtn} onClick={() => setShowDetailsModal(false)}>
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Login Required Popup */}
+      <ConfirmPopup
+        isOpen={showLoginPopup}
+        title="Login Required"
+        message="You need to log in to purchase coins. Please sign in to continue."
+        onConfirm={handleLoginRequired}
+        onCancel={() => setShowLoginPopup(false)}
+        confirmText="Login"
+        cancelText="Cancel"
+        confirmColor="#4CAF50"
+      />
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className={styles.successModal} onClick={handleSuccessPopupClose}>
+          <div className={styles.successContent} onClick={(e) => e.stopPropagation()}>
+            <h3>✓ Purchase Successful!</h3>
+            <p>Your coins have been credited to your account.</p>
+            <p style={{ margin: '16px 0', fontSize: '14px', color: '#666' }}>
+              {userCoins} coins added
+            </p>
+            <div className={styles.successActions}>
+              <button 
+                className={styles.btnSecondary} 
+                onClick={handleReturnToMain}
+              >
+                Return to Main Page
+              </button>
+              <button 
+                className={styles.btnPrimary} 
+                onClick={handleViewHistory}
+              >
+                View Purchase History
+              </button>
+            </div>
           </div>
         </div>
       )}

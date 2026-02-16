@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import styles from "./TrashMainPage.module.css";
 import BottomNav from "../../components/BottomNav";
 
 function TrashMainPage() {
   const navigate = useNavigate();
+  const [coinRemaining] = useState(0); // coin remaining
 
   return (
     <div className={styles.container}>
@@ -22,10 +24,13 @@ function TrashMainPage() {
         {/* Main Content */}
         <div className={styles.mainContent}>
           <div className={styles.banner}>
-            <h2 className={styles.bannerTitle}>Trash Disposal Service</h2>
+            <h2 className={styles.bannerTitle}>COIN : {coinRemaining}</h2>
+            {/*}
             <p className={styles.bannerText}>
               อย่างรับการรีไซเคิลขยะของคุณและรับเหรียญรางวัล
             </p>
+              */}
+               
           </div>
 
           {/* Services Grid */}
@@ -47,8 +52,8 @@ function TrashMainPage() {
                   <path d="M12 6v12M6 12h12" />
                 </svg>
               </div>
-              <h3 className={styles.serviceTitle}>View Coins</h3>
-              <p className={styles.serviceDescription}>ดูเหรียญของคุณ</p>
+              <h3 className={styles.serviceTitle}>BUY COIN</h3>
+              <p className={styles.serviceDescription}>ซื้อเหรียญเพื่อใช้ในการเก็บขยะ</p>
             </div>
           </div>
 

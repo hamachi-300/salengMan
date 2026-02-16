@@ -263,3 +263,77 @@
   margin-top: 8px;
   line-height: 1.4;
 }
+
+.successModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.successContent {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 90%;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+.successContent h3 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #4CAF50;
+  margin-bottom: 12px;
+}
+
+.successContent p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.successActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btnPrimary {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btnPrimary:hover {
+  background: #45a049;
+}
+
+.btnSecondary {
+  background: white;
+  color: #4CAF50;
+  border: 2px solid #4CAF50;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnSecondary:hover {
+  background: #f0f8f0;
+}
