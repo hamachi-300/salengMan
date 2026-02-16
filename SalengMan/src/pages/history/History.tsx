@@ -157,11 +157,19 @@ function History() {
                   {formatDate(post.created_at)}
                 </div>
                 <div className={styles["tags-container"]}>
-                  {post.categories.slice(0, 3).map((cat, index) => (
-                    <span key={index} className={styles["category-tag"]}>
-                      {cat}
+                  {post.categories
+                    ?.filter(cat => !cat.includes('อื่น'))
+                    .slice(0, 2)
+                    .map((cat, index) => (
+                      <span key={index} className={styles["category-tag"]}>
+                        {cat.length > 10 ? cat.slice(0, 10) + '...' : cat}
+                      </span>
+                    ))}
+                  {post.categories && post.categories.filter(cat => !cat.includes('อื่น')).length > 2 && (
+                    <span className={styles["category-tag"]}>
+                      +{post.categories.filter(cat => !cat.includes('อื่น')).length - 2}
                     </span>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

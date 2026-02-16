@@ -7,6 +7,8 @@ interface UserContextType {
   loading: boolean;
   refreshUser: () => Promise<void>;
   updateUserLocal: (updates: Partial<User>) => void;
+  initialLocation: { lat: number; lng: number } | null;
+  setInitialLocation: (loc: { lat: number; lng: number }) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -14,6 +16,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLocation, setInitialLocationState] = useState<{ lat: number; lng: number } | null>(null);
 
   // Fetch fresh user data from API
   const refreshUser = async () => {
@@ -48,6 +51,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const setInitialLocation = (loc: { lat: number; lng: number }) => {
+    setInitialLocationState(loc);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthChange(async (authUser) => {
       // Auto-logout non-driver users
@@ -64,7 +71,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading, refreshUser, updateUserLocal }}>
+    <UserContext.Provider value={{ user, loading, refreshUser, updateUserLocal, initialLocation, setInitialLocation }}>
       {children}
     </UserContext.Provider>
   );

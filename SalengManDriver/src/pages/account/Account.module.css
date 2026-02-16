@@ -1,0 +1,330 @@
+.home {
+  width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  /* For mobile browsers to correctly handle address bar */
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.homeContent {
+  flex: 1;
+  padding: 24px;
+  padding-top: calc(24px + var(--safe-area-top, 0px));
+  padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: var(--font-eng-fun);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary); /* Orange */
+  margin: 0;
+}
+
+.settingsIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: color 0.2s ease;
+}
+
+.settingsIcon:hover {
+  color: var(--color-text-secondary);
+}
+
+.settingsIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Profile Section */
+.profileSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.avatarWrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.profileAvatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--color-text-secondary);
+  background-color: #2a2a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editIcon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  background-color: #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: background-color 0.2s;
+}
+
+.editIcon:hover {
+  background-color: #555;
+}
+
+.editIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.profileName {
+  font-family: var(--font-eng-fun);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.profileStatus {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* Info Cards */
+.infoCard {
+  background-color: #2a2a2a; /* Dark card background */
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.infoCard.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.infoCard.clickable:hover {
+  background-color: #333;
+}
+
+.infoCard.clickable:active {
+  transform: scale(0.98);
+}
+
+.cardLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  overflow: hidden; /* Ensure text doesn't flow out */
+  flex: 1;
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  background-color: #3a3a3a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.cardIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.cardValue {
+  font-size: 1rem;
+  color: var(--color-text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardValue.multiline {
+  white-space: normal;
+}
+
+.cardValue.thaiText {
+  font-family: var(--font-thai-polite);
+}
+
+.cardEdit {
+  color: #666;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.cardEdit:hover {
+  color: var(--color-text-secondary);
+}
+
+.cardEdit svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Logout Button */
+.logoutButton {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #2a2a2a;
+  color: #ff4d4d; /* Red for logout */
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  transition: background-color 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: #3a3a3a;
+}
+
+/* Bottom Navigation (Keep existing but ensure correct styles) */
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background-color: #1a1a1a;
+  padding: 12px 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid #333;
+  z-index: 10;
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: opacity 0.2s ease;
+}
+
+.navItem:hover {
+  opacity: 0.8;
+}
+
+.navIcon {
+  width: 24px;
+  height: 24px;
+  color: #666;
+}
+
+.active .navIcon {
+  color: var(--orange-button);
+}
+
+.navLabel {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.active .navLabel {
+  color: var(--orange-button);
+}
+
+/* Light Mode Overrides */
+@media (prefers-color-scheme: light) {
+  .infoCard, .logoutButton {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .cardIcon {
+     background-color: #f0f0f0;
+  }
+
+  .profileAvatar {
+    background-color: #eee;
+  }
+
+  .editIcon {
+    background-color: #eee;
+    color: #333;
+  }
+
+  .bottomNav {
+    background-color: #fff;
+    border-top: 1px solid #eee;
+  }
+}

@@ -54,9 +54,24 @@ export const signUp = async (email: string, password: string, username: string, 
   throw new Error('Registration failed');
 };
 
+// Sign In Result type
+export interface SignInResult {
+  user?: User;
+  needsRoleSelection?: boolean;
+  availableRoles?: string[];
+}
+
 // Sign In - login user
-export const signIn = async (email: string, password: string): Promise<User> => {
-  const result = await api.login(email, password);
+export const signIn = async (email: string, password: string, role?: string): Promise<SignInResult> => {
+  const result = await api.login(email, password, role);
+
+  // Multiple accounts found - need role selection
+  if (result.available_roles && result.available_roles.length > 0) {
+    return {
+      needsRoleSelection: true,
+      availableRoles: result.available_roles
+    };
+  }
 
   if (result.error) {
     throw new Error(result.error);
@@ -69,7 +84,7 @@ export const signIn = async (email: string, password: string): Promise<User> => 
     // Notify listeners
     authListeners.forEach(callback => callback(result.user as User));
 
-    return result.user as User;
+    return { user: result.user as User };
   }
 
   throw new Error('Login failed');

@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./Login.module.css";
 import reactLogo from "../../assets/icon/logo.svg";
 import { useNavigate } from "react-router-dom";
-import { signIn, logOut } from "../../services/auth";
+import { signIn } from "../../services/auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -17,16 +17,12 @@ function Login() {
     setLoading(true);
 
     try {
-      const user = await signIn(email, password);
+      // Always use 'seller' role for SalengMan app
+      const result = await signIn(email, password, 'seller');
 
-      // Only allow seller role to login
-      if (user.role !== 'seller') {
-        await logOut();
-        setError("เฉพาะบัญชีผู้ขายเท่านั้นที่สามารถเข้าสู่ระบบได้");
-        return;
+      if (result.user) {
+        navigate("/home");
       }
-
-      navigate("/home");
     } catch (err: any) {
       setError(err.message || "Failed to sign in");
     } finally {

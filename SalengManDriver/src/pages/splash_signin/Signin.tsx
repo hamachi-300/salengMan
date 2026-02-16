@@ -1,5 +1,5 @@
 import styles from "./Signin.module.css";
-import reactLogo from "../../assets/icon/logo.svg";
+import reactLogo from "../../assets/icon/logo_driver.svg";
 import { useNavigate } from "react-router-dom";
 
 function SignIn() {

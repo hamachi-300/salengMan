@@ -82,6 +82,37 @@ ON driver_locations USING GIST (
     ST_SetSRID(ST_MakePoint(lng, lat), 4326)
 );
 
+-- Chats table
+CREATE TABLE IF NOT EXISTS chats (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    messages JSONB DEFAULT '[]'::JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Contacts table
+CREATE TABLE IF NOT EXISTS contacts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id INTEGER REFERENCES old_item_posts(id) ON DELETE SET NULL,
+    seller_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    buyer_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    chat_id UUID REFERENCES chats(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add contacts JSONB to old_item_posts if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'old_item_posts' AND column_name = 'contacts'
+    ) THEN
+        ALTER TABLE old_item_posts ADD COLUMN contacts JSONB DEFAULT '[]'::JSONB;
+    END IF;
+END $$;
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
 CREATE INDEX IF NOT EXISTS idx_old_item_posts_user_id ON old_item_posts(user_id);
@@ -89,3 +120,6 @@ CREATE INDEX IF NOT EXISTS idx_old_item_posts_status ON old_item_posts(status);
 CREATE INDEX IF NOT EXISTS idx_orders_driver_id ON orders(driver_id);
 CREATE INDEX IF NOT EXISTS idx_orders_seller_id ON orders(seller_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_contacts_seller_id ON contacts(seller_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_buyer_id ON contacts(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_post_id ON contacts(post_id);

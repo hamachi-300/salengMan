@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Splash.module.css";
-import reactLogo from "../../assets/icon/logo.svg";
+import reactLogo from "../../assets/icon/logo_driver.svg";
 
 function Splash() {
   const navigate = useNavigate();
@@ -26,8 +26,6 @@ function Splash() {
     <div className={`${styles.splash} ${fadeOut ? styles.fadeOut : ""}`}>
       <div className={styles.splashContent}>
         <img src={reactLogo} alt="Logo" className={styles.logo} />
-        <h1 className={styles.splashTitle}>Saleng<span className={styles.ex}>Man</span></h1>
-        <h1 className={styles.splashSubtitle}>Driver</h1>
         <h1 className={styles.splashText}>รับซื้อของเก่าได้ง่ายๆ</h1>
       </div>
     </div>

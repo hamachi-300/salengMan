@@ -19,6 +19,7 @@ interface AuthResponse {
   };
   token?: string;
   error?: string;
+  available_roles?: string[];
 }
 
 interface UserResponse {
@@ -76,11 +77,11 @@ export const api = {
     }).then(res => res.json()),
 
   // Login
-  login: (email: string, password: string): Promise<AuthResponse> =>
+  login: (email: string, password: string, role?: string): Promise<AuthResponse> =>
     fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, role }),
     }).then(res => res.json()),
 
   // Get current user

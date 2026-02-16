@@ -17,6 +17,7 @@ interface Post {
     address_snapshot: any;
     pickup_time: any;
     post_type?: 'old_item' | 'trash_disposal';
+    contacts?: { contact_id: string; driver_id: string }[];
 }
 
 function PostDetail() {
@@ -48,7 +49,7 @@ function PostDetail() {
             setPost(data);
         } catch (err: any) {
             console.error("Failed to load post:", err);
-            setError("Failed to load order details");
+            setError("Failed to load post details");
         } finally {
             setLoading(false);
         }
@@ -123,7 +124,7 @@ function PostDetail() {
     if (loading) {
         return (
             <div className={styles['page']}>
-                <PageHeader title="Order Details" backTo="/history" />
+                <PageHeader title="Post Detail" backTo="/history" />
                 <div className={styles['loading-container']}>
                     <div className={styles['spinner']}></div>
                     <p>Loading...</p>
@@ -135,7 +136,7 @@ function PostDetail() {
     if (error || !post) {
         return (
             <div className={styles['page']}>
-                <PageHeader title="Order Details" backTo="/history" />
+                <PageHeader title="Post Detail" backTo="/history" />
                 <div className={styles['error-container']}>
                     <p>{error || "Post not found"}</p>
                 </div>
@@ -153,7 +154,7 @@ function PostDetail() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title="Order Details" backTo="/history" />
+            <PageHeader title="Post Detail" backTo="/history" />
 
             <div className={styles['content']}>
                 {/* Status Badge */}
@@ -277,7 +278,7 @@ function PostDetail() {
                         <svg className={styles['btn-icon']} viewBox="0 0 24 24" fill="currentColor">
                             <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                         </svg>
-                        View Buyers
+                        View Buyers {post.contacts && post.contacts.length > 0 && `(${post.contacts.length})`}
                     </button>
                     {(post.status === 'waiting' || post.status === 'pending') && (
                         <button className={styles['delete-btn']} onClick={() => setShowDeleteConfirm(true)}>
