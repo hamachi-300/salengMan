@@ -1,11 +1,40 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./TrashMainPage.module.css";
 import BottomNav from "../../components/BottomNav";
+import { API_URL } from "../../config/api";
+import { useUser } from "../../context/UserContext";
 
 function TrashMainPage() {
   const navigate = useNavigate();
-  const [coinRemaining] = useState(0); // coin remaining
+  const { user } = useUser();
+  const [coinRemaining, setCoinRemaining] = useState(0); // coin remaining
+
+  useEffect(() => {
+    if (user) {
+      fetchCoinBalance();
+    }
+  }, [user]);
+
+  const fetchCoinBalance = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/coins/balance`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCoinRemaining(data.balance || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch coin balance:', error);
+    }
+  };
 
   return (
     <div className={styles.container}>

@@ -18,6 +18,7 @@ import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
+import HistoryCoin from "./pages/trash/coin/HistoryCoin";
 import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
@@ -53,6 +54,7 @@ function AppRoutes() {
         <Route path="/dispose" element={<Dispose />} />
         <Route path="/trash" element={<TrashMainPage />} />
         <Route path="/coin" element={<Coin />} />
+        <Route path="/coin/history" element={<HistoryCoin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />
         <Route path="/notify" element={<Notify />} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Coin.module.css';
 import PageHeader from '../../../components/PageHeader';
@@ -25,6 +25,36 @@ export default function Coin() {
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastPurchasedCoins, setLastPurchasedCoins] = useState<number | null>(null);
+
+  // Fetch user's coin balance on component mount
+  useEffect(() => {
+    if (user) {
+      fetchCoinBalance();
+    }
+    // log resolved API_URL for debugging
+    console.log('Resolved API_URL =', API_URL);
+  }, [user]);
+
+  const fetchCoinBalance = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/coins/balance`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserCoins(data.balance || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch coin balance:', error);
+    }
+  };
 
   const allPackages: Package[] = [
     {
@@ -98,48 +128,11 @@ export default function Coin() {
 
       setIsProcessing(true);
 
-      try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-          setShowLoginPopup(true);
-          return;
-        }
-
-        // Synchronize data with database using user ID
-        const response = await fetch(`${API_URL}/api/coins/purchase`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            packageId: pkg.id,
-            coins: pkg.coins,
-            price: pkg.price
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          // Update local coin balance
-          setUserCoins(prev => prev + pkg.coins);
-          
-          // Show success popup after 5 seconds
-          setTimeout(() => {
-            setShowSuccessPopup(true);
-            setIsProcessing(false);
-          }, 5000);
-        } else {
-          alert(data.message || "Purchase failed. Please try again.");
-          setIsProcessing(false);
-        }
-      } catch (error) {
-        console.error("Error during purchase:", error);
-        alert("Connection error. Please try again.");
-        setIsProcessing(false);
-      }
+      // Mock purchase success without database connection
+      setUserCoins(prev => prev + pkg.coins);
+      setLastPurchasedCoins(pkg.coins);
+      setShowSuccessPopup(true);
+      setIsProcessing(false);
     }
   };
 
@@ -158,7 +151,7 @@ export default function Coin() {
 
   const handleViewHistory = () => {
     setShowSuccessPopup(false);
-    navigate('/history');
+    navigate('/coin/history');
   };
 
   const handleReturnToMain = () => {
@@ -262,7 +255,7 @@ export default function Coin() {
             <h3>✓ Purchase Successful!</h3>
             <p>Your coins have been credited to your account.</p>
             <p style={{ margin: '16px 0', fontSize: '14px', color: '#666' }}>
-              {userCoins} coins added
+              {lastPurchasedCoins ? `+${lastPurchasedCoins} coins` : `${userCoins} coins added`}
             </p>
             <div className={styles.successActions}>
               <button 
