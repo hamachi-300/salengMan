@@ -4,7 +4,6 @@ services:
   # ============================================
   postgres:
     image: postgis/postgis:15-3.3
-    platform: linux/amd64
     container_name: salengman-postgres
     restart: unless-stopped
     environment:
@@ -29,7 +28,6 @@ services:
   # ============================================
   postgrest:
     image: postgrest/postgrest:v12.0.2
-    platform: linux/arm64
     container_name: salengman-postgrest
     restart: unless-stopped
     environment:
@@ -52,7 +50,6 @@ services:
   # ============================================
   realtime:
     image: supabase/realtime:v2.25.35
-    platform: linux/arm64
     container_name: salengman-realtime
     restart: unless-stopped
     environment:
@@ -84,7 +81,6 @@ services:
   # ============================================
   minio:
     image: minio/minio:latest
-    platform: linux/arm64
     container_name: salengman-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -107,7 +103,6 @@ services:
   # MinIO bucket initialization
   minio-init:
     image: minio/mc:latest
-    platform: linux/arm64
     container_name: salengman-minio-init
     depends_on:
       minio:
@@ -130,7 +125,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    platform: linux/arm64
     container_name: salengman-backend
     restart: unless-stopped
     environment:
