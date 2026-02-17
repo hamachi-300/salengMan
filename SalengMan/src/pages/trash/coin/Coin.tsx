@@ -155,7 +155,7 @@ export default function Coin() {
 
   return (
     <div className={styles.page}>
-      <PageHeader title="Coins & Packages" backTo="/trash" />
+      <PageHeader title="Coins & Packages" backTo="/account" />
 
       <div className={styles.header}>
         <div className={styles.coinDisplay}>
