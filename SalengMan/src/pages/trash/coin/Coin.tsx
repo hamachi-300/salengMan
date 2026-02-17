@@ -23,17 +23,12 @@ export default function Coin() {
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [lastPurchasedCoins, setLastPurchasedCoins] = useState<number | null>(null);
 
   // Fetch user's coin balance on component mount
   useEffect(() => {
     if (user) {
       fetchCoinBalance();
     }
-    // log resolved API_URL for debugging
-    console.log('Resolved API_URL =', API_URL);
   }, [user]);
 
   const fetchCoinBalance = async () => {
@@ -100,19 +95,14 @@ export default function Coin() {
 
   const getPackageDetails = (packageId: string | null) => {
     if (!packageId) return null;
-
-    const pkg = [
-      ...allPackages
-    ].find(p => p.id === packageId);
-
-    return pkg;
+    return allPackages.find(p => p.id === packageId);
   };
 
   const handlePackageSelect = (packageId: string) => {
     setSelectedPackage(packageId);
   };
 
-  const handleConfirmPurchase = async () => {
+  const handleConfirmPurchase = () => {
     // Check if user is logged in
     if (!user) {
       setShowLoginPopup(true);
@@ -126,42 +116,8 @@ export default function Coin() {
         return;
       }
 
-      setIsProcessing(true);
-
-      try {
-        setIsProcessing(true);
-
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-          setShowLoginPopup(true);
-          return;
-        }
-
-        const response = await fetch(`${API_URL}/coins/buy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ amount: pkg.coins })
-        });
-
-        if (!response.ok) {
-          throw new Error('Purchase failed');
-        }
-
-        const data = await response.json();
-
-        // Update local state with new balance from server
-        setUserCoins(data.newBalance);
-        setLastPurchasedCoins(pkg.coins);
-        setShowSuccessPopup(true);
-      } catch (error) {
-        console.error('Purchase error:', error);
-        alert('Failed to purchase coins. Please try again.');
-      } finally {
-        setIsProcessing(false);
-      }
+      // Navigate to confirmation page with package details
+      navigate('/coin/confirm', { state: { package: pkg } });
     }
   };
 
@@ -172,20 +128,6 @@ export default function Coin() {
   const handleLoginRequired = () => {
     setShowLoginPopup(false);
     navigate('/signin');
-  };
-
-  const handleSuccessPopupClose = () => {
-    setShowSuccessPopup(false);
-  };
-
-  const handleViewHistory = () => {
-    setShowSuccessPopup(false);
-    navigate('/coin/history');
-  };
-
-  const handleReturnToMain = () => {
-    setShowSuccessPopup(false);
-    navigate('/trash');
   };
 
   const selectedPackageDetails = getPackageDetails(selectedPackage);
@@ -276,33 +218,6 @@ export default function Coin() {
         cancelText="Cancel"
         confirmColor="#4CAF50"
       />
-
-      {/* Success Popup */}
-      {showSuccessPopup && (
-        <div className={styles.successModal} onClick={handleSuccessPopupClose}>
-          <div className={styles.successContent} onClick={(e) => e.stopPropagation()}>
-            <h3>✓ Purchase Successful!</h3>
-            <p>Your coins have been credited to your account.</p>
-            <p style={{ margin: '16px 0', fontSize: '14px', color: '#666' }}>
-              {lastPurchasedCoins ? `+${lastPurchasedCoins} coins` : `${userCoins} coins added`}
-            </p>
-            <div className={styles.successActions}>
-              <button
-                className={styles.btnSecondary}
-                onClick={handleReturnToMain}
-              >
-                Return to Main Page
-              </button>
-              <button
-                className={styles.btnPrimary}
-                onClick={handleViewHistory}
-              >
-                View Purchase History
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <PageFooter title="Confirm Purchase" onClick={handleConfirmPurchase} />
     </div>
