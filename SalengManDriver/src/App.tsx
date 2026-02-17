@@ -10,8 +10,10 @@ import Home from "./pages/home/Home";
 import Account from "./pages/account/Account";
 import Notify from "./pages/notify/Notify";
 import History from "./pages/history/History";
+import Chat from "./pages/history/Chat";
 import BuyOldItem from "./pages/buy/buy-old-item/BuyOldItem";
 import ItemDetails from "./pages/buy/item-details/ItemDetails";
+import ContactDetail from "./pages/history/ContactDetail";
 import ConfirmCart from "./pages/buy/confirm-cart/ConfirmCart";
 import SellerProfile from "./pages/buy/seller-profile/SellerProfile";
 import NewAddress from "./pages/account/NewAddress";
@@ -44,8 +46,10 @@ function AppRoutes() {
         <Route path="/account" element={<Account />} />
         <Route path="/notify" element={<Notify />} />
         <Route path="/history" element={<History />} />
+        <Route path="/chat/:id" element={<Chat />} />
         <Route path="/buy-old-item" element={<BuyOldItem />} />
         <Route path="/item-details/:id" element={<ItemDetails />} />
+        <Route path="/contact/:id" element={<ContactDetail />} />
         <Route path="/confirm-cart" element={<ConfirmCart />} />
         <Route path="/seller/:id" element={<SellerProfile />} />
         <Route path="/add-address" element={<NewAddress />} />
