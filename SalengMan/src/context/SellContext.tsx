@@ -25,6 +25,7 @@ interface SellContextType {
   setPickupTime: (time: PickupTime | null) => void;
   setEditingPost: (postId: number, data: Omit<SellData, 'editingPostId'>) => void;
   resetSellData: () => void;
+  discardEdit: () => void; // Only clears if in edit mode
 }
 
 const initialSellData: SellData = {
@@ -72,6 +73,13 @@ export function SellProvider({ children }: { children: ReactNode }) {
     setSellData(initialSellData);
   };
 
+  // Only reset if in edit mode (editingPostId !== null)
+  const discardEdit = () => {
+    if (sellData.editingPostId !== null) {
+      setSellData(initialSellData);
+    }
+  };
+
   return (
     <SellContext.Provider
       value={{
@@ -83,6 +91,7 @@ export function SellProvider({ children }: { children: ReactNode }) {
         setPickupTime,
         setEditingPost,
         resetSellData,
+        discardEdit,
       }}
     >
       {children}

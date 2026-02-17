@@ -9,8 +9,7 @@ import Sell from "./pages/sell/Sell";
 import SelectAddress from "./pages/sell/SelectAddress";
 import SelectTime from "./pages/sell/SelectTime";
 import ConfirmPost from "./pages/sell/ConfirmPost";
-import Dispose from "./pages/dispose/Dispose";
-import TrashMainPage from "./pages/trash/TrashMainPage";
+import PostTrash from "./pages/trash/PostTrash";
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
 import Notify from "./pages/notify/Notify";
@@ -23,6 +22,8 @@ import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import Coin from "./pages/trash/coin/Coin";
+
+import ConfirmBuyCoin from "./pages/trash/coin/ConfirmBuyCoin";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -51,9 +52,9 @@ function AppRoutes() {
         <Route path="/sell/select-address" element={<SelectAddress />} />
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
-        <Route path="/dispose" element={<Dispose />} />
-        <Route path="/trash" element={<TrashMainPage />} />
+        <Route path="/trash" element={<PostTrash />} />
         <Route path="/coin" element={<Coin />} />
+        <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />

@@ -5,17 +5,20 @@ import { useNavigate } from "react-router-dom";
 import { getToken } from "../../services/auth";
 import { api } from "../../config/api";
 import { useUser } from "../../context/UserContext";
+import { useSell } from "../../context/SellContext";
 import BottomNav from "../../components/BottomNav";
 
 function Account() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, loading, refreshUser, updateUserLocal } = useUser();
+  const { discardEdit } = useSell();
   const [uploading, setUploading] = useState(false);
   const [defaultAddress, setDefaultAddress] = useState<string | null>(null);
 
   // Refresh user data and fetch default address every time page loads
   useEffect(() => {
+    discardEdit(); // Clear edit mode data if user was editing
     refreshUser();
     fetchDefaultAddress();
   }, []);
@@ -197,6 +200,28 @@ function Account() {
               <span className={styles.cardLabel}>GENDER</span>
               <span className={`${styles.cardValue} ${styles.thaiText}`}>{getGenderText(user.gender)}</span>
             </div>
+          </div>
+        </div>
+
+        {/* Coin - entire card is clickable */}
+        <div className={`${styles.infoCard} ${styles.clickable}`} onClick={() => navigate("/coin/history")}>
+          <div className={styles.cardLeft}>
+            <div className={styles.cardIcon}>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.15-1.46-3.32-3.49h2.13c.17.82 1.12 1.88 2.53 1.88 1.09 0 1.63-.61 1.63-1.12 0-.69-.47-1.15-1.95-1.5-2.07-.51-3.35-1.57-3.35-3.35 0-1.84 1.35-2.99 3.01-3.33V5h2.67v1.94c1.6.35 2.76 1.48 2.91 3.25h-2.14c-.16-.91-1.04-1.63-2.14-1.63-1.04 0-1.54.68-1.54 1.25 0 .68.49 1.05 1.76 1.34 2.29.54 3.54 1.76 3.54 3.53 0 1.94-1.39 3.12-3.08 3.41z" /></svg>
+            </div>
+            <div className={styles.cardContent}>
+              <span className={styles.cardLabel}>COIN</span>
+              <span className={styles.cardValue}>{user.coin}</span>
+            </div>
+          </div>
+          <div
+            className={styles.cardEdit}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/coin");
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
           </div>
         </div>
 

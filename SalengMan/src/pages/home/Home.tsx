@@ -3,15 +3,18 @@ import styles from "./Home.module.css";
 import { useNavigate } from "react-router-dom";
 import profileLogo from "../../assets/icon/profile.svg";
 import { useUser } from "../../context/UserContext";
+import { useSell } from "../../context/SellContext";
 import BottomNav from "../../components/BottomNav";
 
 function Home() {
   const navigate = useNavigate();
   const { user, refreshUser } = useUser();
+  const { discardEdit } = useSell();
 
-  // Refresh user data when page loads
+  // Refresh user data when page loads and discard any edit mode
   useEffect(() => {
     refreshUser();
+    discardEdit(); // Clear edit mode data if user was editing
     console.log(user?.avatar_url);
   }, []);
 

@@ -60,7 +60,7 @@ export default function HistoryCoin() {
 
   return (
     <div className={styles.page}>
-      <PageHeader title="Coin Purchase History" backTo="/coin" />
+      <PageHeader title="Coin Purchase History" backTo="/account" />
 
       <div className={styles.content}>
         {loading && <div className={styles.message}>Loading...</div>}

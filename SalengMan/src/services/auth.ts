@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { api } from "../config/api";
 
 // Token storage keys
@@ -6,6 +7,7 @@ const USER_KEY = 'auth_user';
 
 // User type for our backend
 export interface User {
+  [x: string]: ReactNode;
   id: string;
   email: string;
   full_name: string;
@@ -122,7 +124,7 @@ const checkAuthOnLoad = async (): Promise<User | null> => {
     const user = await api.getMe(token);
     if (user.id) {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
-      return user;
+      return user as User;
     }
   } catch (error) {
     // Token invalid, clear storage

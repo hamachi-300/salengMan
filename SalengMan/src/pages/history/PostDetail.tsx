@@ -23,7 +23,7 @@ interface Post {
 function PostDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { setEditingPost } = useSell();
+    const { setEditingPost, discardEdit } = useSell();
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -33,6 +33,7 @@ function PostDetail() {
     const isEditable = post?.status === 'waiting';
 
     useEffect(() => {
+        discardEdit(); // Clear edit mode data if user navigated back here
         fetchPost();
     }, [id]);
 
