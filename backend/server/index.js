@@ -659,6 +659,100 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
   }
 });
 
+// Update old item post
+app.put('/old-item-posts/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { images, categories, remarks, address, pickupTime } = req.body;
+
+    // Check if post exists and belongs to user
+    const check = await pool.query(
+      'SELECT * FROM old_item_posts WHERE id = $1 AND user_id = $2',
+      [id, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found or unauthorized' });
+    }
+
+    const post = check.rows[0];
+
+    // Only allow editing if status is waiting or pending
+    if (post.status !== 'waiting' && post.status !== 'pending') {
+      return res.status(400).json({ error: 'Only waiting/pending posts can be edited' });
+    }
+
+    // Handle images - separate new base64 images from existing URLs
+    const uploadedImageUrls = [];
+
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+
+        // Check if it's a base64 image (new upload) or existing URL
+        if (img.startsWith('data:')) {
+          // New image - upload to MinIO
+          const base64Image = img.split(';base64,').pop();
+          const buffer = Buffer.from(base64Image, 'base64');
+          const fileName = `old_item_posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
+
+          await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+            'Content-Type': 'image/jpeg'
+          });
+
+          const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+          uploadedImageUrls.push(imageUrl);
+        } else {
+          // Existing image URL - keep it
+          uploadedImageUrls.push(img);
+        }
+      }
+    }
+
+    // Delete old images that are no longer in the list
+    if (post.images && post.images.length > 0) {
+      for (const oldImg of post.images) {
+        if (!uploadedImageUrls.includes(oldImg)) {
+          try {
+            const objectName = oldImg.split(`${BUCKET_NAME}/`)[1];
+            if (objectName) {
+              await minioClient.removeObject(BUCKET_NAME, objectName);
+            }
+          } catch (err) {
+            console.error('Failed to delete old image:', err);
+          }
+        }
+      }
+    }
+
+    // Update the post
+    const result = await pool.query(
+      `UPDATE old_item_posts
+       SET images = $1,
+           categories = $2,
+           remarks = $3,
+           address_snapshot = $4,
+           pickup_time = $5,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $6
+       RETURNING *`,
+      [
+        uploadedImageUrls,
+        categories,
+        remarks,
+        JSON.stringify(address),
+        JSON.stringify(pickupTime),
+        id
+      ]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating post:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;

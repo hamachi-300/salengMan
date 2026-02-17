@@ -5,17 +5,20 @@ import { useNavigate } from "react-router-dom";
 import { getToken } from "../../services/auth";
 import { api } from "../../config/api";
 import { useUser } from "../../context/UserContext";
+import { useSell } from "../../context/SellContext";
 import BottomNav from "../../components/BottomNav";
 
 function Account() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, loading, refreshUser, updateUserLocal } = useUser();
+  const { discardEdit } = useSell();
   const [uploading, setUploading] = useState(false);
   const [defaultAddress, setDefaultAddress] = useState<string | null>(null);
 
   // Refresh user data and fetch default address every time page loads
   useEffect(() => {
+    discardEdit(); // Clear edit mode data if user was editing
     refreshUser();
     fetchDefaultAddress();
   }, []);

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./History.module.css";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
+import { useSell } from "../../context/SellContext";
 import BottomNav from "../../components/BottomNav";
 import PageHeader from "../../components/PageHeader";
 
@@ -19,11 +20,13 @@ interface Post {
 
 function History() {
   const navigate = useNavigate();
+  const { discardEdit } = useSell();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
 
   useEffect(() => {
+    discardEdit(); // Clear edit mode data if user was editing
     fetchPosts();
   }, []);
 
