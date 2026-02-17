@@ -1055,6 +1055,19 @@ app.post('/contacts', authMiddleware, async (req, res) => {
 
     const createdContacts = [];
 
+    // Ensure 'type' column exists (Migration)
+    await pool.query(`
+      DO $$
+      BEGIN
+          IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_name = 'contacts' AND column_name = 'type'
+          ) THEN
+              ALTER TABLE contacts ADD COLUMN type VARCHAR(50);
+          END IF;
+      END $$;
+    `).catch(err => console.error('Migration error:', err.message));
+
     for (const postId of post_ids) {
       // Get post details to find seller
       const postResult = await pool.query(
@@ -1088,8 +1101,8 @@ app.post('/contacts', authMiddleware, async (req, res) => {
 
       // Create contact
       const contactResult = await pool.query(
-        `INSERT INTO contacts (post_id, seller_id, buyer_id, chat_id, status)
-         VALUES ($1, $2, $3, $4, 'pending')
+        `INSERT INTO contacts (post_id, seller_id, buyer_id, chat_id, status, type)
+         VALUES ($1, $2, $3, $4, 'pending', 'old_item_posts')
          RETURNING *`,
         [postId, sellerId, req.user.user_id, chatId]
       );
@@ -1205,6 +1218,73 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
   }
 });
 
+// Cancel contact
+app.delete('/contacts/:id', authMiddleware, async (req, res) => {
+  try {
+    const contactId = req.params.id;
+    const userId = req.user.user_id;
+
+    // Fetch contact first
+    const contactCheck = await pool.query(
+      'SELECT * FROM contacts WHERE id = $1',
+      [contactId]
+    );
+
+    if (contactCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    const contact = contactCheck.rows[0];
+
+    // Check permissions (only seller or buyer involved can delete)
+    if (contact.seller_id !== userId && contact.buyer_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const { post_id, chat_id } = contact;
+
+    // 1. Remove contact from old_item_posts contacts array
+    if (post_id) {
+      const postResult = await pool.query(
+        'SELECT contacts FROM old_item_posts WHERE id = $1',
+        [post_id]
+      );
+
+      if (postResult.rows.length > 0) {
+        let contactsArray = postResult.rows[0].contacts || [];
+        // Filter out the deleted contact
+        const updatedContacts = contactsArray.filter(c => c.contact_id !== contactId);
+
+        await pool.query(
+          'UPDATE old_item_posts SET contacts = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+          [JSON.stringify(updatedContacts), post_id]
+        );
+      }
+    }
+
+    // 2. Delete the contact record
+    await pool.query('DELETE FROM contacts WHERE id = $1', [contactId]);
+
+    // 3. Delete the associated chat (if exists)
+    if (chat_id) {
+      // Check if chat is used by other contacts (unlikely in this flow but safe)
+      const otherContacts = await pool.query(
+        'SELECT 1 FROM contacts WHERE chat_id = $1',
+        [chat_id]
+      );
+
+      if (otherContacts.rows.length === 0) {
+        await pool.query('DELETE FROM chats WHERE id = $1', [chat_id]);
+      }
+    }
+
+    res.json({ message: 'Contact cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling contact:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ============================================
 // CHAT ENDPOINTS
 // ============================================
@@ -1237,7 +1317,7 @@ app.get('/chats/:id', authMiddleware, async (req, res) => {
 // Send message to chat
 app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
   try {
-    const { text, image_url } = req.body;
+    const { text, image } = req.body;
 
     // Verify user has access to this chat
     const contactCheck = await pool.query(
@@ -1249,11 +1329,30 @@ app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    let imageUrl = null;
+    if (image && image.startsWith('data:')) {
+      try {
+        const base64Image = image.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `chat/${req.params.id}_${Date.now()}.jpg`;
+
+        await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+      } catch (err) {
+        console.error('Chat image upload failed:', err);
+        // Continue without image or return error depending on requirements
+        // For now, we continue but log error
+      }
+    }
+
     const message = {
       id: Date.now().toString(),
       sender_id: req.user.user_id,
       text: text || null,
-      image_url: image_url || null,
+      image_url: imageUrl,
       timestamp: new Date().toISOString()
     };
 

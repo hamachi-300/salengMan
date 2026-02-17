@@ -317,4 +317,49 @@ export const api = {
 
     return res.json();
   },
+
+  // Delete contact
+  deleteContact: async (token: string, contactId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/contacts/${contactId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to delete contact');
+    }
+
+    return res.json();
+  },
+
+  // Get chat messages
+  getChat: async (token: string, chatId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/chats/${chatId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch chat');
+    }
+
+    return res.json();
+  },
+
+  // Send message
+  sendMessage: async (token: string, chatId: string, text?: string, image?: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/chats/${chatId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ text, image }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to send message');
+    }
+
+    return res.json();
+  },
 };

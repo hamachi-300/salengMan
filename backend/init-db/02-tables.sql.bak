@@ -99,7 +99,6 @@ CREATE TABLE IF NOT EXISTS contacts (
     buyer_id UUID REFERENCES users(id) ON DELETE SET NULL,
     chat_id UUID REFERENCES chats(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'pending',
-    type VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -112,14 +111,6 @@ BEGIN
         WHERE table_name = 'old_item_posts' AND column_name = 'contacts'
     ) THEN
         ALTER TABLE old_item_posts ADD COLUMN contacts JSONB DEFAULT '[]'::JSONB;
-    END IF;
-
-    -- Add type column to contacts if not exists
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'contacts' AND column_name = 'type'
-    ) THEN
-        ALTER TABLE contacts ADD COLUMN type VARCHAR(50);
     END IF;
 END $$;
 
