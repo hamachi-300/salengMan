@@ -8,7 +8,6 @@ import { getToken } from "../../services/auth";
 import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
 import SuccessPopup from "../../components/SuccessPopup";
-import MapSelector from "../../components/MapSelector";
 import { useSell } from "../../context/SellContext";
 
 interface Post {
@@ -158,7 +157,7 @@ function PostDetail() {
 
     const handleChat = () => {
         if (post?.contacts && post.contacts.length > 0) {
-            if (post.status === 'pending') {
+            if (post.status.toLowerCase() === 'pending' || post.status.toLowerCase() === 'completed') {
                 const chatId = post.contacts[0].chat_id;
                 if (chatId) {
                     navigate(`/chat/${chatId}`, { state: { postId: post.id, backToDetail: true } });
@@ -249,7 +248,7 @@ function PostDetail() {
             <PageHeader
                 title="Post Detail"
                 backTo="/history"
-                rightElement={post.status.toLowerCase() === 'pending' ? renderChatIcon() : undefined}
+                rightElement={(post.status.toLowerCase() === 'pending' || post.status.toLowerCase() === 'completed') ? renderChatIcon() : undefined}
             />
 
             <div className={styles['content']}>

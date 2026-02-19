@@ -1,8 +1,10 @@
 .page-container {
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
     background-color: var(--color-bg);
     padding-bottom: 80px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     /* Space for bottom nav */
 }
 

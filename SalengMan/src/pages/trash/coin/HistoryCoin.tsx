@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../components/PageHeader';
 import styles from './HistoryCoin.module.css';
 import { API_URL } from '../../../config/api';
@@ -14,7 +13,6 @@ interface CoinTransaction {
 }
 
 export default function HistoryCoin() {
-  const navigate = useNavigate();
   const { user } = useUser();
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
   const [loading, setLoading] = useState(true);
