@@ -136,7 +136,9 @@ function ExploreMap() {
                     driverLat={driverLocation?.lat}
                     driverLng={driverLocation?.lng}
                     isReadOnly={true}
-                    showGpsButton={true}
+                    showGpsButton={false}
+                    showRefreshButton={true}
+                    onRefresh={fetchContactDetails}
                     onGpsClick={(lat, lng) => {
                         setDriverLocation({ lat, lng });
                         fetchContactDetails();

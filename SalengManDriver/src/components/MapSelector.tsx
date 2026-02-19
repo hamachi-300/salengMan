@@ -23,6 +23,22 @@ const HomeIcon = L.divIcon({
     popupAnchor: [0, -20]
 });
 
+// Custom orange pin icon for adding address
+const orangePinSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
+  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FF7A30" stroke="white" stroke-width="2"/>
+  <circle cx="12" cy="9" r="2.5" fill="white"/>
+</svg>
+`;
+
+const OrangePinIcon = L.divIcon({
+    html: orangePinSvg,
+    className: 'orange-pin-marker',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+});
+
 // Custom logo icon for driver
 const LogoIcon = L.icon({
     iconUrl: logoIcon,
@@ -66,6 +82,8 @@ interface MapSelectorProps {
     driverLng?: number;
     isReadOnly?: boolean;
     showGpsButton?: boolean;
+    showRefreshButton?: boolean;
+    onRefresh?: () => void;
     onGpsClick?: (lat: number, lng: number) => void;
 }
 
@@ -88,9 +106,12 @@ const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnable
         }
     }, [position, map]);
 
+    // Use OrangePinIcon when adding/editing address (!isReadOnly), otherwise HomeIcon
+    const markerIcon = !isReadOnly ? OrangePinIcon : HomeIcon;
+
     return position === null ? null : (
-        <Marker position={position} icon={HomeIcon}>
-            <Popup>Pickup Location</Popup>
+        <Marker position={position} icon={markerIcon}>
+            <Popup>{!isReadOnly ? 'Selected Location' : 'Pickup Location'}</Popup>
         </Marker>
     );
 };
@@ -138,12 +159,7 @@ const getSystemTheme = (): 'dark' | 'light' => {
     return 'dark';
 };
 
-const handleRefresh = () => {
-    window.location.reload();
-};
-
-
-export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, onGpsClick }: MapSelectorProps) {
+export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, showRefreshButton, onRefresh, onGpsClick }: MapSelectorProps) {
     const [position, setPosition] = useState<L.LatLng | null>(
         initialLat && initialLng ? new L.LatLng(initialLat, initialLng) : null
     );
@@ -189,6 +205,86 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
         }
     }, [initialLat, initialLng]);
 
+    const handleGetCurrentLocation = async () => {
+        setLoading(true);
+        setAutoBoundsEnabled(false);
+
+        const isTauri = !!(window as any).__TAURI_INTERNALS__;
+
+        if (isTauri) {
+            try {
+                const pos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+                const { latitude, longitude } = pos.coords;
+                const newPos = new L.LatLng(latitude, longitude);
+
+                if (!isReadOnly) {
+                    setPosition(newPos);
+                    extractAddress(latitude, longitude);
+                } else {
+                    // Re-enable auto-bounds/tracking (like page refresh)
+                    setAutoBoundsEnabled(true);
+                    setTriggerCenter(null); // Clear manual trigger to let auto-bounds take over
+                    setLoading(false);
+                }
+
+                if (onGpsClick) {
+                    onGpsClick(latitude, longitude);
+                }
+
+                return;
+            } catch (error) {
+                console.warn("Tauri geolocation failed, falling back to browser API:", error);
+            }
+        }
+
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            setLoading(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const newPos = new L.LatLng(latitude, longitude);
+
+                if (!isReadOnly) {
+                    setPosition(newPos);
+                    extractAddress(latitude, longitude);
+                } else {
+                    setAutoBoundsEnabled(true);
+                    setTriggerCenter(null);
+                    setLoading(false);
+                }
+
+                if (onGpsClick) {
+                    onGpsClick(latitude, longitude);
+                }
+            },
+            (err) => {
+                console.error("Error getting location:", err.code, err.message);
+                setLoading(false);
+                switch (err.code) {
+                    case err.PERMISSION_DENIED:
+                        alert("Location permission denied. Please allow location access.");
+                        break;
+                    case err.POSITION_UNAVAILABLE:
+                        alert("Location unavailable. Please check if GPS is enabled.");
+                        break;
+                    case err.TIMEOUT:
+                        alert("Location request timed out. Please try again.");
+                        break;
+                    default:
+                        alert("Could not get your location. Please select manually on the map.");
+                }
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    };
+
+    /**
+     * EXTRACT ADDRESS FROM LAT/LNG
+     */
     const extractAddress = async (lat: number, lng: number) => {
         if (isReadOnly) return;
         setLoading(true);
@@ -321,10 +417,27 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                 {getThemeIcon()}
             </button>
 
+            {showRefreshButton && (
+                <button
+                    className={styles.refreshButton}
+                    onClick={() => {
+                        // Soft refresh: re-enable auto bounds and trigger re-fit
+                        if (onRefresh) onRefresh();
+                        setAutoBoundsEnabled(true);
+                        setTriggerFitBounds(prev => prev + 1);
+                    }}
+                    title="Refresh Map & Data"
+                >
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                    </svg>
+                </button>
+            )}
+
             {(!isReadOnly || showGpsButton) && (
                 <button
                     className={showGpsButton ? styles.gpsButtonTop : styles.gpsButton}
-                    onClick={handleRefresh}
+                    onClick={handleGetCurrentLocation}
                     disabled={loading}
                     title="Use my current location"
                 >

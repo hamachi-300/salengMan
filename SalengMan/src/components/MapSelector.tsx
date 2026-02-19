@@ -23,6 +23,22 @@ const HomeIcon = L.divIcon({
     popupAnchor: [0, -20]
 });
 
+// Custom orange pin icon for adding address
+const orangePinSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
+  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FF7A30" stroke="white" stroke-width="2"/>
+  <circle cx="12" cy="9" r="2.5" fill="white"/>
+</svg>
+`;
+
+const OrangePinIcon = L.divIcon({
+    html: orangePinSvg,
+    className: 'orange-pin-marker',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+});
+
 // Custom logo icon for driver
 const LogoIcon = L.icon({
     iconUrl: logoIcon,
@@ -88,9 +104,12 @@ const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnable
         }
     }, [position, map]);
 
+    // Use OrangePinIcon when adding/editing address (!isReadOnly), otherwise HomeIcon
+    const markerIcon = !isReadOnly ? OrangePinIcon : HomeIcon;
+
     return position === null ? null : (
-        <Marker position={position} icon={HomeIcon}>
-            <Popup>Pickup Location</Popup>
+        <Marker position={position} icon={markerIcon}>
+            <Popup>{!isReadOnly ? 'Selected Location' : 'Pickup Location'}</Popup>
         </Marker>
     );
 };

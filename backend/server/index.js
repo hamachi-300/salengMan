@@ -806,8 +806,8 @@ app.post('/old-item-posts/:id/cancel', authMiddleware, async (req, res) => {
 
     // 2. Fetch the confirmed contact to get buyer_id
     const contactResult = await client.query(
-      'SELECT id, buyer_id FROM contacts WHERE post_id = $1 AND status = $2',
-      [id, 'confirmed']
+      "SELECT id, buyer_id FROM contacts WHERE post_id = $1 AND status IN ('confirmed', 'wait complete')",
+      [id]
     );
 
     if (contactResult.rows.length === 0) {
@@ -1436,9 +1436,9 @@ app.post('/contacts/:id/cancel', authMiddleware, async (req, res) => {
 
     const contact = contactResult.rows[0];
 
-    if (contact.status !== 'confirmed') {
+    if (contact.status !== 'confirmed' && contact.status !== 'wait complete') {
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Only confirmed contacts can be cancelled through this flow' });
+      return res.status(400).json({ error: 'Only confirmed or waiting complete contacts can be cancelled through this flow' });
     }
 
     // 2. Update contact status to 'cancelled'

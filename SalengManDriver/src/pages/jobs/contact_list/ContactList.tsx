@@ -28,7 +28,7 @@ function ContactList() {
 
     useEffect(() => {
         fetchContacts();
-    }, []);
+    }, [location]);
 
     const fetchContacts = async () => {
         const token = getToken();
