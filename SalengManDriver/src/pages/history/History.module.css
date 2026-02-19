@@ -2,7 +2,7 @@
     height: 100vh;
     height: 100dvh;
     background-color: var(--color-bg);
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -49,6 +49,7 @@
     flex-direction: column;
     gap: 16px;
     padding: 0 16px;
+    margin-bottom: 50px;
 }
 
 .post-card {

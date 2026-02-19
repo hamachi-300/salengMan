@@ -15,6 +15,7 @@
 
 .header-row {
     margin-bottom: 20px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
 .header-title {

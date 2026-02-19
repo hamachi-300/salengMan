@@ -4,7 +4,7 @@
     height: 100vh;
     height: 100dvh;
     background-color: var(--color-bg);
-    padding-bottom: 100px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
     /* Space for the fixed PageFooter */
 }
 

@@ -52,12 +52,12 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    padding-bottom: 100px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 /* Card Style */
 .card {
-    background:var(--color-bg-2);
+    background: var(--color-bg-2);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 16px;
@@ -245,13 +245,13 @@
 
     .card {
         background: var(--color-bg-2);
-        border: 1px solid  #FF9644;
+        border: 1px solid #FF9644;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     .success-modal {
         background: var(--color-bg-2);
-        border: 1px solid  #FF9644;
+        border: 1px solid #FF9644;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
 

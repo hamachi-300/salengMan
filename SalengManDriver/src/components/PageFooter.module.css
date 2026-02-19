@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     padding: 16px 24px;
-    padding-bottom: calc(24px + var(--safe-area-bottom, 0px));
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
     background: linear-gradient(transparent, var(--color-bg) 20%);
     z-index: 2000;
     /* Ensure it stays above Leaflet panes (up to 1000) */

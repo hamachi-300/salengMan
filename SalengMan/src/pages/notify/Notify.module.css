@@ -2,7 +2,7 @@
     min-height: 100vh;
     background-color: #1a1c20;
     color: white;
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
     font-family: var(--font-thai-polite);
 }
 
