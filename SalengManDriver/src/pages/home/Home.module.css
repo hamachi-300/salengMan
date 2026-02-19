@@ -71,7 +71,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #3a3a3a;
+  background-color: var(--color-bg-2);
   transition: transform 0.2s;
 }
 
@@ -117,7 +117,7 @@
 }
 
 .serviceCard {
-  background-color: #3a3a3a;
+  background-color: var(--color-bg-2);
   border-radius: 20px;
   padding: 24px 16px;
   display: flex;
@@ -178,7 +178,7 @@
 }
 
 .exploreCard {
-  background-color: #3a3a3a;
+  background-color: var(--color-bg-2);
   border-radius: 20px;
   padding: 32px 24px;
   position: relative;
