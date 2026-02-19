@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./PostDetail.module.css";
 import PageHeader from "../../components/PageHeader";
+import PageFooter from "../../components/PageFooter";
 import { api, Address } from "../../config/api";
 import { getToken } from "../../services/auth";
 import ConfirmPopup from "../../components/ConfirmPopup";
+import RequestCancelPopup from "../../components/RequestCancelPopup";
+import SuccessPopup from "../../components/SuccessPopup";
+import MapSelector from "../../components/MapSelector";
 import { useSell } from "../../context/SellContext";
 
 interface Post {
@@ -17,7 +21,7 @@ interface Post {
     address_snapshot: any;
     pickup_time: any;
     post_type?: 'old_item' | 'trash_disposal';
-    contacts?: { contact_id: string; driver_id: string }[];
+    contacts?: { contact_id: string; driver_id: string; chat_id?: string }[];
 }
 
 function PostDetail() {
@@ -28,8 +32,12 @@ function PostDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
-
+    const [cancelLoading, setCancelLoading] = useState(false);
+    const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [completing, setCompleting] = useState(false);
     const isEditable = post?.status === 'waiting';
 
     useEffect(() => {
@@ -84,6 +92,32 @@ function PostDetail() {
         }
     };
 
+    const handleCancel = async (reason: string) => {
+        setCancelLoading(true);
+        const token = getToken();
+        if (!token || !post) return;
+
+        try {
+            await api.cancelPost(token, post.id, reason);
+            alert("Post cancelled and buyer notified");
+            fetchPost(); // Refresh post details
+            setShowCancelConfirm(false);
+        } catch (err: any) {
+            console.error("Failed to cancel post:", err);
+            alert(err.message || "Failed to cancel post");
+        } finally {
+            setCancelLoading(false);
+        }
+    };
+
+    const handleDeleteClick = () => {
+        if (post?.status === 'waiting') {
+            setShowDeleteConfirm(true);
+        } else if (post?.status === 'pending') {
+            setShowCancelConfirm(true);
+        }
+    };
+
     const handleEdit = (targetPage: string) => {
         if (!post) return;
 
@@ -122,6 +156,63 @@ function PostDetail() {
         navigate(targetPage);
     };
 
+    const handleChat = () => {
+        if (post?.contacts && post.contacts.length > 0) {
+            if (post.status === 'pending') {
+                const chatId = post.contacts[0].chat_id;
+                if (chatId) {
+                    navigate(`/chat/${chatId}`, { state: { postId: post.id, backToDetail: true } });
+                } else {
+                    console.error("Chat ID not found for contact");
+                    alert("Unable to open chat: Chat ID is missing.");
+                }
+            } else {
+                navigate(`/history/${post.id}/buyers`);
+            }
+        } else {
+            console.warn("No contact available for chat");
+        }
+    };
+
+    const handleConfirmComplete = async () => {
+        if (!post || !post.contacts || post.contacts.length === 0) return;
+        const token = getToken();
+        if (!token) return;
+
+        const contactId = post.contacts[0].contact_id;
+        if (!contactId) {
+            console.error("No contact_id found in post contacts:", post.contacts[0]);
+            alert("Error: Contact information is missing for this post. Please try again with a new post.");
+            return;
+        }
+
+        setCompleting(true);
+        try {
+            await api.updateContactStatus(token, contactId, 'completed');
+            await fetchPost();
+            setShowCompleteConfirm(false);
+            setShowSuccess(true);
+        } catch (err: any) {
+            console.error("Failed to complete transaction:", err);
+            alert(err.message || "Failed to complete transaction");
+        } finally {
+            setCompleting(false);
+        }
+    };
+
+    const renderChatIcon = () => (
+        <div className={styles['chat-room-icon']} onClick={handleChat}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 7v-1.25c0-1.52-1.23-2.75-2.75-2.75H4.75C3.23 3 2 4.23 2 5.75v11c0 1.52 1.23 2.75 2.75 2.75h.5V21l3-3h7c1.52 0 2.75-1.23 2.75-2.75v-1.25" opacity="0.4" />
+                <path d="M22 10.75c0-1.52-1.23-2.75-2.75-2.75h-11c-1.52 0-2.75 1.23-2.75 2.75v11c0 1.52 1.23 2.75 2.75 2.75h.5l3-3h7c1.52 0 2.75-1.23 2.75-2.75v-11z" />
+                <circle cx="11.5" cy="16.25" r="1" fill="white" />
+                <circle cx="14.5" cy="16.25" r="1" fill="white" />
+                <circle cx="17.5" cy="16.25" r="1" fill="white" />
+            </svg>
+            <div className={styles['unread-dot']} />
+        </div>
+    );
+
     if (loading) {
         return (
             <div className={styles['page']}>
@@ -155,7 +246,11 @@ function PostDetail() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title="Post Detail" backTo="/history" />
+            <PageHeader
+                title="Post Detail"
+                backTo="/history"
+                rightElement={post.status.toLowerCase() === 'pending' ? renderChatIcon() : undefined}
+            />
 
             <div className={styles['content']}>
                 {/* Status Badge */}
@@ -225,6 +320,18 @@ function PostDetail() {
                 <div className={styles['card']}>
                     <div className={styles['card-title']}>
                         <span>Pickup Information</span>
+                        {post.status === 'pending' && (
+                            <button
+                                className={styles['track-btn-top']}
+                                onClick={() => navigate(`/history/${post.id}/track`)}
+                                title="Track Driver"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                                </svg>
+                                <span>Track</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* Location Row */}
@@ -274,22 +381,47 @@ function PostDetail() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className={styles['action-buttons']}>
-                    <button className={styles['view-buyers-btn']}>
-                        <svg className={styles['btn-icon']} viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                        </svg>
-                        View Buyers {post.contacts && post.contacts.length > 0 && `(${post.contacts.length})`}
-                    </button>
-                    {(post.status === 'waiting' || post.status === 'pending') && (
-                        <button className={styles['delete-btn']} onClick={() => setShowDeleteConfirm(true)}>
-                            <svg className={styles['delete-icon']} viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                            </svg>
-                        </button>
-                    )}
-                </div>
+                {post.status.toLowerCase() !== 'completed' && (
+                    <div className={styles['action-buttons']}>
+                        {post.status === 'pending' ? (
+                            <>
+                                <button
+                                    className={styles['complete-btn']}
+                                    onClick={() => setShowCompleteConfirm(true)}
+                                    disabled={completing}
+                                >
+                                    {completing ? 'Completing...' : 'Complete'}
+                                    <svg className={styles['btn-icon']} viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                    </svg>
+                                </button>
+                            </>
+                        ) : (
+                            post.status !== 'cancelled' && (
+                                <button
+                                    className={styles['view-buyers-btn']}
+                                    onClick={() => navigate(`/history/${post.id}/buyers`)}
+                                >
+                                    <svg className={styles['btn-icon']} viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                    </svg>
+                                    View Buyers {post.contacts && post.contacts.length > 0 && `(${post.contacts.length})`}
+                                </button>
+                            )
+                        )}
+
+                        {(post.status === 'waiting' || post.status === 'pending') && (
+                            <button className={styles['delete-btn']} onClick={handleDeleteClick}>
+                                <svg className={styles['delete-icon']} viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1-1H5v2h14V4z" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
+
+            {/* Action Buttons */}
 
             <ConfirmPopup
                 isOpen={showDeleteConfirm}
@@ -301,6 +433,42 @@ function PostDetail() {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
+
+            <ConfirmPopup
+                isOpen={showCompleteConfirm}
+                title="Confirm Transaction"
+                message="Did you receive money already?"
+                onConfirm={handleConfirmComplete}
+                onCancel={() => setShowCompleteConfirm(false)}
+                isLoading={completing}
+                confirmText="Yes, Received"
+                cancelText="Not Yet"
+                confirmColor="#4CAF50"
+            />
+
+            <RequestCancelPopup
+                isOpen={showCancelConfirm}
+                onConfirm={handleCancel}
+                onCancel={() => setShowCancelConfirm(false)}
+                isLoading={cancelLoading}
+            />
+
+            <SuccessPopup
+                isOpen={showSuccess}
+                onConfirm={() => setShowSuccess(false)}
+                title="Transaction Completed!"
+                message="โพสต์และรายการติดต่อนี้ถูกทำเครื่องหมายว่าเสร็จสิ้นแล้ว"
+            />
+
+            {post.status.toLowerCase() === 'completed' && (
+                <PageFooter
+                    title="Completed"
+                    onClick={() => { }}
+                    disabled={true}
+                    showArrow={false}
+                    variant="green"
+                />
+            )}
         </div>
     );
 }

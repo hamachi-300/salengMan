@@ -62,6 +62,15 @@ export interface CreateAddressData {
   sub_district?: string;
   zipcode?: string;
 }
+export interface Notification {
+  notify_id: number;
+  notify_user_id: string;
+  notify_header: string;
+  notify_content: string;
+  timestamp: string;
+  type: string;
+  refer_id?: number;
+}
 
 export const api = {
   // Health check
@@ -332,6 +341,25 @@ export const api = {
     return res.json();
   },
 
+  // Cancel contact (with reason)
+  cancelContact: async (token: string, contactId: string, reason: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/contacts/${contactId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ reason }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to cancel contact');
+    }
+
+    return res.json();
+  },
+
   // Get chat messages
   getChat: async (token: string, chatId: string): Promise<any> => {
     const res = await fetch(`${API_URL}/chats/${chatId}`, {
@@ -358,6 +386,37 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to send message');
+    }
+
+    return res.json();
+  },
+
+  // Get notifications
+  getNotifications: async (token: string): Promise<Notification[]> => {
+    const res = await fetch(`${API_URL}/notifications`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch notifications');
+    }
+
+    return res.json();
+  },
+
+  // Update driver real-time location
+  updateDriverLocation: async (token: string, lat: number, lng: number): Promise<{ status: string }> => {
+    const res = await fetch(`${API_URL}/driver-location`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ lat, lng }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to update driver location');
     }
 
     return res.json();

@@ -10,7 +10,7 @@ async function checkSchema() {
         const res = await pool.query(`
       SELECT column_name, data_type 
       FROM information_schema.columns 
-      WHERE table_name = 'users';
+      WHERE table_name = 'driver_locations';
     `);
         console.log('Users table columns:', res.rows);
     } catch (err) {

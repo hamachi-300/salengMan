@@ -1,0 +1,27 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    background-color: var(--color-bg);
+    padding-bottom: 100px;
+    /* Space for the fixed PageFooter */
+}
+
+.mapContainer {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.loading,
+.empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8E8E93;
+    font-family: var(--font-eng-fun);
+    padding: 20px;
+    text-align: center;
+}

@@ -67,6 +67,35 @@
     justify-content: space-between;
 }
 
+.track-btn-top {
+    background-color: #1a1a1a;
+    color: #ff7a30;
+    border: 1px solid #333;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.track-btn-top:hover {
+    background-color: #333;
+    transform: translateY(-1px);
+}
+
+.track-btn-top:active {
+    transform: scale(0.95);
+}
+
+.track-btn-top svg {
+    color: #ff7a30;
+}
+
 /* Image Grid */
 .image-grid {
     display: grid;
@@ -283,8 +312,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Light mode */
@@ -316,5 +350,82 @@
     .spinner {
         border: 4px solid #eee;
         border-top: 4px solid var(--color-primary);
+    }
+}
+
+/* Header Icon */
+.chat-room-icon {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: transparent;
+    border-radius: 50%;
+    color: var(--color-primary);
+    transition: background-color 0.2s;
+}
+
+.chat-room-icon:hover {
+    background-color: #333;
+}
+
+.unread-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background-color: #ff5252;
+    border: 2px solid #111;
+    border-radius: 50%;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.complete-btn {
+    flex: 1;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    font-family: var(--font-eng-fun);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.complete-btn:hover {
+    opacity: 0.9;
+    background-color: #45a049;
+}
+
+.complete-btn:active {
+    transform: scale(0.98);
+}
+
+.complete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Light mode */
+@media (prefers-color-scheme: light) {
+    .chat-room-icon:hover {
+        background-color: #f0f0f0;
     }
 }

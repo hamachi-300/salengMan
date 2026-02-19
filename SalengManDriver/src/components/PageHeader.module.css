@@ -36,6 +36,14 @@
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
+  flex: 1;
+}
+
+.right-element {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 40px;
 }
 
 /* Light Mode */

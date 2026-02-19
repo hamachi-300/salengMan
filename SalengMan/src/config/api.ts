@@ -63,6 +63,39 @@ export interface CreateAddressData {
   zipcode?: string;
 }
 
+export interface Contact {
+  id: string;
+  post_id: number;
+  seller_id: string;
+  buyer_id: string;
+  chat_id: string;
+  status: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+  // Join fields
+  images?: string[];
+  categories?: string[];
+  remarks?: string;
+  post_status?: string;
+  address_snapshot?: any;
+  buyer_name?: string;
+  buyer_phone?: string;
+  buyer_avatar?: string;
+  seller_name?: string;
+  seller_phone?: string;
+  seller_avatar?: string;
+}
+export interface Notification {
+  notify_id: number;
+  notify_user_id: string;
+  notify_header: string;
+  notify_content: string;
+  timestamp: string;
+  type: string;
+  refer_id?: number;
+}
+
 export const api = {
   // Health check
   health: (): Promise<{ status: string }> =>
@@ -334,6 +367,139 @@ export const api = {
         errorMessage = `Server Error: ${res.status} ${res.statusText}`;
       }
       throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
+
+  // Get Contacts
+  getContacts: async (token: string): Promise<Contact[]> => {
+    const res = await fetch(`${API_URL}/contacts`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch contacts');
+    }
+
+    return res.json();
+  },
+
+  // Get single contact by ID
+  getContact: async (token: string, id: string): Promise<Contact> => {
+    const res = await fetch(`${API_URL}/contacts/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch contact');
+    }
+
+    return res.json();
+  },
+
+  // Get user public profile
+  getPublicProfile: async (token: string, userId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/users/${userId}/public`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+
+    return res.json();
+  },
+
+  // Update contact status
+  updateContactStatus: async (token: string, id: string, status: string): Promise<Contact> => {
+    const res = await fetch(`${API_URL}/contacts/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to update contact status');
+    }
+
+    return res.json();
+  },
+
+  // Get chat messages
+  getChat: async (token: string, chatId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/chats/${chatId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch chat');
+    }
+
+    return res.json();
+  },
+
+  // Send message
+  sendMessage: async (token: string, chatId: string, text?: string, image?: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/chats/${chatId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ text, image }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to send message');
+    }
+
+    return res.json();
+  },
+
+  // Cancel post
+  cancelPost: async (token: string, postId: number, reason: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/old-item-posts/${postId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ reason }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to cancel post');
+    }
+
+    return res.json();
+  },
+
+  // Get notifications
+  getNotifications: async (token: string): Promise<Notification[]> => {
+    const res = await fetch(`${API_URL}/notifications`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch notifications');
+    }
+
+    return res.json();
+  },
+
+  // Get driver real-time location
+  getDriverLocation: async (token: string, driverId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/driver-location/${driverId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch driver location');
     }
 
     return res.json();

@@ -291,7 +291,11 @@ app.patch('/auth/me', authMiddleware, async (req, res) => {
 app.get('/users/:id/public', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, full_name, email, phone, avatar_url, created_at FROM users WHERE id = $1',
+      `SELECT u.id, u.full_name, u.email, u.phone as user_phone, u.avatar_url, u.created_at,
+              a.address as default_address, a.phone as address_phone
+       FROM users u
+       LEFT JOIN addresses a ON u.id = a.user_id AND a.is_default = true
+       WHERE u.id = $1`,
       [req.params.id]
     );
 
@@ -599,8 +603,9 @@ app.get('/old-item-posts/available/all', authMiddleware, async (req, res) => {
 });
 
 app.get('/old-item-posts/:id', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
+    const result = await client.query(
       `SELECT * FROM old_item_posts WHERE id = $1`,
       [req.params.id]
     );
@@ -609,9 +614,25 @@ app.get('/old-item-posts/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    res.json(result.rows[0]);
+    const post = result.rows[0];
+
+    // If pending or completed, ensure it has chat_id in contacts
+    if ((post.status === 'pending' || post.status === 'completed') && post.contacts && post.contacts.length > 0) {
+      const contactId = post.contacts[0].contact_id;
+      const contactResult = await client.query(
+        'SELECT chat_id FROM contacts WHERE id = $1',
+        [contactId]
+      );
+      if (contactResult.rows.length > 0 && contactResult.rows[0].chat_id) {
+        post.contacts[0].chat_id = contactResult.rows[0].chat_id;
+      }
+    }
+
+    res.json(post);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -750,6 +771,85 @@ app.put('/old-item-posts/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error updating post:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Cancel post (specifically for pending posts)
+app.post('/old-item-posts/:id/cancel', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ error: 'Reason is required for cancellation' });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Check post ownership and status
+    const postCheck = await client.query(
+      'SELECT * FROM old_item_posts WHERE id = $1 AND user_id = $2',
+      [id, req.user.user_id]
+    );
+
+    if (postCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Post not found or unauthorized' });
+    }
+
+    const post = postCheck.rows[0];
+    if (post.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only pending posts can be cancelled through this flow' });
+    }
+
+    // 2. Fetch the confirmed contact to get buyer_id
+    const contactResult = await client.query(
+      'SELECT id, buyer_id FROM contacts WHERE post_id = $1 AND status = $2',
+      [id, 'confirmed']
+    );
+
+    if (contactResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'No confirmed buyer found for this post' });
+    }
+
+    const contact = contactResult.rows[0];
+
+    // 3. Update post status to 'cancelled'
+    await client.query(
+      "UPDATE old_item_posts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [id]
+    );
+
+    // 4. Update contact status to 'cancelled'
+    await client.query(
+      "UPDATE contacts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [contact.id]
+    );
+
+    // 5. Create notification for buyer
+    await client.query(
+      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        contact.buyer_id,
+        "Post Old Item Cancelled From Seller",
+        reason,
+        "cancelled contact",
+        id
+      ]
+    );
+
+    await client.query('COMMIT');
+    res.json({ message: 'Post cancelled and buyer notified successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error cancelling post:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -1197,24 +1297,185 @@ app.get('/contacts/:id', authMiddleware, async (req, res) => {
 
 // Update contact status
 app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const { status } = req.body;
     const contactId = req.params.id;
 
-    const result = await pool.query(
-      `UPDATE contacts SET status = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND (seller_id = $3 OR buyer_id = $3)
-       RETURNING *`,
-      [status, contactId, req.user.user_id]
+    await client.query('BEGIN');
+
+    // 1. Fetch current status and check permissions
+    const currentContact = await client.query(
+      'SELECT id, status, seller_id, buyer_id, post_id, chat_id FROM contacts WHERE id = $1',
+      [contactId]
     );
 
-    if (result.rows.length === 0) {
+    if (currentContact.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Contact not found' });
     }
 
-    res.json(result.rows[0]);
+    const contact = currentContact.rows[0];
+
+    // If already completed, nothing more to do (prevent accidental rollbacks)
+    if (contact.status === 'completed') {
+      await client.query('COMMIT');
+      return res.json(contact);
+    }
+
+    const isSeller = contact.seller_id === req.user.user_id;
+    const isBuyer = contact.buyer_id === req.user.user_id;
+
+    if (!isSeller && !isBuyer) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Buyer constraints: only allow updating to 'wait complete'
+    if (isBuyer && !isSeller && status !== 'wait complete') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Drivers can only set status to wait complete' });
+    }
+
+    // 2. Update the target contact status
+    const updateResult = await client.query(
+      `UPDATE contacts SET status = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      [status, contactId]
+    );
+
+    const updatedContact = updateResult.rows[0];
+
+    // 2. If status is 'confirmed', perform cleanup and update post
+    if (status === 'confirmed') {
+      const postId = contact.post_id;
+
+      // Update post status to 'pending' and clear other contacts in array
+      await client.query(
+        `UPDATE old_item_posts 
+         SET status = 'pending',
+             contacts = $1::JSONB,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [JSON.stringify([{ contact_id: contactId, driver_id: contact.buyer_id, chat_id: contact.chat_id }]), postId]
+      );
+
+      // Fetch other contacts before deleting to clean up chats
+      const otherContactsResult = await client.query(
+        `SELECT id, chat_id FROM contacts WHERE post_id = $1 AND id != $2`,
+        [postId, contactId]
+      );
+
+      const otherContactIds = otherContactsResult.rows.map(c => c.id);
+      const otherChatIds = otherContactsResult.rows.map(c => c.chat_id).filter(id => id && id !== contact.chat_id);
+
+      if (otherContactIds.length > 0) {
+        // Delete other contacts
+        await client.query(
+          `DELETE FROM contacts WHERE id = ANY($1)`,
+          [otherContactIds]
+        );
+
+        // Delete associated chats
+        if (otherChatIds.length > 0) {
+          await client.query(
+            `DELETE FROM chats WHERE id = ANY($1)`,
+            [otherChatIds]
+          );
+        }
+      }
+    }
+
+    // 3. If status is 'completed', update associated post status
+    if (status === 'completed') {
+      const postId = contact.post_id;
+      await client.query(
+        `UPDATE old_item_posts 
+         SET status = 'completed',
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [postId]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json(contact);
   } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating contact status:', error);
     res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Cancel contact (specifically for pending/confirmed contacts by driver)
+app.post('/contacts/:id/cancel', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ error: 'Reason is required for cancellation' });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Check contact exists and user is the buyer
+    const contactResult = await client.query(
+      'SELECT * FROM contacts WHERE id = $1 AND buyer_id = $2',
+      [id, req.user.user_id]
+    );
+
+    if (contactResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Contact not found or unauthorized' });
+    }
+
+    const contact = contactResult.rows[0];
+
+    if (contact.status !== 'confirmed') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only confirmed contacts can be cancelled through this flow' });
+    }
+
+    // 2. Update contact status to 'cancelled'
+    await client.query(
+      "UPDATE contacts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [id]
+    );
+
+    // 3. Update associated post status to 'cancelled'
+    if (contact.post_id) {
+      await client.query(
+        "UPDATE old_item_posts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+        [contact.post_id]
+      );
+    }
+
+    // 4. Create notification for seller
+    await client.query(
+      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        contact.seller_id,
+        "Post Old Item Cancelled From Buyer",
+        reason,
+        "cancelled contact",
+        contact.post_id
+      ]
+    );
+
+    await client.query('COMMIT');
+    res.json({ message: 'Contact cancelled and seller notified successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error cancelling contact:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -1375,6 +1636,94 @@ app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
   }
 });
 
+// Get notifications for current user
+app.get('/notifications', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM notifies WHERE notify_user_id = $1 ORDER BY timestamp DESC',
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Initialize buckets and database tables
+async function init() {
+  await initBucket();
+
+  // Create driver_locations with all columns and unique constraint
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS driver_locations (
+      id SERIAL PRIMARY KEY,
+      driver_id TEXT UNIQUE NOT NULL,
+      lat DECIMAL NOT NULL,
+      lng DECIMAL NOT NULL,
+      heading DECIMAL,
+      speed DECIMAL,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  console.log('Database tables initialized');
+}
+
+init();
+
+// ============================================
+// DRIVER LOCATION
+// ============================================
+app.post('/driver-location', authMiddleware, async (req, res) => {
+  const { lat, lng, heading, speed } = req.body;
+  const driver_id = req.user.user_id; // Using user_id from JWT payload
+
+  if (lat === undefined || lng === undefined) {
+    return res.status(400).json({ error: 'Latitude and Longitude are required' });
+  }
+
+  try {
+    // Note: The table might have an auto-incrementing 'id' column, 
+    // but we use 'driver_id' as our unique constraint.
+    await pool.query(`
+      INSERT INTO driver_locations (driver_id, lat, lng, heading, speed, updated_at)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      ON CONFLICT (driver_id) DO UPDATE SET
+        lat = EXCLUDED.lat,
+        lng = EXCLUDED.lng,
+        heading = EXCLUDED.heading,
+        speed = EXCLUDED.speed,
+        updated_at = EXCLUDED.updated_at;
+    `, [driver_id, lat, lng, heading || null, speed || null]);
+
+    res.json({ status: 'success' });
+  } catch (error) {
+    console.error('Error updating driver location:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/driver-location/:driver_id', authMiddleware, async (req, res) => {
+  const { driver_id } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT lat, lng, heading, speed, updated_at FROM driver_locations WHERE driver_id = $1',
+      [driver_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver location not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching driver location:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ============================================
 // START SERVER
 // ============================================
@@ -1382,7 +1731,18 @@ const PORT = process.env.PORT || 3000;
 
 async function start() {
   await waitForDatabase();
-  await initBucket();
+  // Ensure notifies table exists
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS notifies (
+        notify_id SERIAL PRIMARY KEY,
+        notify_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        notify_header TEXT NOT NULL,
+        notify_content TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        type VARCHAR(50),
+        refer_id INTEGER
+    );
+  `).catch(err => console.error('Migration error (notifies):', err.message));
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);

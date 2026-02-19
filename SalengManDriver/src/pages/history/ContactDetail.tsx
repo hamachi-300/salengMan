@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styles from "./ContactDetail.module.css";
-// Add simple flex style to bottomBar in module css or inline
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
@@ -10,6 +9,7 @@ import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
 import { useUser } from "../../context/UserContext";
 import profileLogo from "../../assets/icon/profile.svg";
 import ConfirmPopup from "../../components/ConfirmPopup";
+import RequestCancelPopup from "../../components/RequestCancelPopup";
 
 interface Contact {
     id: string;
@@ -17,6 +17,7 @@ interface Contact {
     seller_id: string;
     buyer_id: string;
     chat_id: string;
+    status: string;
     post_status: string;
     created_at: string;
     categories: string[];
@@ -24,7 +25,7 @@ interface Contact {
     images?: string[];
     seller_name?: string;
     seller_phone?: string;
-    seller_avatar?: string; // Add if available in contact details
+    seller_avatar?: string;
     address_snapshot?: {
         address?: string;
         lat?: string;
@@ -37,6 +38,7 @@ interface Contact {
 function ContactDetail() {
     const { initialLocation } = useUser();
     const navigate = useNavigate();
+    const location = useLocation();
     const { id } = useParams<{ id: string }>();
     const [contact, setContact] = useState<Contact | null>(null);
     const [loading, setLoading] = useState(true);
@@ -45,6 +47,10 @@ function ContactDetail() {
     const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
     const [cancelling, setCancelling] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [showCancelRequest, setShowCancelRequest] = useState(false);
+    const [cancelRequestLoading, setCancelRequestLoading] = useState(false);
+    const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+    const [completing, setCompleting] = useState(false);
 
     useEffect(() => {
         fetchContactDetails();
@@ -62,6 +68,7 @@ function ContactDetail() {
                             return;
                         }
                         if (pos) {
+                            console.log("Contact Detail - Location (Tauri):", pos.coords.latitude, pos.coords.longitude);
                             setDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                         }
                     });
@@ -74,6 +81,7 @@ function ContactDetail() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
                     (pos) => {
+                        console.log("Contact Detail - Location (Web):", pos.coords.latitude, pos.coords.longitude);
                         setDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                     },
                     (err) => {
@@ -135,7 +143,11 @@ function ContactDetail() {
     };
 
     const handleCancelClick = () => {
-        setShowConfirm(true);
+        if (contact?.post_status === 'pending') {
+            setShowCancelRequest(true);
+        } else {
+            setShowConfirm(true);
+        }
     };
 
     const handleConfirmCancel = async () => {
@@ -156,6 +168,68 @@ function ContactDetail() {
             setShowConfirm(false);
         }
     };
+
+    const handleRequestCancel = async (reason: string) => {
+        if (!contact) return;
+        const token = getToken();
+        if (!token) return;
+
+        setCancelRequestLoading(true);
+        try {
+            await api.cancelContact(token, contact.id, reason);
+            alert("Contact cancelled and seller notified");
+            navigate('/history');
+        } catch (error: any) {
+            console.error("Failed to cancel contact:", error);
+            alert(error.message || "Failed to cancel contact. Please try again.");
+        } finally {
+            setCancelRequestLoading(false);
+            setShowCancelRequest(false);
+        }
+    };
+
+    const handleCompleteClick = () => {
+        setShowCompleteConfirm(true);
+    };
+
+    const handleConfirmComplete = async () => {
+        if (!contact) return;
+        const token = getToken();
+        if (!token) return;
+
+        setCompleting(true);
+        try {
+            await api.updateContactStatus(token, contact.id, 'wait complete');
+            await fetchContactDetails();
+            setShowCompleteConfirm(false);
+            alert("Status updated to wait complete. Please wait for the seller to confirm.");
+
+            // Redirect to contacts list if this was part of a job exploration flow
+            if (location.state?.fromExplore) {
+                navigate("/jobs/contacts", {
+                    state: { filter: location.state?.filter }
+                });
+            }
+        } catch (error: any) {
+            console.error("Failed to update contact status:", error);
+            alert(error.message || "Failed to update status. Please try again.");
+        } finally {
+            setCompleting(false);
+        }
+    };
+
+    const renderChatIcon = () => (
+        <div className={styles.chatRoomIcon} onClick={handleChat}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 7v-1.25c0-1.52-1.23-2.75-2.75-2.75H4.75C3.23 3 2 4.23 2 5.75v11c0 1.52 1.23 2.75 2.75 2.75h.5V21l3-3h7c1.52 0 2.75-1.23 2.75-2.75v-1.25" opacity="0.4" />
+                <path d="M22 10.75c0-1.52-1.23-2.75-2.75-2.75h-11c-1.52 0-2.75 1.23-2.75 2.75v11c0 1.52 1.23 2.75 2.75 2.75h.5l3-3h7c1.52 0 2.75-1.23 2.75-2.75v-11z" />
+                <circle cx="11.5" cy="16.25" r="1" fill="white" />
+                <circle cx="14.5" cy="16.25" r="1" fill="white" />
+                <circle cx="17.5" cy="16.25" r="1" fill="white" />
+            </svg>
+            <div className={styles.unreadDot} />
+        </div>
+    );
 
     const openMap = () => {
         if (contact?.address_snapshot?.lat && contact?.address_snapshot?.lng) {
@@ -180,7 +254,6 @@ function ContactDetail() {
         );
     }
 
-
     return (
         <div className={styles.pageContainer}>
             {/* Map Modal */}
@@ -197,13 +270,18 @@ function ContactDetail() {
                             initialLng={parseFloat(contact.address_snapshot.lng)}
                             driverLat={driverLocation?.lat}
                             driverLng={driverLocation?.lng}
+                            isReadOnly={true}
                         />
                     </div>
                 </div>
             )}
 
             {/* Header */}
-            <PageHeader title="Contact Details" backTo="/history" />
+            <PageHeader
+                title="Contact Details"
+                backTo={location.state?.fromExplore ? `/jobs/explore/${id}` : "/history"}
+                rightElement={renderChatIcon()}
+            />
 
             {/* Content */}
             <div className={styles.content}>
@@ -324,25 +402,43 @@ function ContactDetail() {
                         </div>
                     </div>
                 </div>
-                <button
-                    className={styles.cancelButton}
-                    onClick={handleCancelClick}
-                    disabled={cancelling}
-                >
-                    {cancelling ? 'Cancelling...' : 'Cancel Contact'}
-                </button>
+
+                {contact.status !== 'completed' && (
+                    <button
+                        className={styles.cancelButton}
+                        onClick={handleCancelClick}
+                        disabled={cancelling}
+                    >
+                        {cancelling ? 'Cancelling...' : 'Cancel Contact'}
+                    </button>
+                )}
             </div>
 
             <div className={styles.bottomBar}>
-                <button
-                    className={styles.addToCartButton}
-                    onClick={handleChat}
-                >
-                    Chat
-                    <svg viewBox="0 0 24 24" fill="currentColor" className={styles.cartIcon}>
-                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-                    </svg>
-                </button>
+                {contact.post_status === 'pending' ? (
+                    <button
+                        className={`${styles.completeContactButton} ${contact.status === 'wait complete' ? styles.waitCompleteStatus : ''}`}
+                        onClick={handleCompleteClick}
+                        disabled={contact.status === 'wait complete' || contact.status === 'completed' || completing}
+                    >
+                        {contact.status === 'wait complete' ? 'Wait for Complete' :
+                            contact.status === 'completed' ? 'Completed' :
+                                completing ? 'Updating...' : 'Complete Contact'}
+                        <svg viewBox="0 0 24 24" fill="currentColor" className={styles.cartIcon}>
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                        </svg>
+                    </button>
+                ) : (
+                    <button
+                        className={styles.addToCartButton}
+                        onClick={handleChat}
+                    >
+                        Chat
+                        <svg viewBox="0 0 24 24" fill="currentColor" className={styles.cartIcon}>
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                        </svg>
+                    </button>
+                )}
             </div>
 
             <ConfirmPopup
@@ -355,6 +451,25 @@ function ContactDetail() {
                 cancelText="No, Keep"
                 confirmColor="#ef4444"
                 isLoading={cancelling}
+            />
+
+            <ConfirmPopup
+                isOpen={showCompleteConfirm}
+                title="Complete Contact"
+                message="Are you sure you want to mark this contact as complete? This will notify the seller to confirm the transaction."
+                onConfirm={handleConfirmComplete}
+                onCancel={() => setShowCompleteConfirm(false)}
+                confirmText="Yes, Complete"
+                cancelText="Not Yet"
+                confirmColor="#4CAF50"
+                isLoading={completing}
+            />
+
+            <RequestCancelPopup
+                isOpen={showCancelRequest}
+                onConfirm={handleRequestCancel}
+                onCancel={() => setShowCancelRequest(false)}
+                isLoading={cancelRequestLoading}
             />
         </div>
     );

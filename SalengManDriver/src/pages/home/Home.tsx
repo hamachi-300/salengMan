@@ -72,7 +72,7 @@ function Home() {
         {/* Explore Section */}
         <div className={styles.exploreSection}>
           <h2 className={styles.sectionTitle}>Explore</h2>
-          <div className={styles.exploreCard} onClick={() => navigate("/start-job")}>
+          <div className={styles.exploreCard} onClick={() => navigate("/jobs/contacts", { state: { filter: "pending" } })}>
             <div className={styles.gridPattern}></div>
             <div className={styles.exploreContent}>
               <div className={styles.exploreIconWrapper}>

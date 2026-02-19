@@ -122,3 +122,48 @@
         background-color: rgba(240, 240, 240, 0.95);
     }
 }
+
+.gpsButtonTop {
+    position: absolute;
+    top: 16px;
+    right: 70px;
+    /* themeButton (44px) + gap (10px) + right offset (16px) = 70px */
+    z-index: 1000;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background-color: rgba(40, 40, 40, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.gpsButtonTop:hover {
+    background-color: rgba(60, 60, 60, 0.95);
+}
+
+.gpsButtonTop:active {
+    transform: scale(0.95);
+}
+
+.gpsButtonTop svg {
+    width: 22px;
+    height: 22px;
+}
+
+@media (prefers-color-scheme: light) {
+    .gpsButtonTop {
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: #333;
+    }
+
+    .gpsButtonTop:hover {
+        background-color: rgba(240, 240, 240, 0.95);
+    }
+}

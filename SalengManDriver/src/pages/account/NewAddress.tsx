@@ -12,7 +12,7 @@ function NewAddress() {
     const routeLocation = useLocation();
     const { id } = useParams<{ id: string }>();
     const { updateUserLocal } = useUser();
-    const returnPath = (routeLocation.state as { from?: string })?.from || "/account";
+    const returnPath = (routeLocation.state as { from?: string })?.from || "/add-address";
     const [loading, setLoading] = useState(false);
     const [showMap, setShowMap] = useState(false);
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -25,7 +25,7 @@ function NewAddress() {
     const [isOnlyAddress, setIsOnlyAddress] = useState(false);
 
     // Location Data
-    const [locationData, setLocationData] = useState<{
+    const [location, setLocation] = useState<{
         lat: number;
         lng: number;
         address: string;
@@ -68,7 +68,7 @@ function NewAddress() {
             setPhone(data.phone || "");
             setNote(data.note || "");
             setIsDefault(data.is_default);
-            setLocationData({
+            setLocation({
                 lat: data.lat ? parseFloat(data.lat.toString()) : 0,
                 lng: data.lng ? parseFloat(data.lng.toString()) : 0,
                 address: data.address,
@@ -102,7 +102,7 @@ function NewAddress() {
     };
 
     const handleSave = async () => {
-        if (!label || !phone || !locationData) {
+        if (!label || !phone || !location) {
             alert("Please fill in all required fields and select a location.");
             return;
         }
@@ -127,14 +127,14 @@ function NewAddress() {
                 label,
                 phone,
                 note,
-                address: locationData.address,
-                lat: locationData.lat,
-                lng: locationData.lng,
+                address: location.address,
+                lat: location.lat,
+                lng: location.lng,
                 is_default: isDefault,
-                province: locationData.province,
-                district: locationData.district,
-                sub_district: locationData.sub_district,
-                zipcode: locationData.zipcode
+                province: location.province,
+                district: location.district,
+                sub_district: location.sub_district,
+                zipcode: location.zipcode
             };
 
             if (id) {
@@ -145,7 +145,7 @@ function NewAddress() {
 
             // Sync user context if default
             if (isDefault || isOnlyAddress) {
-                updateUserLocal({ default_address: locationData.address });
+                updateUserLocal({ default_address: location.address });
             }
 
             navigate(returnPath);
@@ -175,11 +175,11 @@ function NewAddress() {
     };
 
     const handleLocationSelect = (loc: any) => {
-        setLocationData(loc);
+        setLocation(loc);
     };
 
     const confirmLocation = () => {
-        if (!locationData) {
+        if (!location) {
             alert("Please select a location on the map");
             return;
         }
@@ -192,7 +192,7 @@ function NewAddress() {
             <ConfirmPopup
                 isOpen={showConfirmDelete}
                 title="Delete Address?"
-                message="Are you sure you want to delete this address? This action cannot be undone."
+                message="คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้ การกระทำนี้ไม่สามารถย้อนกลับได้"
                 onConfirm={handleDelete}
                 onCancel={() => setShowConfirmDelete(false)}
                 isLoading={loading}
@@ -214,10 +214,10 @@ function NewAddress() {
                     <div className={styles.mapContent}>
                         <MapSelector
                             onLocationSelect={handleLocationSelect}
-                            initialLat={locationData?.lat}
-                            initialLng={locationData?.lng}
+                            initialLat={location?.lat}
+                            initialLng={location?.lng}
                         />
-                        {locationData && (
+                        {location && (
                             <button className={styles.mapConfirmButton} onClick={confirmLocation}>
                                 Confirm Location
                             </button>
@@ -240,7 +240,7 @@ function NewAddress() {
                 <div className={styles.form}>
                     {/* Label */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Label (e.g. Home, Office)</label>
+                        <label className={styles.label}>ชื่อที่อยู่ (ex. บ้านหนองอีหรี)</label>
                         <input
                             type="text"
                             className={styles.input}
@@ -252,7 +252,7 @@ function NewAddress() {
 
                     {/* Phone */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Phone Number</label>
+                        <label className={styles.label}>หมายเลขโทรศัพท์</label>
                         <input
                             type="tel"
                             className={styles.input}
@@ -265,7 +265,7 @@ function NewAddress() {
 
                     {/* Address Selector */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Address Location</label>
+                        <label className={styles.label}>ตำแหน่งที่อยู่</label>
                         <div className={styles.addressSelector} onClick={() => setShowMap(true)}>
                             <div className={styles.addressIcon}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -273,8 +273,8 @@ function NewAddress() {
                                 </svg>
                             </div>
                             <div className={styles.addressContent}>
-                                {locationData ? (
-                                    <p className={styles.addressText}>{locationData.address}</p>
+                                {location ? (
+                                    <p className={styles.addressText}>{location.address}</p>
                                 ) : (
                                     <span className={styles.addressPlaceholder}>Click to select location on map</span>
                                 )}
@@ -287,10 +287,10 @@ function NewAddress() {
 
                     {/* Note */}
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Note (Optional)</label>
+                        <label className={styles.label}>หมายเหตุ (Optional)</label>
                         <textarea
                             className={`${styles.input} ${styles.textarea}`}
-                            placeholder="Additional details (e.g., floor, landmark)"
+                            placeholder="รายละเอียดเกี่ยวกับที่อยู่เพิ่มเติม"
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                         />
@@ -298,7 +298,7 @@ function NewAddress() {
 
                     {/* Default Address Toggle */}
                     <div className={styles.toggleRow}>
-                        <span className={styles.toggleLabel}>Set as Default Address</span>
+                        <span className={styles.toggleLabel}>ตั้งเป็นที่อยู่เริ่มต้น (Default)</span>
                         <label className={styles.toggle}>
                             <input
                                 type="checkbox"

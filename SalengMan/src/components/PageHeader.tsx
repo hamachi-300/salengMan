@@ -4,9 +4,10 @@ import styles from './PageHeader.module.css';
 interface PageHeaderProps {
   title: string;
   backTo: string;
+  rightElement?: React.ReactNode;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, backTo }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, backTo, rightElement }) => {
   const navigate = useNavigate();
 
   return (
@@ -17,6 +18,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, backTo }) => {
         </svg>
       </button>
       <h1 className={styles['title']}>{title}</h1>
+      {rightElement && <div className={styles['right-element']}>{rightElement}</div>}
     </div>
   );
 };

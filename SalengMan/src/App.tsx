@@ -12,6 +12,10 @@ import ConfirmPost from "./pages/sell/ConfirmPost";
 import PostTrash from "./pages/trash/PostTrash";
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
+import TrackDriver from "./pages/history/TrackDriver";
+import PostBuyerList from "./pages/history/PostBuyerList";
+import ConfirmBuyer from "./pages/history/ConfirmBuyer";
+import Chat from "./pages/history/Chat";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
@@ -58,6 +62,10 @@ function AppRoutes() {
         <Route path="/coin/history" element={<HistoryCoin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />
+        <Route path="/history/:id/track" element={<TrackDriver />} />
+        <Route path="/history/:id/buyers" element={<PostBuyerList />} />
+        <Route path="/history/buyer/:contactId" element={<ConfirmBuyer />} />
+        <Route path="/chat/:id" element={<Chat />} />
         <Route path="/notify" element={<Notify />} />
         <Route path="/account" element={<Account />} />
         <Route path="/add-address" element={<AddAddress />} />

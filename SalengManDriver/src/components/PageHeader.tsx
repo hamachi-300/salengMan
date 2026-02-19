@@ -5,9 +5,10 @@ interface PageHeaderProps {
   title: string;
   backTo?: string;
   onBack?: () => void;
+  rightElement?: React.ReactNode;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, backTo, onBack }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, backTo, onBack, rightElement }) => {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -28,6 +29,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, backTo, onBack }) => {
         </svg>
       </button>
       <h1 className={styles['title']}>{title}</h1>
+      <div className={styles['right-element']}>
+        {rightElement}
+      </div>
     </div>
   );
 };

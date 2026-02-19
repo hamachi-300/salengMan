@@ -1,30 +1,39 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { getCurrentPosition } from '@tauri-apps/plugin-geolocation';
 import 'leaflet/dist/leaflet.css';
 import styles from './MapSelector.module.css';
+import logoIcon from '../assets/icon/logo.svg';
 
-// Custom orange marker icon
-const orangeMarkerSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="32" height="48">
-  <path fill="#ff7a30" stroke="#cc5500" stroke-width="1" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z"/>
-  <circle fill="white" cx="12" cy="12" r="5"/>
+// Custom blue circle home icon for pickup
+const homeMarkerSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <circle cx="20" cy="20" r="18" fill="white" stroke="#2196F3" stroke-width="2" />
+  <circle cx="20" cy="20" r="15" fill="#2196F3" />
+  <path d="M20 12l-6 5v8h4v-5h4v5h4v-8l-6-5z" fill="white" />
 </svg>
 `;
 
-const OrangeIcon = L.divIcon({
-    html: orangeMarkerSvg,
-    className: 'orange-marker',
-    iconSize: [32, 48],
-    iconAnchor: [16, 48],
-    popupAnchor: [0, -48]
+const HomeIcon = L.divIcon({
+    html: homeMarkerSvg,
+    className: 'home-marker',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20]
 });
 
-L.Marker.prototype.options.icon = OrangeIcon;
+// Custom logo icon for driver
+const LogoIcon = L.icon({
+    iconUrl: logoIcon,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
+    className: 'driver-logo-marker'
+});
 
 // Map tile configurations
-const MAP_TILES = {
+const MAP_TILES: Record<string, { url: string; label: string }> = {
     dark: {
         url: 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
         label: 'Dark'
@@ -53,17 +62,23 @@ interface MapSelectorProps {
     }) => void;
     initialLat?: number;
     initialLng?: number;
+    driverLat?: number;
+    driverLng?: number;
+    isReadOnly?: boolean;
+    showGpsButton?: boolean;
+    onGpsClick?: (lat: number, lng: number) => void;
 }
 
-const LocationMarker = ({ position, setPosition }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void }) => {
+const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnabled }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void, isReadOnly?: boolean, setAutoBoundsEnabled: (enabled: boolean) => void }) => {
     const map = useMapEvents({
         click(e) {
+            if (isReadOnly) return;
+            setAutoBoundsEnabled(false);
             setPosition(e.latlng);
             map.flyTo(e.latlng, map.getZoom());
         },
-        dragend() {
-            // Logic if we want map drag to center marker?
-            // For now click is enough
+        dragstart() {
+            setAutoBoundsEnabled(false);
         }
     });
 
@@ -74,9 +89,45 @@ const LocationMarker = ({ position, setPosition }: { position: L.LatLng | null, 
     }, [position, map]);
 
     return position === null ? null : (
-        <Marker position={position} />
+        <Marker position={position} icon={HomeIcon}>
+            <Popup>Pickup Location</Popup>
+        </Marker>
     );
 };
+
+// Helper component to auto-zoom map to fit pins
+function MapAutoBounds({ driverLat, driverLng, targetLat, targetLng, enabled }: {
+    driverLat: number | null | undefined,
+    driverLng: number | null | undefined,
+    targetLat: number | null | undefined,
+    targetLng: number | null | undefined,
+    enabled: boolean
+}) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (enabled && driverLat && driverLng && targetLat && targetLng) {
+            const bounds = L.latLngBounds([
+                [driverLat, driverLng],
+                [targetLat, targetLng]
+            ]);
+            map.fitBounds(bounds, { padding: [70, 70], animate: true });
+        }
+    }, [driverLat, driverLng, targetLat, targetLng, map]);
+
+    return null;
+}
+
+// Helper component to handle map centering
+function MapController({ triggerCenter }: { triggerCenter: L.LatLng | null }) {
+    const map = useMap();
+    useEffect(() => {
+        if (triggerCenter) {
+            map.flyTo(triggerCenter, map.getZoom());
+        }
+    }, [triggerCenter, map]);
+    return null;
+}
 
 // Detect system color scheme
 const getSystemTheme = (): 'dark' | 'light' => {
@@ -86,12 +137,15 @@ const getSystemTheme = (): 'dark' | 'light' => {
     return 'dark';
 };
 
-export default function MapSelector({ onLocationSelect, initialLat, initialLng }: MapSelectorProps) {
+export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, onGpsClick }: MapSelectorProps) {
     const [position, setPosition] = useState<L.LatLng | null>(
         initialLat && initialLng ? new L.LatLng(initialLat, initialLng) : null
     );
     const [loading, setLoading] = useState(false);
     const [mapTheme, setMapTheme] = useState<MapTheme>(getSystemTheme());
+    const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
+    const [autoBoundsEnabled, setAutoBoundsEnabled] = useState(true);
+    const [triggerCenter, setTriggerCenter] = useState<L.LatLng | null>(null);
 
     // Default to Bangkok if no location
     const center = initialLat && initialLng ? [initialLat, initialLng] : [13.7563, 100.5018];
@@ -102,19 +156,62 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
         }
     }, [initialLat, initialLng]);
 
+    // Fetch route from OSRM
+    useEffect(() => {
+        const fetchRoute = async () => {
+            if (driverLat && driverLng && initialLat && initialLng) {
+                try {
+                    const response = await fetch(
+                        `https://router.project-osrm.org/route/v1/driving/${driverLng},${driverLat};${initialLng},${initialLat}?overview=full&geometries=geojson`
+                    );
+                    const data = await response.json();
+                    if (data.routes && data.routes.length > 0) {
+                        const coords = data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+                        setRouteCoords(coords);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch route:", error);
+                }
+            }
+        };
+
+        if (driverLat && driverLng) {
+            fetchRoute();
+        } else {
+            setRouteCoords([]);
+        }
+    }, [driverLat, driverLng, initialLat, initialLng]);
+
     const handleGetCurrentLocation = async () => {
         setLoading(true);
+        setAutoBoundsEnabled(false);
 
-        try {
-            const pos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-            const { latitude, longitude } = pos.coords;
-            const newPos = new L.LatLng(latitude, longitude);
-            setPosition(newPos);
-            setLoading(false);
-            extractAddress(latitude, longitude);
-            return;
-        } catch (error) {
-            console.warn("Tauri geolocation failed, falling back to browser API:", error);
+        const isTauri = !!(window as any).__TAURI_INTERNALS__;
+
+        if (isTauri) {
+            try {
+                const pos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+                const { latitude, longitude } = pos.coords;
+                const newPos = new L.LatLng(latitude, longitude);
+
+                if (!isReadOnly) {
+                    setPosition(newPos);
+                    extractAddress(latitude, longitude);
+                } else {
+                    // Re-enable auto-bounds/tracking (like page refresh)
+                    setAutoBoundsEnabled(true);
+                    setTriggerCenter(null); // Clear manual trigger to let auto-bounds take over
+                    setLoading(false);
+                }
+
+                if (onGpsClick) {
+                    onGpsClick(latitude, longitude);
+                }
+
+                return;
+            } catch (error) {
+                console.warn("Tauri geolocation failed, falling back to browser API:", error);
+            }
         }
 
         if (!navigator.geolocation) {
@@ -127,9 +224,19 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
             (pos) => {
                 const { latitude, longitude } = pos.coords;
                 const newPos = new L.LatLng(latitude, longitude);
-                setPosition(newPos);
-                setLoading(false);
-                extractAddress(latitude, longitude);
+
+                if (!isReadOnly) {
+                    setPosition(newPos);
+                    extractAddress(latitude, longitude);
+                } else {
+                    setAutoBoundsEnabled(true);
+                    setTriggerCenter(null);
+                    setLoading(false);
+                }
+
+                if (onGpsClick) {
+                    onGpsClick(latitude, longitude);
+                }
             },
             (err) => {
                 console.error("Error getting location:", err.code, err.message);
@@ -153,6 +260,7 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
     };
 
     const extractAddress = async (lat: number, lng: number) => {
+        if (isReadOnly) return;
         setLoading(true);
         try {
             // Use Nominatim OpenStreetMap API
@@ -245,7 +353,47 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
                     key={mapTheme}
                     url={MAP_TILES[mapTheme].url}
                 />
-                <LocationMarker position={position} setPosition={handlePositionChange} />
+                <MapController triggerCenter={triggerCenter} />
+                <LocationMarker position={position} setPosition={handlePositionChange} isReadOnly={isReadOnly} setAutoBoundsEnabled={setAutoBoundsEnabled} />
+
+                {driverLat && driverLng && (
+                    <Marker position={[driverLat, driverLng]} icon={LogoIcon}>
+                        <Popup>Driver Location</Popup>
+                    </Marker>
+                )}
+
+                {routeCoords.length > 0 && (
+                    <Polyline
+                        positions={routeCoords}
+                        pathOptions={{
+                            color: '#2196F3',
+                            weight: 5,
+                            opacity: 0.7,
+                            lineJoin: 'round',
+                            dashArray: '1, 10' // Dottted line for transit
+                        }}
+                    />
+                )}
+
+                {/* Secondary glow for the path */}
+                {routeCoords.length > 0 && (
+                    <Polyline
+                        positions={routeCoords}
+                        pathOptions={{
+                            color: '#ff7a30',
+                            weight: 2,
+                            opacity: 0.5,
+                        }}
+                    />
+                )}
+
+                <MapAutoBounds
+                    driverLat={driverLat}
+                    driverLng={driverLng}
+                    targetLat={initialLat}
+                    targetLng={initialLng}
+                    enabled={autoBoundsEnabled}
+                />
             </MapContainer>
 
             {/* Theme Toggle Button */}
@@ -257,21 +405,22 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
                 {getThemeIcon()}
             </button>
 
-            {/* GPS Button */}
-            <button
-                className={styles.gpsButton}
-                onClick={handleGetCurrentLocation}
-                disabled={loading}
-                title="Use my current location"
-            >
-                {loading ? (
-                    <div className={styles.spinner}></div>
-                ) : (
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-                        <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
-                    </svg>
-                )}
-            </button>
+            {(!isReadOnly || showGpsButton) && (
+                <button
+                    className={showGpsButton ? styles.gpsButtonTop : styles.gpsButton}
+                    onClick={handleGetCurrentLocation}
+                    disabled={loading}
+                    title="Use my current location"
+                >
+                    {loading ? (
+                        <div className={styles.spinner}></div>
+                    ) : (
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+                            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.97 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+                        </svg>
+                    )}
+                </button>
+            )}
         </div>
     );
 }

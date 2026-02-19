@@ -6,7 +6,8 @@
     padding: 16px 24px;
     padding-bottom: calc(24px + var(--safe-area-bottom, 0px));
     background: linear-gradient(transparent, var(--color-bg) 20%);
-    z-index: 10;
+    z-index: 2000;
+    /* Ensure it stays above Leaflet panes (up to 1000) */
 }
 
 .btn-next {
@@ -40,9 +41,40 @@
     cursor: not-allowed;
 }
 
+.btn-green {
+    width: 100%;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.btn-green:hover {
+    opacity: 0.9;
+    background-color: #45a049;
+}
+
+.btn-green:active {
+    transform: scale(0.98);
+}
+
+.btn-green:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .btn-icon {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
 }
 
 @media (prefers-color-scheme: light) {

@@ -1,0 +1,158 @@
+.page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: var(--color-bg);
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex: 1;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section-title {
+    font-family: var(--font-eng-fun);
+    font-size: 14px;
+    font-weight: 700;
+    color: #888;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.buyer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.buyer-card {
+    background-color: var(--color-bg-2);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.buyer-card:active {
+    transform: scale(0.98);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.avatar-container {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--orange-button);
+}
+
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: #4CAF50;
+    border: 2px solid var(--color-bg-2);
+    border-radius: 50%;
+}
+
+.buyer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.buyer-name {
+    font-family: var(--font-th);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.time-ago {
+    font-family: var(--font-eng-fun);
+    font-size: 13px;
+    color: #888;
+}
+
+.chevron-icon {
+    width: 24px;
+    height: 24px;
+    color: #666;
+}
+
+.loading-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #888;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: var(--orange-button);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    margin-top: 40px;
+    font-family: var(--font-th);
+}
+
+/* Light Mode support if needed, but following dark theme in image */
+@media (prefers-color-scheme: light) {
+    .section-title {
+        color: #666;
+    }
+
+    .avatar-placeholder {
+        background-color: #ddd;
+        color: #666;
+    }
+
+    .time-ago {
+        color: #666;
+    }
+}
+
+.error-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #ff5252;
+    text-align: center;
+    font-family: var(--font-th);
+}

@@ -16,8 +16,11 @@ import ItemDetails from "./pages/buy/item-details/ItemDetails";
 import ContactDetail from "./pages/history/ContactDetail";
 import ConfirmCart from "./pages/buy/confirm-cart/ConfirmCart";
 import SellerProfile from "./pages/buy/seller-profile/SellerProfile";
+import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
+import ContactList from "./pages/jobs/contact_list/ContactList";
+import ExploreMap from "./pages/jobs/ExploreMap";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -52,9 +55,12 @@ function AppRoutes() {
         <Route path="/contact/:id" element={<ContactDetail />} />
         <Route path="/confirm-cart" element={<ConfirmCart />} />
         <Route path="/seller/:id" element={<SellerProfile />} />
-        <Route path="/add-address" element={<NewAddress />} />
+        <Route path="/add-address" element={<AddAddress />} />
+        <Route path="/new-address" element={<NewAddress />} />
         <Route path="/edit-address/:id" element={<NewAddress />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/jobs/contacts" element={<ContactList />} />
+        <Route path="/jobs/explore/:id" element={<ExploreMap />} />
       </Route>
     </Routes>
   );

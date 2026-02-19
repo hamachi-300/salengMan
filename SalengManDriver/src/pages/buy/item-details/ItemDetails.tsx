@@ -193,6 +193,7 @@ function ItemDetails() {
               initialLng={parseFloat(post.address_snapshot.lng)}
               driverLat={driverLocation?.lat}
               driverLng={driverLocation?.lng}
+              isReadOnly={true}
             />
           </div>
         </div>
