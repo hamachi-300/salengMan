@@ -76,7 +76,9 @@ function Home() {
               <h3 className={styles.serviceTitle}>Dispose Trash</h3>
               <p className={styles.serviceSubtitle}>ทิ้งขยะ</p>
             </div>
+
           </div>
+
         </div>
       </div>
 

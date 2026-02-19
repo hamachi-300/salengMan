@@ -25,6 +25,8 @@ import Coin from "./pages/trash/coin/Coin";
 
 import ConfirmBuyCoin from "./pages/trash/coin/ConfirmBuyCoin";
 
+
+
 function AppRoutes() {
   const { loading } = useUser();
 
@@ -58,7 +60,9 @@ function AppRoutes() {
         <Route path="/coin/history" element={<HistoryCoin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />
+
         <Route path="/notify" element={<Notify />} />
+
         <Route path="/account" element={<Account />} />
         <Route path="/add-address" element={<AddAddress />} />
         <Route path="/new-address" element={<NewAddress />} />

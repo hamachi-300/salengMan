@@ -4,6 +4,7 @@ import styles from './Sell.module.css';
 import { useSell } from '../../context/SellContext';
 import PageHeader from '../../components/PageHeader';
 import PageFooter from '../../components/PageFooter';
+import { analyzeWaste } from '../../services/aiService';
 
 const ItemUpload: React.FC = () => {
     const navigate = useNavigate();
@@ -11,6 +12,9 @@ const ItemUpload: React.FC = () => {
 
     const isEditing = sellData.editingPostId !== null;
     const [images, setImages] = useState<string[]>(sellData.images);
+    // Keep track of File objects for newly uploaded files
+    const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
+
     const [viewImage, setViewImage] = useState<string | null>(null);
     const [categories, setCategories] = useState<string[]>(sellData.categories);
     const [remarks, setRemarks] = useState(sellData.remarks);
@@ -18,9 +22,16 @@ const ItemUpload: React.FC = () => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [customCategories, setCustomCategories] = useState<string[]>([]);
 
+
+    const [isAnalyzingAll, setIsAnalyzingAll] = useState(false);
+
     // Sync with context when returning from other pages
     useEffect(() => {
-        if (sellData.images.length > 0) setImages(sellData.images);
+        if (sellData.images.length > 0) {
+            setImages(sellData.images);
+            // Initialize imageFiles with nulls for existing images from context
+            setImageFiles(new Array(sellData.images.length).fill(null));
+        }
         if (sellData.categories.length > 0) setCategories(sellData.categories);
         if (sellData.remarks) setRemarks(sellData.remarks);
     }, []);
@@ -54,6 +65,10 @@ const ItemUpload: React.FC = () => {
                 alert("You can only upload up to 10 images.");
                 return;
             }
+
+            // Append new files to our file state
+            setImageFiles((prev) => [...prev, ...fileArray]);
+
             const newImagePromises = fileArray.map((file) => {
                 return new Promise<string>((resolve) => {
                     const reader = new FileReader();
@@ -91,6 +106,86 @@ const ItemUpload: React.FC = () => {
         navigate('/sell/select-address');
     };
 
+    const handleRemoveImage = (index: number) => {
+        setImages(images.filter((_, i) => i !== index));
+        setImageFiles(imageFiles.filter((_, i) => i !== index));
+    };
+
+    // Helper to convert base64 to File object if needed
+    const dataURLtoFile = (dataurl: string, filename: string): File => {
+        const arr = dataurl.split(',');
+        const mime = arr[0].match(/:(.*?);/)?.[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
+    };
+
+
+
+    const handleAnalyzeAll = async () => {
+        if (images.length === 0) return;
+        if (isAnalyzingAll) return;
+
+        setIsAnalyzingAll(true);
+        const newCategories: string[] = [];
+        const newCustomCategories: string[] = [];
+
+        try {
+            // Process all images
+            const promises = images.map(async (img, index) => {
+                let file = imageFiles[index];
+                if (!file) {
+                    file = dataURLtoFile(img, `image-${index}.jpg`);
+                }
+                return analyzeWaste(file);
+            });
+
+            const results = await Promise.all(promises);
+
+            results.forEach(result => {
+                const matchedCategory = availableCategories.find(c =>
+                    c.toLowerCase() === result.category.toLowerCase() ||
+                    result.category.toLowerCase().includes(c.toLowerCase())
+                );
+
+                if (matchedCategory) {
+                    if (!newCategories.includes(matchedCategory) && !categories.includes(matchedCategory)) {
+                        newCategories.push(matchedCategory);
+                    }
+                } else {
+                    if (result.confidence > 0.8) {
+                        if (!newCustomCategories.includes(result.category) && !customCategories.includes(result.category)) {
+                            newCustomCategories.push(result.category);
+                            if (!newCategories.includes(result.category) && !categories.includes(result.category)) {
+                                newCategories.push(result.category);
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (newCustomCategories.length > 0) {
+                setCustomCategories(prev => [...prev, ...newCustomCategories]);
+            }
+            if (newCategories.length > 0) {
+                setCategories(prev => [...prev, ...newCategories]);
+                alert(`AI Analyzed ${results.length} images.\nDetected: ${newCategories.join(', ')}`);
+            } else {
+                alert(`AI Analyzed ${results.length} images.\nNo new categories detected.`);
+            }
+
+        } catch (error) {
+            console.error("Batch Analysis failed:", error);
+            alert("Failed to analyze images.");
+        } finally {
+            setIsAnalyzingAll(false);
+        }
+    };
+
     return (
         <div className={styles['post-item-container']}>
             <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo={isEditing ? `/history/${sellData.editingPostId}` : "/home"} />
@@ -100,6 +195,41 @@ const ItemUpload: React.FC = () => {
                     <div className={styles['label-row']}>
                         <span className={styles['main-label']}>Item Photos</span>
                         <span className={styles['tag-required']}>Required</span>
+
+                        {/* Analyze All Button */}
+                        {images.length > 0 && (
+                            <button
+                                onClick={handleAnalyzeAll}
+                                disabled={isAnalyzingAll}
+                                style={{
+                                    marginLeft: 'auto',
+                                    border: '1px solid #ddd',
+                                    background: 'white',
+                                    padding: '4px 12px',
+                                    borderRadius: '16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.85rem',
+                                    color: 'var(--orange-button)',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                }}
+                            >
+                                {isAnalyzingAll ? (
+                                    <>
+                                        <div className={styles['spinner-mini']} style={{
+                                            width: '12px', height: '12px', border: '2px solid #ccc', borderTopColor: '#ff9500', borderRadius: '50%', animation: 'spin 1s linear infinite'
+                                        }} />
+                                        Analyzing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span style={{ fontSize: '1.1em' }}>✨</span> Analyze All
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
                     <label className={styles['upload-area']}>
                         <input type="file" hidden multiple onChange={handleImageChange} accept="image/*" />
@@ -115,7 +245,7 @@ const ItemUpload: React.FC = () => {
                             {images.map((img, index) => (
                                 <div key={index} className={styles['thumb-container']}>
                                     <img src={img} className={styles['thumb-item']} onClick={() => setViewImage(img)} alt="preview" />
-                                    <button className={styles['remove-thumb']} onClick={() => setImages(images.filter((_, i) => i !== index))}>×</button>
+                                    <button className={styles['remove-thumb']} onClick={() => handleRemoveImage(index)}>×</button>
                                 </div>
                             ))}
                         </div>
@@ -215,6 +345,11 @@ const ItemUpload: React.FC = () => {
                     </div>
                 </div>
             )}
+            <style>{`
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };
