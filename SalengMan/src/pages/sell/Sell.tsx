@@ -5,6 +5,7 @@ import { useSell } from '../../context/SellContext';
 import PageHeader from '../../components/PageHeader';
 import PageFooter from '../../components/PageFooter';
 import { analyzeWaste } from '../../services/aiService';
+import Camera from '../../components/Camera';
 
 const ItemUpload: React.FC = () => {
     const navigate = useNavigate();
@@ -24,6 +25,7 @@ const ItemUpload: React.FC = () => {
 
 
     const [isAnalyzingAll, setIsAnalyzingAll] = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
 
     // Sync with context when returning from other pages
     useEffect(() => {
@@ -80,6 +82,16 @@ const ItemUpload: React.FC = () => {
                 setImages((prev) => [...prev, ...base64Images]);
             });
         }
+    };
+
+    const handleCapture = (base64Image: string, file: File) => {
+        if (images.length >= 10) {
+            alert("You already have 10 images.");
+            return;
+        }
+        setImages((prev) => [...prev, base64Image]);
+        setImageFiles((prev) => [...prev, file]);
+        setShowCamera(false);
     };
 
     const toggleCategory = (name: string) => {
@@ -231,14 +243,24 @@ const ItemUpload: React.FC = () => {
                             </button>
                         )}
                     </div>
-                    <label className={styles['upload-area']}>
-                        <input type="file" hidden multiple onChange={handleImageChange} accept="image/*" />
-                        <div className={styles['upload-placeholder']}>
-                            <div className={styles['icon-up']}>↑</div>
-                            <div className={styles['text-orange']}>Upload Photos</div>
-                            <div className={styles['text-small']}>Up to 10 images ({images.length}/10)</div>
+                    <div className={styles['upload-methods']}>
+                        <label className={`${styles['upload-option']} ${styles['upload-area-small']}`}>
+                            <input type="file" hidden multiple onChange={handleImageChange} accept="image/*" />
+                            <div className={styles['icon-circle']}>↑</div>
+                            <div className={styles['option-text']}>Upload Photos</div>
+                            <div className={styles['text-small']}>Stored files</div>
+                        </label>
+
+                        <div className={styles['upload-option']} onClick={() => setShowCamera(true)}>
+                            <div className={styles['icon-circle']}>📷</div>
+                            <div className={styles['option-text']}>Take Photo</div>
+                            <div className={styles['text-small']}>Using camera</div>
                         </div>
-                    </label>
+                    </div>
+
+                    <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--color-text)', opacity: 0.5, textAlign: 'center' }}>
+                        Up to 10 images ({images.length}/10)
+                    </div>
 
                     {images.length > 0 && (
                         <div className={styles['thumbnail-grid']}>
@@ -302,6 +324,13 @@ const ItemUpload: React.FC = () => {
             </div>
 
             <PageFooter title="Next" onClick={handleNext} />
+
+            {showCamera && (
+                <Camera
+                    onCapture={handleCapture}
+                    onClose={() => setShowCamera(false)}
+                />
+            )}
 
             {viewImage && (
                 <div className={styles['image-modal']} onClick={() => setViewImage(null)}>
