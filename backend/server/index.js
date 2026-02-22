@@ -9,6 +9,41 @@ require('dotenv').config();
 
 const app = express();
 
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'SalengMan API Documentation',
+      version: '1.0.0',
+      description: 'API สำหรับระบบจัดการของเก่าและขยะ',
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000', // URL ของ API
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        }
+      }
+    },
+    security: [{
+      bearerAuth: []
+    }]
+  },
+  apis: ['./index.js'], // ระบุไฟล์ที่เขียนคอมเมนต์ API ไว้
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -97,6 +132,16 @@ const authMiddleware = (req, res, next) => {
 // ============================================
 // HEALTH CHECK
 // ============================================
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: ตรวจสอบสถานะการทำงานของระบบ
+ *     tags: [Utility]
+ *     responses:
+ *       200:
+ *         description: ระบบทำงานปกติ
+ */
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
@@ -119,6 +164,32 @@ app.get('/health', async (req, res) => {
 // ============================================
 
 // Register
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: สมัครสมาชิกใหม่
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email: { type: string, example: user@example.com }
+ *               password: { type: string, example: secret123 }
+ *               full_name: { type: string, example: John }
+ *               phone: { type: string, example: "0812345678" }
+ *               role: { type: string, enum: [customer, driver], default: customer }
+ *               gender: { type: string, enum: [male, female, other] }
+ *     responses:
+ *       200:
+ *         description: สมัครสมาชิกสำเร็จ พร้อม token
+ *       400:
+ *         description: ข้อมูลไม่ถูกต้อง หรืออีเมลซ้ำ
+ */
 app.post('/auth/register', async (req, res) => {
   try {
     const { email, password, full_name, phone, role, gender } = req.body;
@@ -168,6 +239,27 @@ app.post('/auth/register', async (req, res) => {
 });
 
 // Login
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: เข้าสู่ระบบ
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, role]
+ *             properties:
+ *               email: { type: string }
+ *               password: { type: string }
+ *               role: { type: string, enum: [customer, driver] }
+ *     responses:
+ *       200:
+ *         description: ล็อกอินสำเร็จ
+ */
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password, role } = req.body;
@@ -226,6 +318,18 @@ app.post('/auth/login', async (req, res) => {
 });
 
 // Get current user
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: ดึงข้อมูลโปรไฟล์ผู้ใช้ปัจจุบัน
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: ข้อมูลผู้ใช้
+ */
 app.get('/auth/me', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
@@ -239,6 +343,28 @@ app.get('/auth/me', authMiddleware, async (req, res) => {
 });
 
 // Update current user profile
+/**
+ * @swagger
+ * /auth/me:
+ *   patch:
+ *     summary: อัปเดตข้อมูลโปรไฟล์ผู้ใช้ปัจจุบัน
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               full_name: { type: string }
+ *               phone: { type: string }
+ *               gender: { type: string }
+ *               default_address: { type: string }
+ *     responses:
+ *       200:
+ *         description: อัปเดตสำเร็จ
+ */
 app.patch('/auth/me', authMiddleware, async (req, res) => {
   try {
     const { full_name, phone, gender, default_address } = req.body;
@@ -288,6 +414,21 @@ app.patch('/auth/me', authMiddleware, async (req, res) => {
 });
 
 // Get user public profile
+/**
+ * @swagger
+ * /users/{id}/public:
+ *   get:
+ *     summary: ดึงข้อมูลโปรไฟล์สาธารณะของผู้ใช้
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: ข้อมูลสาธารณะ
+ */
 app.get('/users/:id/public', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
@@ -310,6 +451,18 @@ app.get('/users/:id/public', authMiddleware, async (req, res) => {
 });
 
 // Delete account
+/**
+ * @swagger
+ * /auth/me:
+ *   delete:
+ *     summary: ลบบัญชีผู้ใช้ปัจจุบัน
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: ลบบัญชีสำเร็จ
+ */
 app.delete('/auth/me', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.user_id;
@@ -341,6 +494,25 @@ app.delete('/auth/me', authMiddleware, async (req, res) => {
 // ============================================
 // AVATAR UPLOAD
 // ============================================
+/**
+ * @swagger
+ * /upload/avatar:
+ *   post:
+ *     summary: อัปโหลดรูปโปรไฟล์
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image: { type: string, description: "Base64 string ของรูปภาพ" }
+ *     responses:
+ *       200:
+ *         description: อัปโหลดสำเร็จ
+ */
 app.post('/upload/avatar', authMiddleware, async (req, res) => {
   try {
     if (!req.files || !req.files.image) {
@@ -390,6 +562,18 @@ app.post('/upload/avatar', authMiddleware, async (req, res) => {
 // ADDRESS ENDPOINTS
 // ============================================
 
+/**
+ * @swagger
+ * /addresses:
+ *   get:
+ *     summary: ดึงรายการที่อยู่ทั้งหมดของผู้ใช้
+ *     tags: [Addresses]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการที่อยู่
+ */
 app.get('/addresses', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
@@ -402,6 +586,33 @@ app.get('/addresses', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /addresses:
+ *   post:
+ *     summary: เพิ่มที่อยู่ใหม่
+ *     tags: [Addresses]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [label, address]
+ *             properties:
+ *               label: { type: string }
+ *               address: { type: string }
+ *               lat: { type: number }
+ *               lng: { type: number }
+ *               phone: { type: string }
+ *               note: { type: string }
+ *               is_default: { type: boolean }
+ *     responses:
+ *       200:
+ *         description: เพิ่มสำเร็จ
+ */
 app.post('/addresses', authMiddleware, async (req, res) => {
   try {
     const { label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode } = req.body;
@@ -449,6 +660,25 @@ app.post('/addresses', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /addresses/{id}:
+ *   get:
+ *     summary: ดึงที่อยู่ตาม ID
+ *     tags: [Addresses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: ข้อมูลที่อยู่
+ *       404:
+ *         description: ไม่พบที่อยู่
+ */
 app.get('/addresses/:id', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
@@ -462,6 +692,43 @@ app.get('/addresses/:id', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /addresses/{id}:
+ *   put:
+ *     summary: แก้ไขที่อยู่ตาม ID
+ *     tags: [Addresses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               label: { type: string }
+ *               address: { type: string }
+ *               lat: { type: number }
+ *               lng: { type: number }
+ *               phone: { type: string }
+ *               note: { type: string }
+ *               is_default: { type: boolean }
+ *               province: { type: string }
+ *               district: { type: string }
+ *               sub_district: { type: string }
+ *               zipcode: { type: string }
+ *     responses:
+ *       200:
+ *         description: แก้ไขสำเร็จ
+ *       404:
+ *         description: ไม่พบที่อยู่
+ */
 app.put('/addresses/:id', authMiddleware, async (req, res) => {
   try {
     let { label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode } = req.body;
@@ -563,6 +830,18 @@ app.delete('/addresses/:id', authMiddleware, async (req, res) => {
 // ============================================
 
 // Get user's own posts
+/**
+ * @swagger
+ * /old-item-posts:
+ *   get:
+ *     summary: ดึงโพสต์ขายของเก่าของตนเอง
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการโพสต์
+ */
 app.get('/old-item-posts', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
@@ -576,6 +855,18 @@ app.get('/old-item-posts', authMiddleware, async (req, res) => {
 });
 
 // Get all available posts (for drivers) - waiting status only, exclude already contacted
+/**
+ * @swagger
+ * /old-item-posts/available/all:
+ *   get:
+ *     summary: ดึงโพสต์ที่มีอยู่ทั้งหมด (สำหรับคนขับ)
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการโพสต์ที่ยังว่าง
+ */
 app.get('/old-item-posts/available/all', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'driver') {
@@ -636,6 +927,30 @@ app.get('/old-item-posts/:id', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /old-item-posts:
+ *   post:
+ *     summary: สร้างโพสต์ขายของเก่าใหม่
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               images: { type: array, items: { type: string } }
+ *               categories: { type: array, items: { type: string } }
+ *               remarks: { type: string }
+ *               address: { type: object }
+ *               pickupTime: { type: object }
+ *     responses:
+ *       200:
+ *         description: สร้างโพสต์สำเร็จ
+ */
 app.post('/old-item-posts', authMiddleware, async (req, res) => {
   try {
     const { images, categories, remarks, address, pickupTime } = req.body;
@@ -996,10 +1311,43 @@ const getCoinBalance = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /coins/balance:
+ *   get:
+ *     summary: ตรวจสอบยอดเหรียญคงเหลือ
+ *     tags: [Coins]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: ยอดเหรียญ
+ */
 app.get('/coins/balance', authMiddleware, getCoinBalance);
 app.get('/api/coins/balance', authMiddleware, getCoinBalance);
 
 // Buy coins
+/**
+ * @swagger
+ * /coins/buy:
+ *   post:
+ *     summary: ซื้อเหรียญเพิ่ม
+ *     tags: [Coins]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount]
+ *             properties:
+ *               amount: { type: integer }
+ *     responses:
+ *       200:
+ *         description: ซื้อสำเร็จ
+ */
 app.post('/coins/buy', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1039,6 +1387,27 @@ app.post('/coins/buy', authMiddleware, async (req, res) => {
 });
 
 // Use coins
+/**
+ * @swagger
+ * /coins/use:
+ *   post:
+ *     summary: ใช้เหรียญ
+ *     tags: [Coins]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount]
+ *             properties:
+ *               amount: { type: integer }
+ *     responses:
+ *       200:
+ *         description: ใช้สำเร็จ
+ */
 app.post('/coins/use', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1637,6 +2006,18 @@ app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
 });
 
 // Get notifications for current user
+/**
+ * @swagger
+ * /notifications:
+ *   get:
+ *     summary: ดึงรายการแจ้งเตือนของผู้ใช้
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการแจ้งเตือน
+ */
 app.get('/notifications', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(

@@ -22,8 +22,13 @@ import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
 import HistoryCoin from "./pages/trash/coin/HistoryCoin";
+import SelectTrashMode from "./pages/trash/SelectTrashMode";
+import TrashDetails from "./pages/trash/TrashDetails";
+import TrashSelectAddress from "./pages/trash/TrashSelectAddress";
+import ConfirmTrashPost from "./pages/trash/ConfirmTrashPost";
 import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
+import { TrashProvider } from "./context/TrashContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import Coin from "./pages/trash/coin/Coin";
 
@@ -56,7 +61,11 @@ function AppRoutes() {
         <Route path="/sell/select-address" element={<SelectAddress />} />
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
-        <Route path="/trash" element={<PostTrash />} />
+        <Route path="/trash" element={<SelectTrashMode />} />
+        <Route path="/trash/mode" element={<SelectTrashMode />} />
+        <Route path="/trash/details" element={<TrashDetails />} />
+        <Route path="/trash/select-address" element={<TrashSelectAddress />} />
+        <Route path="/trash/confirm" element={<ConfirmTrashPost />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />
@@ -81,7 +90,9 @@ function App() {
     <BrowserRouter>
       <UserProvider>
         <SellProvider>
-          <AppRoutes />
+          <TrashProvider>
+            <AppRoutes />
+          </TrashProvider>
         </SellProvider>
       </UserProvider>
     </BrowserRouter>
