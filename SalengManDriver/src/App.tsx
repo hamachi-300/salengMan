@@ -84,6 +84,16 @@ function LocationGuard({ children }: { children: ReactNode }) {
           setTimeout(() => reject(new Error("Location check timed out")), 65000)
         );
 
+        // Ask for permission explicitly first
+        try {
+          // Tauri geolocation plugin has a requestPermissions method defined
+          const { requestPermissions } = await import('@tauri-apps/plugin-geolocation');
+          const permissionStatus = await requestPermissions(['location', 'coarseLocation']);
+          console.log("Permission status:", permissionStatus);
+        } catch (e) {
+          console.warn("Could not request permissions or already granted", e);
+        }
+
         const pos = await Promise.race([
           getCurrentPosition({ enableHighAccuracy: true, timeout: 60000, maximumAge: 5000 }),
           timeoutPromise
