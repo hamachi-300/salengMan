@@ -4,6 +4,7 @@ import styles from './Sell.module.css';
 import { useSell } from '../../context/SellContext';
 import PageHeader from '../../components/PageHeader';
 import PageFooter from '../../components/PageFooter';
+import AlertPopup from '../../components/AlertPopup';
 
 const ItemUpload: React.FC = () => {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ const ItemUpload: React.FC = () => {
     const [showAddCategory, setShowAddCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [customCategories, setCustomCategories] = useState<string[]>([]);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
     // Sync with context when returning from other pages
     useEffect(() => {
@@ -37,7 +39,7 @@ const ItemUpload: React.FC = () => {
             return;
         }
         if (availableCategories.includes(trimmedName)) {
-            alert('This category already exists');
+            setAlertMessage('This category already exists');
             return;
         }
         setCustomCategories([...customCategories, trimmedName]);
@@ -51,7 +53,7 @@ const ItemUpload: React.FC = () => {
         if (files) {
             const fileArray = Array.from(files);
             if (images.length + fileArray.length > 10) {
-                alert("You can only upload up to 10 images.");
+                setAlertMessage("You can only upload up to 10 images.");
                 return;
             }
             const newImagePromises = fileArray.map((file) => {
@@ -77,11 +79,11 @@ const ItemUpload: React.FC = () => {
 
     const handleNext = () => {
         if (images.length === 0) {
-            alert('Please upload at least one image');
+            setAlertMessage('Please upload at least one image');
             return;
         }
         if (categories.length === 0) {
-            alert('Please select at least one category');
+            setAlertMessage('Please select at least one category');
             return;
         }
         // Save to context (in-memory only)
@@ -215,6 +217,12 @@ const ItemUpload: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                message={alertMessage || ""}
+                onClose={() => setAlertMessage(null)}
+            />
         </div>
     );
 };

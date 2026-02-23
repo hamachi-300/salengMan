@@ -404,6 +404,18 @@ export const api = {
     return res.json();
   },
 
+  // Clear all notifications
+  clearNotifications: async (token: string): Promise<void> => {
+    const res = await fetch(`${API_URL}/notifications`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to clear notifications');
+    }
+  },
+
   // Update driver real-time location
   updateDriverLocation: async (token: string, lat: number, lng: number): Promise<{ status: string }> => {
     const res = await fetch(`${API_URL}/driver-location`, {

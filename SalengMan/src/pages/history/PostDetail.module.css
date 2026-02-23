@@ -12,7 +12,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 /* Status Section */
@@ -424,9 +424,82 @@
     cursor: not-allowed;
 }
 
+/* Driver Card */
+.driverCard {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #333;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.driverCard:hover {
+    background-color: #2a2a2a;
+}
+
+.driverCard:active {
+    transform: scale(0.98);
+}
+
+.driverAvatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #3a3a3a;
+    flex-shrink: 0;
+}
+
+.driverAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.driverInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.viewProfileText {
+    font-family: var(--font-eng-polite);
+    font-size: 0.8rem;
+    color: var(--orange-button);
+    font-weight: 500;
+}
+
+.driverName {
+    font-family: var(--font-eng-fun);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
 /* Light mode */
 @media (prefers-color-scheme: light) {
     .chat-room-icon:hover {
         background-color: #f0f0f0;
+    }
+
+    .imagePreview,
+    .locationInput,
+    .remarksBox,
+    .driverCard,
+    .sellerCard {
+        background-color: #f5f5f5;
+    }
+
+    .backButton:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .divider {
+        background-color: rgba(0, 0, 0, 0.1);
     }
 }

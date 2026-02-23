@@ -42,5 +42,10 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SalengManDriver needs access to your location to find nearby jobs and track your route.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

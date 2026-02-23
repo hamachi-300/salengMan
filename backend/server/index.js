@@ -10,12 +10,17 @@ require('dotenv').config();
 const app = express();
 
 // Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const poolConfig = {
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-});
+};
+
+if (process.env.DATABASE_URL) {
+  poolConfig.connectionString = process.env.DATABASE_URL;
+}
+
+const pool = new Pool(poolConfig);
 
 // MinIO Client (Docker-aware configuration)
 const minioClient = new Minio.Client({
@@ -216,7 +221,15 @@ app.post('/auth/login', async (req, res) => {
     );
 
     res.json({
-      user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, gender: user.gender, coin: user.coin },
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        gender: user.gender,
+        coin: user.coin,
+        default_address: user.default_address
+      },
       token
     });
   } catch (error) {
@@ -229,7 +242,7 @@ app.post('/auth/login', async (req, res) => {
 app.get('/auth/me', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, full_name, phone, role, avatar_url, gender, coin FROM users WHERE id = $1',
+      'SELECT id, email, full_name, phone, role, avatar_url, gender, coin, default_address FROM users WHERE id = $1',
       [req.user.user_id]
     );
     res.json(result.rows[0]);
@@ -616,15 +629,32 @@ app.get('/old-item-posts/:id', authMiddleware, async (req, res) => {
 
     const post = result.rows[0];
 
-    // If pending or completed, ensure it has chat_id in contacts
-    if ((post.status === 'pending' || post.status === 'completed') && post.contacts && post.contacts.length > 0) {
+    // If pending, completed, or cancelled, ensure it has chat_id and driver info in contacts
+    if ((post.status === 'pending' || post.status === 'completed' || post.status === 'cancelled') && post.contacts && post.contacts.length > 0) {
       const contactId = post.contacts[0].contact_id;
+      const driverId = post.contacts[0].driver_id;
+
       const contactResult = await client.query(
         'SELECT chat_id FROM contacts WHERE id = $1',
         [contactId]
       );
       if (contactResult.rows.length > 0 && contactResult.rows[0].chat_id) {
         post.contacts[0].chat_id = contactResult.rows[0].chat_id;
+      }
+
+      // Fetch driver details
+      if (driverId) {
+        const driverResult = await client.query(
+          'SELECT full_name, avatar_url, phone FROM users WHERE id = $1',
+          [driverId]
+        );
+        if (driverResult.rows.length > 0) {
+          const driverData = driverResult.rows[0];
+          post.contacts[0].driver_name = driverData.full_name;
+          post.contacts[0].driver_avatar = driverData.avatar_url;
+          // You might combine phone logic depending on database structure
+          post.contacts[0].driver_phone = driverData.phone;
+        }
       }
     }
 
@@ -677,6 +707,21 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete all notifications for a user
+app.delete('/notifications', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    await pool.query(
+      'DELETE FROM notifies WHERE notify_user_id = $1',
+      [userId]
+    );
+    res.json({ message: 'Notifications cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1306,7 +1351,7 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
 
     // 1. Fetch current status and check permissions
     const currentContact = await client.query(
-      'SELECT id, status, seller_id, buyer_id, post_id, chat_id FROM contacts WHERE id = $1',
+      'SELECT id, status, seller_id, buyer_id, post_id, chat_id, type FROM contacts WHERE id = $1',
       [contactId]
     );
 
@@ -1399,6 +1444,21 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
       );
     }
 
+    if (status === 'wait complete') {
+      await client.query(
+        `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id, contact_type)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          contact.seller_id,
+          "Driver make complete old item post contact",
+          "Your post have required to check if it complete from buyer, Make it complete if you already recieve money from buyer.",
+          "require complete",
+          contact.post_id,
+          contact.type
+        ]
+      );
+    }
+
     await client.query('COMMIT');
     res.json(contact);
   } catch (error) {
@@ -1457,14 +1517,15 @@ app.post('/contacts/:id/cancel', authMiddleware, async (req, res) => {
 
     // 4. Create notification for seller
     await client.query(
-      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
-       VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id, contact_type)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         contact.seller_id,
         "Post Old Item Cancelled From Buyer",
         reason,
         "cancelled contact",
-        contact.post_id
+        contact.post_id,
+        contact.type
       ]
     );
 
@@ -1725,8 +1786,65 @@ app.get('/driver-location/:driver_id', authMiddleware, async (req, res) => {
 });
 
 // ============================================
-// START SERVER
+// BACKGROUND JOBS
 // ============================================
+async function checkExpiredPosts() {
+  try {
+    const result = await pool.query(
+      `SELECT id, user_id, pickup_time 
+       FROM old_item_posts 
+       WHERE status = 'waiting' AND pickup_time IS NOT NULL`
+    );
+
+    const now = new Date();
+
+    for (const post of result.rows) {
+      // pickup_time is stored as JSONB, so it's already parsed into an object by pg if connected properly, or it might be string.
+      let pickup_time = post.pickup_time;
+      if (typeof pickup_time === 'string') {
+        try {
+          pickup_time = JSON.parse(pickup_time);
+        } catch (e) { continue; }
+      }
+
+      if (!pickup_time || typeof pickup_time !== 'object') continue;
+
+      const { date, endTime } = pickup_time;
+      if (!date || !endTime) continue;
+
+      // Construct expiration date in +07:00 timezone
+      const expireString = `${date}T${endTime}:00+07:00`;
+      const expireDate = new Date(expireString);
+
+      if (now > expireDate) {
+        // Post has expired. Check if notification already exists.
+        const checkNotify = await pool.query(
+          `SELECT 1 FROM notifies 
+           WHERE refer_id = $1 AND type = 'old item post' AND notify_header = 'Old Item Post Expired'`,
+          [post.id]
+        );
+
+        if (checkNotify.rows.length === 0) {
+          await pool.query(
+            `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              post.user_id,
+              "Old Item Post Expired",
+              "Your post is reach out of the time consider to delete it.",
+              "old item post",
+              post.id
+            ]
+          );
+          console.log(`Notification sent for expired post ${post.id}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error checking expired posts:', err);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 
 async function start() {
@@ -1743,6 +1861,9 @@ async function start() {
         refer_id INTEGER
     );
   `).catch(err => console.error('Migration error (notifies):', err.message));
+
+  // Start background jobs
+  setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);

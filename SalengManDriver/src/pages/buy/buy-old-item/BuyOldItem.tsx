@@ -7,6 +7,7 @@ import PageHeader from "../../../components/PageHeader";
 import PageFooter from "../../../components/PageFooter";
 import { useUser } from "../../../context/UserContext";
 import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
+import ConfirmPopup from "../../../components/ConfirmPopup";
 
 interface Post {
   id: number;
@@ -33,6 +34,7 @@ function BuyOldItem() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [cartCount, setCartCount] = useState(0);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+  const [showAddressPrompt, setShowAddressPrompt] = useState(false);
 
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
@@ -124,6 +126,46 @@ function BuyOldItem() {
 
   const deg2rad = (deg: number) => {
     return deg * (Math.PI / 180);
+  };
+
+  const handleItemClick = async (postId: number) => {
+    const token = getToken();
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const addresses = await api.getAddresses(token);
+      if (!addresses || addresses.length === 0) {
+        setShowAddressPrompt(true);
+      } else {
+        navigate(`/item-details/${postId}`);
+      }
+    } catch (error) {
+      console.error("Failed to check addresses:", error);
+      setShowAddressPrompt(true);
+    }
+  };
+
+  const handleCartClick = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const addresses = await api.getAddresses(token);
+      if (!addresses || addresses.length === 0) {
+        setShowAddressPrompt(true);
+      } else {
+        navigate('/confirm-cart');
+      }
+    } catch (error) {
+      console.error("Failed to check addresses:", error);
+      setShowAddressPrompt(true);
+    }
   };
 
   // Get unique categories from posts
@@ -224,7 +266,7 @@ function BuyOldItem() {
             <div
               key={post.id}
               className={styles.postCard}
-              onClick={() => navigate(`/item-details/${post.id}`)}
+              onClick={() => handleItemClick(post.id)}
             >
               <div className={styles.iconContainer}>
                 {post.images && post.images.length > 0 ? (
@@ -273,10 +315,23 @@ function BuyOldItem() {
       {cartCount > 0 && (
         <PageFooter
           title={`View Cart (${cartCount})`}
-          onClick={() => navigate('/confirm-cart')}
+          onClick={handleCartClick}
         />
       )}
 
+      <ConfirmPopup
+        isOpen={showAddressPrompt}
+        title="Address Required"
+        message="You must add a delivery address before you can buy items. Would you like to add one now?"
+        onConfirm={() => {
+          setShowAddressPrompt(false);
+          navigate('/add-address');
+        }}
+        onCancel={() => setShowAddressPrompt(false)}
+        confirmText="Add Address"
+        cancelText="Cancel"
+        confirmColor="#4CAF50"
+      />
     </div>
   );
 }

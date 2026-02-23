@@ -6,6 +6,8 @@ import { getToken } from "../../../services/auth";
 import PageHeader from "../../../components/PageHeader";
 import PageFooter from "../../../components/PageFooter";
 import SuccessPopup from "../../../components/SuccessPopup";
+import ConfirmPopup from "../../../components/ConfirmPopup";
+import AlertPopup from "../../../components/AlertPopup";
 import { useUser } from "../../../context/UserContext";
 
 interface Post {
@@ -32,6 +34,8 @@ function ConfirmCart() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showAddressPrompt, setShowAddressPrompt] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [userLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
 
   useEffect(() => {
@@ -110,6 +114,18 @@ function ConfirmCart() {
       return;
     }
 
+    try {
+      const addresses = await api.getAddresses(token);
+      if (!addresses || addresses.length === 0) {
+        setShowAddressPrompt(true);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check addresses:", error);
+      setShowAddressPrompt(true);
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -123,7 +139,7 @@ function ConfirmCart() {
       setShowSuccess(true);
     } catch (error) {
       console.error("Failed to create contacts:", error);
-      alert("Failed to create contact. Please try again.");
+      setAlertMessage("Failed to create contact. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -227,6 +243,27 @@ function ConfirmCart() {
         message="Your contact request has been sent to the seller. You can view the status in your history."
         onConfirm={handleSuccessConfirm}
         confirmText="View History"
+      />
+
+      <ConfirmPopup
+        isOpen={showAddressPrompt}
+        title="Address Required"
+        message="You must add a delivery address before you can buy items. Would you like to add one now?"
+        onConfirm={() => {
+          setShowAddressPrompt(false);
+          navigate('/add-address');
+        }}
+        onCancel={() => setShowAddressPrompt(false)}
+        confirmText="Add Address"
+        cancelText="Cancel"
+        confirmColor="#4CAF50"
+      />
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        title="Error"
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
       />
     </div>
   );

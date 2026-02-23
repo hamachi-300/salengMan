@@ -8,7 +8,9 @@ import { getToken } from "../../services/auth";
 import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
 import SuccessPopup from "../../components/SuccessPopup";
+import AlertPopup from "../../components/AlertPopup";
 import { useSell } from "../../context/SellContext";
+import profileLogo from "../../assets/icon/profile.svg";
 
 interface Post {
     id: number;
@@ -20,7 +22,14 @@ interface Post {
     address_snapshot: any;
     pickup_time: any;
     post_type?: 'old_item' | 'trash_disposal';
-    contacts?: { contact_id: string; driver_id: string; chat_id?: string }[];
+    contacts?: {
+        contact_id: string;
+        driver_id: string;
+        chat_id?: string;
+        driver_name?: string;
+        driver_avatar?: string;
+        driver_phone?: string;
+    }[];
 }
 
 function PostDetail() {
@@ -37,6 +46,7 @@ function PostDetail() {
     const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [completing, setCompleting] = useState(false);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
     const isEditable = post?.status === 'waiting';
 
     useEffect(() => {
@@ -84,7 +94,7 @@ function PostDetail() {
             navigate("/history");
         } catch (err: any) {
             console.error("Failed to delete post:", err);
-            alert(err.message || "Failed to delete post");
+            setAlertMessage(err.message || "Failed to delete post");
         } finally {
             setDeleteLoading(false);
             setShowDeleteConfirm(false);
@@ -98,12 +108,12 @@ function PostDetail() {
 
         try {
             await api.cancelPost(token, post.id, reason);
-            alert("Post cancelled and buyer notified");
+            setAlertMessage("Post cancelled and buyer notified");
             fetchPost(); // Refresh post details
             setShowCancelConfirm(false);
         } catch (err: any) {
             console.error("Failed to cancel post:", err);
-            alert(err.message || "Failed to cancel post");
+            setAlertMessage(err.message || "Failed to cancel post");
         } finally {
             setCancelLoading(false);
         }
@@ -163,7 +173,7 @@ function PostDetail() {
                     navigate(`/chat/${chatId}`, { state: { postId: post.id, backToDetail: true } });
                 } else {
                     console.error("Chat ID not found for contact");
-                    alert("Unable to open chat: Chat ID is missing.");
+                    setAlertMessage("Unable to open chat: Chat ID is missing.");
                 }
             } else {
                 navigate(`/history/${post.id}/buyers`);
@@ -181,7 +191,7 @@ function PostDetail() {
         const contactId = post.contacts[0].contact_id;
         if (!contactId) {
             console.error("No contact_id found in post contacts:", post.contacts[0]);
-            alert("Error: Contact information is missing for this post. Please try again with a new post.");
+            setAlertMessage("Error: Contact information is missing for this post. Please try again with a new post.");
             return;
         }
 
@@ -193,7 +203,7 @@ function PostDetail() {
             setShowSuccess(true);
         } catch (err: any) {
             console.error("Failed to complete transaction:", err);
-            alert(err.message || "Failed to complete transaction");
+            setAlertMessage(err.message || "Failed to complete transaction");
         } finally {
             setCompleting(false);
         }
@@ -379,6 +389,26 @@ function PostDetail() {
                     </div>
                 </div>
 
+                {/* Driver */}
+                {(post.status === 'pending' || post.status === 'completed' || post.status === 'cancelled') && post.contacts && post.contacts.length > 0 && (
+                    <div className={styles['card']} style={{ padding: 0, border: 'none', backgroundColor: 'transparent', marginBottom: '8px' }}>
+                        <div
+                            className={styles['driverCard']}
+                            onClick={() => navigate(`/driver-profile/${post.contacts![0].driver_id}`, {
+                                state: { driverValues: { phone: post.contacts![0].driver_phone } }
+                            })}
+                        >
+                            <div className={styles['driverAvatar']}>
+                                <img src={post.contacts[0].driver_avatar || profileLogo} alt="Driver" />
+                            </div>
+                            <div className={styles['driverInfo']}>
+                                <span className={styles['driverName']}>{post.contacts[0].driver_name || 'Driver'}</span>
+                                <span className={styles['viewProfileText']}>Driver Profile</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Action Buttons */}
                 {post.status.toLowerCase() !== 'completed' && (
                     <div className={styles['action-buttons']}>
@@ -457,6 +487,18 @@ function PostDetail() {
                 onConfirm={() => setShowSuccess(false)}
                 title="Transaction Completed!"
                 message="โพสต์และรายการติดต่อนี้ถูกทำเครื่องหมายว่าเสร็จสิ้นแล้ว"
+            />
+
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                title={alertMessage?.includes('Failed') || alertMessage?.includes('Error') || alertMessage?.includes('Unable') ? 'Error' : 'Notice'}
+                message={alertMessage || ""}
+                onClose={() => {
+                    setAlertMessage(null);
+                    if (alertMessage === "Post cancelled and buyer notified") {
+                        navigate("/history");
+                    }
+                }}
             />
 
             {post.status.toLowerCase() === 'completed' && (

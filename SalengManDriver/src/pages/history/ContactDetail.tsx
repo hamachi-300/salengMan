@@ -10,6 +10,7 @@ import { useUser } from "../../context/UserContext";
 import profileLogo from "../../assets/icon/profile.svg";
 import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
+import AlertPopup from "../../components/AlertPopup";
 
 interface Contact {
     id: string;
@@ -51,6 +52,7 @@ function ContactDetail() {
     const [cancelRequestLoading, setCancelRequestLoading] = useState(false);
     const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
     const [completing, setCompleting] = useState(false);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
     useEffect(() => {
         fetchContactDetails();
@@ -163,7 +165,7 @@ function ContactDetail() {
             setShowConfirm(false);
         } catch (error) {
             console.error("Failed to cancel contact:", error);
-            alert("Failed to cancel contact. Please try again.");
+            setAlertMessage("Failed to cancel contact. Please try again.");
             setCancelling(false);
             setShowConfirm(false);
         }
@@ -177,11 +179,11 @@ function ContactDetail() {
         setCancelRequestLoading(true);
         try {
             await api.cancelContact(token, contact.id, reason);
-            alert("Contact cancelled and seller notified");
+            setAlertMessage("Contact cancelled and seller notified");
             navigate('/history');
         } catch (error: any) {
             console.error("Failed to cancel contact:", error);
-            alert(error.message || "Failed to cancel contact. Please try again.");
+            setAlertMessage(error.message || "Failed to cancel contact. Please try again.");
         } finally {
             setCancelRequestLoading(false);
             setShowCancelRequest(false);
@@ -202,7 +204,7 @@ function ContactDetail() {
             await api.updateContactStatus(token, contact.id, 'wait complete');
             await fetchContactDetails();
             setShowCompleteConfirm(false);
-            alert("Status updated to wait complete. Please wait for the seller to confirm.");
+            setAlertMessage("Status updated to wait complete. Please wait for the seller to confirm.");
 
             // Redirect to contacts list if this was part of a job exploration flow
             if (location.state?.fromExplore) {
@@ -212,7 +214,7 @@ function ContactDetail() {
             }
         } catch (error: any) {
             console.error("Failed to update contact status:", error);
-            alert(error.message || "Failed to update status. Please try again.");
+            setAlertMessage(error.message || "Failed to update status. Please try again.");
         } finally {
             setCompleting(false);
         }
@@ -470,6 +472,13 @@ function ContactDetail() {
                 onConfirm={handleRequestCancel}
                 onCancel={() => setShowCancelRequest(false)}
                 isLoading={cancelRequestLoading}
+            />
+
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                title={alertMessage?.includes('Failed') || alertMessage?.includes('Error') ? 'Error' : 'Notice'}
+                message={alertMessage || ""}
+                onClose={() => setAlertMessage(null)}
             />
         </div>
     );

@@ -8,6 +8,7 @@ import MapSelector from "../../../components/MapSelector";
 import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
 import { useUser } from "../../../context/UserContext";
 import profileLogo from "../../../assets/icon/profile.svg";
+import ConfirmPopup from "../../../components/ConfirmPopup";
 
 interface Post {
   id: number;
@@ -44,6 +45,7 @@ function ItemDetails() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+  const [showAddressPrompt, setShowAddressPrompt] = useState(false);
 
   const [isInCart, setIsInCart] = useState(false);
 
@@ -136,8 +138,26 @@ function ItemDetails() {
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (isInCart) {
+      return;
+    }
+
+    const token = getToken();
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const addresses = await api.getAddresses(token);
+      if (!addresses || addresses.length === 0) {
+        setShowAddressPrompt(true);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check addresses:", error);
+      setShowAddressPrompt(true);
       return;
     }
 
@@ -337,6 +357,20 @@ function ItemDetails() {
           </svg>
         </button>
       </div>
+
+      <ConfirmPopup
+        isOpen={showAddressPrompt}
+        title="Address Required"
+        message="You must add a delivery address before you can buy items. Would you like to add one now?"
+        onConfirm={() => {
+          setShowAddressPrompt(false);
+          navigate('/add-address');
+        }}
+        onCancel={() => setShowAddressPrompt(false)}
+        confirmText="Add Address"
+        cancelText="Cancel"
+        confirmColor="#4CAF50"
+      />
     </div>
   );
 }

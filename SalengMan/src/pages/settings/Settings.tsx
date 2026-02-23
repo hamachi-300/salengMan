@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { logOut, getToken } from "../../services/auth";
 import { api } from "../../config/api";
 import ConfirmPopup from "../../components/ConfirmPopup";
+import AlertPopup from "../../components/AlertPopup";
 import styles from "./Settings.module.css";
 
 function Settings() {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -34,7 +36,7 @@ function Settings() {
       navigate("/");
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("Failed to delete account. Please try again.");
+      setAlertMessage("Failed to delete account. Please try again.");
     } finally {
       setLoading(false);
       setShowConfirm(false);
@@ -53,6 +55,13 @@ function Settings() {
         isLoading={loading}
         confirmText="Delete"
         cancelText="Cancel"
+      />
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        title={alertMessage?.includes('Failed') ? 'Error' : 'Notice'}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
       />
 
       <div className={styles.settingsContent}>

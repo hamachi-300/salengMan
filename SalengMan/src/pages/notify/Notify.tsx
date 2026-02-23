@@ -5,6 +5,8 @@ import PageHeader from "../../components/PageHeader";
 import { api, Notification } from "../../config/api";
 import { getToken } from "../../services/auth";
 import { useNavigate } from "react-router-dom";
+import ConfirmPopup from "../../components/ConfirmPopup";
+import AlertPopup from "../../components/AlertPopup";
 
 type GroupedNotifications = {
   [key: string]: Notification[];
@@ -14,6 +16,19 @@ function Notify() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [confirmPopup, setConfirmPopup] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => { },
+  });
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -34,6 +49,29 @@ function Notify() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearAll = () => {
+    if (notifications.length === 0) return;
+    setConfirmPopup({
+      isOpen: true,
+      title: "Clear All Notifications",
+      message: "Are you sure you want to delete all notifications? This action cannot be undone.",
+      onConfirm: async () => {
+        setConfirmPopup(prev => ({ ...prev, isOpen: false }));
+        try {
+          const token = getToken();
+          if (token) {
+            await api.clearNotifications(token);
+            setNotifications([]);
+            setAlertMessage("All notifications have been cleared.");
+          }
+        } catch (error) {
+          console.error("Failed to clear notifications:", error);
+          setAlertMessage("Failed to clear notifications.");
+        }
+      }
+    });
   };
 
   const getRelativeTime = (timestamp: string) => {
@@ -150,12 +188,26 @@ function Notify() {
             <p className={styles.placeholderText}>No new notifications</p>
           </div>
         ) : (
-          groupOrder.map(groupName => (
+          groupOrder.map((groupName, index) => (
             <div key={groupName} className={styles.section}>
-              <h2 className={styles.sectionHeader}>{groupName}</h2>
+              <h2 className={styles.sectionHeader}>
+                <span>{groupName}</span>
+                {index === 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className={styles.clearAllBtn}
+                  >
+                    Clear All
+                  </button>
+                )}
+              </h2>
               <div className={styles.notificationList}>
                 {grouped[groupName].map(n => (
-                  <div key={n.notify_id} className={styles.notificationCard}>
+                  <div
+                    key={n.notify_id}
+                    className={styles.notificationCard}
+                    onClick={() => n.refer_id && navigate(`/history/${n.refer_id}`)}
+                  >
                     {getIcon(n.type)}
                     <div className={styles.notificationInfo}>
                       <div className={styles.cardHeader}>
@@ -172,6 +224,18 @@ function Notify() {
         )}
       </div>
       <BottomNav />
+      <ConfirmPopup
+        isOpen={confirmPopup.isOpen}
+        title={confirmPopup.title}
+        message={confirmPopup.message}
+        onConfirm={confirmPopup.onConfirm}
+        onCancel={() => setConfirmPopup(prev => ({ ...prev, isOpen: false }))}
+      />
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 }

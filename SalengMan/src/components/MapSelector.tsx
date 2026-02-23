@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { getCurrentPosition } from '@tauri-apps/plugin-geolocation';
+import { getCurrentPosition, requestPermissions } from '@tauri-apps/plugin-geolocation';
 import 'leaflet/dist/leaflet.css';
 import styles from './MapSelector.module.css';
 import logoIcon from '../assets/icon/logo.svg';
+import AlertPopup from './AlertPopup';
 
 // Custom blue circle home icon for pickup
 const homeMarkerSvg = `
@@ -51,7 +52,7 @@ const LogoIcon = L.icon({
 // Map tile configurations
 const MAP_TILES: Record<string, { url: string; label: string }> = {
     dark: {
-        url: 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
         label: 'Dark'
     },
     light: {
@@ -165,6 +166,7 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
     const [routeCoords, setRouteCoords] = useState<[number, number][]>([]);
     const [autoBoundsEnabled, setAutoBoundsEnabled] = useState(true);
     const [triggerCenter, setTriggerCenter] = useState<L.LatLng | null>(null);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
     // Default to Bangkok if no location
     const center = initialLat && initialLng ? [initialLat, initialLng] : [13.7563, 100.5018];
@@ -209,6 +211,8 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
 
         if (isTauri) {
             try {
+                // Force a permission check/request before accessing location
+                await requestPermissions(['location']);
                 const pos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
                 const { latitude, longitude } = pos.coords;
                 const newPos = new L.LatLng(latitude, longitude);
@@ -234,7 +238,7 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
         }
 
         if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser.");
+            setAlertMessage("Geolocation is not supported by your browser.");
             setLoading(false);
             return;
         }
@@ -262,16 +266,16 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                 setLoading(false);
                 switch (err.code) {
                     case err.PERMISSION_DENIED:
-                        alert("Location permission denied. Please allow location access.");
+                        setAlertMessage("Location permission denied. Please allow location access.");
                         break;
                     case err.POSITION_UNAVAILABLE:
-                        alert("Location unavailable. Please check if GPS is enabled.");
+                        setAlertMessage("Location unavailable. Please check if GPS is enabled.");
                         break;
                     case err.TIMEOUT:
-                        alert("Location request timed out. Please try again.");
+                        setAlertMessage("Location request timed out. Please try again.");
                         break;
                     default:
-                        alert("Could not get your location. Please select manually on the map.");
+                        setAlertMessage("Could not get your location. Please select manually on the map.");
                 }
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -440,6 +444,12 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                     )}
                 </button>
             )}
+
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                message={alertMessage || ""}
+                onClose={() => setAlertMessage(null)}
+            />
         </div>
     );
 }

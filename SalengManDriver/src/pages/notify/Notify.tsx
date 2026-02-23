@@ -5,6 +5,8 @@ import PageHeader from "../../components/PageHeader";
 import { api, Notification } from "../../config/api";
 import { getToken } from "../../services/auth";
 import { useNavigate } from "react-router-dom";
+import AlertPopup from "../../components/AlertPopup";
+import ConfirmPopup from "../../components/ConfirmPopup";
 
 type GroupedNotifications = {
   [key: string]: Notification[];
@@ -13,7 +15,20 @@ type GroupedNotifications = {
 function Notify() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [confirmPopup, setConfirmPopup] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => { },
+  });
 
   useEffect(() => {
     fetchNotifications();
@@ -27,13 +42,40 @@ function Notify() {
     }
 
     try {
-      const data = await api.getNotifications(token);
-      setNotifications(data);
+      const [notifsData, contactsData] = await Promise.all([
+        api.getNotifications(token),
+        api.getContacts(token)
+      ]);
+      setNotifications(notifsData);
+      setContacts(contactsData);
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      console.error("Failed to fetch notification data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearAll = () => {
+    if (notifications.length === 0) return;
+    setConfirmPopup({
+      isOpen: true,
+      title: "Clear All Notifications",
+      message: "Are you sure you want to delete all notifications? This action cannot be undone.",
+      onConfirm: async () => {
+        setConfirmPopup(prev => ({ ...prev, isOpen: false }));
+        try {
+          const token = getToken();
+          if (token) {
+            await api.clearNotifications(token);
+            setNotifications([]);
+            setAlertMessage("All notifications have been cleared.");
+          }
+        } catch (error) {
+          console.error("Failed to clear notifications:", error);
+          setAlertMessage("Failed to clear notifications.");
+        }
+      }
+    });
   };
 
   const getRelativeTime = (timestamp: string) => {
@@ -133,6 +175,17 @@ function Notify() {
     return 0;
   });
 
+  const handleNotificationClick = (n: Notification) => {
+    if (n.refer_id) {
+      const contact = contacts.find(c => c.post_id === n.refer_id);
+      if (contact) {
+        navigate(`/contact/${contact.id}`);
+      } else {
+        setAlertMessage("Details for this post are no longer available in your contacts.");
+      }
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       <PageHeader title="Notification" backTo="/home" />
@@ -150,12 +203,26 @@ function Notify() {
             <p className={styles.placeholderText}>No new notifications</p>
           </div>
         ) : (
-          groupOrder.map(groupName => (
+          groupOrder.map((groupName, index) => (
             <div key={groupName} className={styles.section}>
-              <h2 className={styles.sectionHeader}>{groupName}</h2>
+              <h2 className={styles.sectionHeader}>
+                <span>{groupName}</span>
+                {index === 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className={styles.clearAllBtn}
+                  >
+                    Clear All
+                  </button>
+                )}
+              </h2>
               <div className={styles.notificationList}>
                 {grouped[groupName].map(n => (
-                  <div key={n.notify_id} className={styles.notificationCard}>
+                  <div
+                    key={n.notify_id}
+                    className={styles.notificationCard}
+                    onClick={() => handleNotificationClick(n)}
+                  >
                     {getIcon(n.type)}
                     <div className={styles.notificationInfo}>
                       <div className={styles.cardHeader}>
@@ -172,6 +239,20 @@ function Notify() {
         )}
       </div>
       <BottomNav />
+
+      <ConfirmPopup
+        isOpen={confirmPopup.isOpen}
+        title={confirmPopup.title}
+        message={confirmPopup.message}
+        onConfirm={confirmPopup.onConfirm}
+        onCancel={() => setConfirmPopup(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 }

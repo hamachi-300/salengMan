@@ -6,6 +6,7 @@ import { api, Address } from "../../config/api";
 import { useSell } from "../../context/SellContext";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
+import AlertPopup from "../../components/AlertPopup";
 
 function SelectAddress() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ function SelectAddress() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(sellData.address?.id || null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const isEditing = sellData.editingPostId !== null;
 
@@ -55,7 +57,7 @@ function SelectAddress() {
 
   const handleSelect = () => {
     if (!selectedId) {
-      alert('Please select an address');
+      setAlertMessage('Please select an address');
       return;
     }
     const selectedAddress = addresses.find(addr => addr.id === selectedId);
@@ -125,6 +127,12 @@ function SelectAddress() {
         title="Select"
         onClick={handleSelect}
         disabled={!selectedId}
+      />
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { getToken } from "../../services/auth";
 import { api, CreateAddressData } from "../../config/api";
 import MapSelector from "../../components/MapSelector";
 import ConfirmPopup from "../../components/ConfirmPopup";
+import AlertPopup from "../../components/AlertPopup";
 import { useUser } from "../../context/UserContext";
 
 function NewAddress() {
@@ -16,6 +17,7 @@ function NewAddress() {
     const [loading, setLoading] = useState(false);
     const [showMap, setShowMap] = useState(false);
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
     // Form State
     const [label, setLabel] = useState("");
@@ -79,7 +81,7 @@ function NewAddress() {
             });
         } catch (error) {
             console.error("Error fetching address:", error);
-            alert("Failed to load address details");
+            setAlertMessage("Failed to load address details");
             navigate(returnPath);
         } finally {
             setLoading(false);
@@ -103,14 +105,14 @@ function NewAddress() {
 
     const handleSave = async () => {
         if (!label || !phone || !location) {
-            alert("Please fill in all required fields and select a location.");
+            setAlertMessage("Please fill in all required fields and select a location.");
             return;
         }
 
         // Phone validation regex for 000-000-0000
         const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
         if (!phoneRegex.test(phone)) {
-            alert("Phone number must be in format 000-000-0000");
+            setAlertMessage("Phone number must be in format 000-000-0000");
             return;
         }
 
@@ -151,7 +153,7 @@ function NewAddress() {
             navigate(returnPath);
         } catch (error) {
             console.error("Error saving address:", error);
-            alert("Failed to save address. Please try again.");
+            setAlertMessage("Failed to save address. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -167,7 +169,7 @@ function NewAddress() {
             navigate(returnPath);
         } catch (e) {
             console.error(e);
-            alert("Failed to delete address");
+            setAlertMessage("Failed to delete address");
         } finally {
             setLoading(false);
             setShowConfirmDelete(false);
@@ -180,7 +182,7 @@ function NewAddress() {
 
     const confirmLocation = () => {
         if (!location) {
-            alert("Please select a location on the map");
+            setAlertMessage("Please select a location on the map");
             return;
         }
         setShowMap(false);
@@ -198,6 +200,13 @@ function NewAddress() {
                 isLoading={loading}
                 confirmText="Delete"
                 cancelText="Cancel"
+            />
+
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                title={alertMessage?.includes('Failed') || alertMessage?.includes('Please') || alertMessage?.includes('must') ? 'Error' : 'Notice'}
+                message={alertMessage || ""}
+                onClose={() => setAlertMessage(null)}
             />
 
             {/* Map Modal */}

@@ -16,6 +16,7 @@ import TrackDriver from "./pages/history/TrackDriver";
 import PostBuyerList from "./pages/history/PostBuyerList";
 import ConfirmBuyer from "./pages/history/ConfirmBuyer";
 import Chat from "./pages/history/Chat";
+import DriverProfile from "./pages/history/DriverProfile";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="/history/:id/track" element={<TrackDriver />} />
         <Route path="/history/:id/buyers" element={<PostBuyerList />} />
         <Route path="/history/buyer/:contactId" element={<ConfirmBuyer />} />
+        <Route path="/driver-profile/:id" element={<DriverProfile />} />
         <Route path="/chat/:id" element={<Chat />} />
         <Route path="/notify" element={<Notify />} />
         <Route path="/account" element={<Account />} />

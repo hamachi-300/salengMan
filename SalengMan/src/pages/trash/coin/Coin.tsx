@@ -4,6 +4,7 @@ import styles from './Coin.module.css';
 import PageHeader from '../../../components/PageHeader';
 import PageFooter from '../../../components/PageFooter';
 import ConfirmPopup from '../../../components/ConfirmPopup';
+import AlertPopup from '../../../components/AlertPopup';
 import { useUser } from '../../../context/UserContext';
 import { API_URL } from '../../../config/api';
 
@@ -23,6 +24,7 @@ export default function Coin() {
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   // Fetch user's coin balance on component mount
   useEffect(() => {
@@ -112,7 +114,7 @@ export default function Coin() {
     if (selectedPackage) {
       const pkg = getPackageDetails(selectedPackage);
       if (!pkg) {
-        alert("Invalid package selected");
+        setAlertMessage("Invalid package selected");
         return;
       }
 
@@ -217,6 +219,12 @@ export default function Coin() {
         confirmText="Login"
         cancelText="Cancel"
         confirmColor="#4CAF50"
+      />
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
       />
 
       <PageFooter title="Confirm Purchase" onClick={handleConfirmPurchase} />

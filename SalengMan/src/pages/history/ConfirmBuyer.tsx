@@ -7,6 +7,7 @@ import profileLogo from "../../assets/icon/profile.svg";
 import { api, Contact } from "../../config/api";
 import { getToken } from "../../services/auth";
 import SuccessPopup from "../../components/SuccessPopup";
+import AlertPopup from "../../components/AlertPopup";
 
 interface BuyerProfile {
     id: string;
@@ -28,6 +29,7 @@ function ConfirmBuyer() {
     const [error, setError] = useState<string | null>(null);
     const [confirming, setConfirming] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -66,7 +68,7 @@ function ConfirmBuyer() {
             setShowSuccess(true);
         } catch (err: any) {
             console.error("Failed to confirm buyer:", err);
-            alert("Failed to confirm buyer. Please try again.");
+            setAlertMessage("Failed to confirm buyer. Please try again.");
         } finally {
             setConfirming(false);
         }
@@ -74,7 +76,7 @@ function ConfirmBuyer() {
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        alert("Copied to clipboard!");
+        setAlertMessage("Copied to clipboard!");
     };
 
     if (error) {
@@ -249,6 +251,13 @@ function ConfirmBuyer() {
                 message="คุณได้ยืนยันผู้ซื้อเรียบร้อยแล้ว รายการอื่นๆ จะถูกปิดโดยอัตโนมัติ"
                 onConfirm={() => navigate(`/history/${contact?.post_id}`)}
                 confirmText="ตกลง"
+            />
+
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                title={alertMessage?.includes('Failed') ? 'Error' : 'Notice'}
+                message={alertMessage || ""}
+                onClose={() => setAlertMessage(null)}
             />
         </div>
     );

@@ -4,12 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useSell } from "../../context/SellContext";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
+import AlertPopup from "../../components/AlertPopup";
 
 function SelectTime() {
   const navigate = useNavigate();
   const { sellData, setPickupTime } = useSell();
 
   const isEditing = sellData.editingPostId !== null;
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   // Initialize from context if available
   const [selectedDate, setSelectedDate] = useState<string | null>(sellData.pickupTime?.date || null);
@@ -171,12 +173,12 @@ function SelectTime() {
 
   const handleConfirm = () => {
     if (!selectedDate) {
-      alert('Please select a date');
+      setAlertMessage('Please select a date');
       return;
     }
 
     if (!isValidTimeRange()) {
-      alert('End time must be after start time');
+      setAlertMessage('End time must be after start time');
       return;
     }
 
@@ -376,6 +378,12 @@ function SelectTime() {
           </div>
         </div>
       )}
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 }

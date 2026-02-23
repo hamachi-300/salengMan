@@ -1,0 +1,115 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+    background-color: #1a1c20;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal h3 {
+    margin: 0 0 12px 0;
+    font-family: var(--font-eng-fun), sans-serif;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.modal h3.errorTitle {
+    color: #ef4444;
+}
+
+.modal p {
+    margin: 0 0 24px 0;
+    color: #ccc;
+    font-family: var(--font-thai-polite), sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.okButton {
+    background-color: var(--color-primary);
+    color: white;
+    font-family: var(--font-eng-fun), sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.okButton:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.okButton:active {
+    transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+    .modalOverlay {
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal {
+        background-color: #ffffff;
+        border: 1px solid #eee;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal h3 {
+        color: #111;
+    }
+
+    .modal p {
+        color: #555;
+    }
+}

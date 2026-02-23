@@ -1,18 +1,42 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Home.module.css";
 import { useNavigate } from "react-router-dom";
 import profileLogo from "../../assets/icon/profile.svg";
 import { useUser } from "../../context/UserContext";
 import BottomNav from "../../components/BottomNav";
+import ConfirmPopup from "../../components/ConfirmPopup";
+import { api } from "../../config/api";
+import { getToken } from "../../services/auth";
 
 function Home() {
   const navigate = useNavigate();
   const { user, refreshUser } = useUser();
+  const [showAddressPrompt, setShowAddressPrompt] = useState(false);
 
   // Refresh user data when page loads
   useEffect(() => {
     refreshUser();
   }, []);
+
+  const handleBuyOldItemClick = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const addresses = await api.getAddresses(token);
+      if (!addresses || addresses.length === 0) {
+        setShowAddressPrompt(true);
+      } else {
+        navigate("/buy-old-item");
+      }
+    } catch (error) {
+      console.error("Failed to check addresses:", error);
+      setShowAddressPrompt(true);
+    }
+  };
 
   return (
     <div className={styles.home}>
@@ -45,7 +69,7 @@ function Home() {
         <div className={styles.servicesSection}>
           <h2 className={styles.sectionTitle}>Services</h2>
           <div className={styles.servicesGrid}>
-            <div className={styles.serviceCard} onClick={() => navigate("/buy-old-item")}>
+            <div className={styles.serviceCard} onClick={handleBuyOldItemClick}>
               <div className={styles.serviceIconWrapper}>
                 {/* Recycle icon */}
                 <svg className={styles.serviceIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -90,6 +114,20 @@ function Home() {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      <ConfirmPopup
+        isOpen={showAddressPrompt}
+        title="Address Required"
+        message="You must add a delivery address before you can buy items. Would you like to add one now?"
+        onConfirm={() => {
+          setShowAddressPrompt(false);
+          navigate('/add-address');
+        }}
+        onCancel={() => setShowAddressPrompt(false)}
+        confirmText="Add Address"
+        cancelText="Cancel"
+        confirmColor="#4CAF50"
+      />
     </div>
   );
 }

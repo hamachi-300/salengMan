@@ -6,6 +6,7 @@ import { getToken } from "../../services/auth";
 import { api } from "../../config/api";
 import { useUser } from "../../context/UserContext";
 import BottomNav from "../../components/BottomNav";
+import AlertPopup from "../../components/AlertPopup";
 
 function Account() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ function Account() {
   const { user, loading, refreshUser, updateUserLocal } = useUser();
   const [uploading, setUploading] = useState(false);
   const [defaultAddress, setDefaultAddress] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   // Refresh user data and fetch default address every time page loads
   useEffect(() => {
@@ -48,10 +50,10 @@ function Account() {
       const { url } = await api.uploadFile(token, file);
       // Update user locally (no need to refetch from API)
       updateUserLocal({ avatar_url: url });
-      alert("Image uploaded successfully!");
+      setAlertMessage("Image uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert(`Failed to upload image: ${error}`);
+      setAlertMessage(`Failed to upload image: ${error}`);
     } finally {
       setUploading(false);
     }
@@ -204,6 +206,13 @@ function Account() {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      <AlertPopup
+        isOpen={alertMessage !== null}
+        title={alertMessage?.includes('Failed') ? 'Error' : 'Notice'}
+        message={alertMessage || ""}
+        onClose={() => setAlertMessage(null)}
+      />
     </div>
   );
 }
