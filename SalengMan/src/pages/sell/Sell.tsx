@@ -5,6 +5,7 @@ import { useSell } from '../../context/SellContext';
 import PageHeader from '../../components/PageHeader';
 import PageFooter from '../../components/PageFooter';
 import AlertPopup from '../../components/AlertPopup';
+import { predict, getTopPrediction } from '../../services/aiService';
 
 const ItemUpload: React.FC = () => {
     const navigate = useNavigate();
@@ -20,6 +21,7 @@ const ItemUpload: React.FC = () => {
     const [newCategoryName, setNewCategoryName] = useState('');
     const [customCategories, setCustomCategories] = useState<string[]>([]);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Sync with context when returning from other pages
     useEffect(() => {
@@ -29,7 +31,7 @@ const ItemUpload: React.FC = () => {
     }, []);
 
     const defaultCategories = [
-        "เครื่องแก้ว", "เซรามิก", "อุปกรณ์อิเล็กทรอนิกส์", "ของเล่น", "หนังสือ"
+        "เครื่องแก้ว", "เซรามิก", "ขวดพลาสติก", "กระป๋องอลูมิเนียม", "กระดาษแข็ง/ลัง", "หนังสือ", "อุปกรณ์อิเล็กทรอนิกส์", "ของเล่น"
     ];
 
     const availableCategories = [...defaultCategories, ...customCategories];
@@ -78,6 +80,41 @@ const ItemUpload: React.FC = () => {
         }
     };
 
+    const handleAIDetect = async () => {
+        if (images.length === 0) {
+            setAlertMessage("Please upload at least one image first.");
+            return;
+        }
+
+        setIsAnalyzing(true);
+        try {
+            const detectedCategories = new Set<string>();
+
+            for (const imgBase64 of images) {
+                const predictions = await predict(imgBase64);
+                const topResult = getTopPrediction(predictions, 0.6); // Slightly higher threshold
+                if (topResult && topResult !== "unknown") {
+                    detectedCategories.add(topResult);
+                }
+            }
+
+            if (detectedCategories.size > 0) {
+                const newCats = Array.from(detectedCategories);
+                // Merge with existing categories
+                const merged = Array.from(new Set([...categories, ...newCats]));
+                setCategories(merged);
+                setAlertMessage(`AI detected: ${newCats.join(', ')}`);
+            } else {
+                setAlertMessage("AI couldn't identify any specific categories.");
+            }
+        } catch (error) {
+            console.error("AI Analysis failed:", error);
+            setAlertMessage("AI analysis failed. Please check your connection or model URL.");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     const handleNext = () => {
         if (images.length === 0) {
             setAlertMessage('Please upload at least one image');
@@ -107,7 +144,7 @@ const ItemUpload: React.FC = () => {
                     {/* Hidden inputs for camera and gallery */}
                     <input id="camera-upload" type="file" hidden accept="image/*" capture="environment" onChange={(e) => { handleImageChange(e); setShowPhotoOptions(false); }} />
                     <input id="gallery-upload" type="file" hidden multiple accept="image/*" onChange={(e) => { handleImageChange(e); setShowPhotoOptions(false); }} />
-                    
+
                     <div className={styles['upload-area']} onClick={() => setShowPhotoOptions(true)}>
                         <div className={styles['upload-placeholder']}>
                             <div className={styles['icon-up']}>+</div>
@@ -115,6 +152,45 @@ const ItemUpload: React.FC = () => {
                             <div className={styles['text-small']}>Take photo or upload from gallery</div>
                         </div>
                     </div>
+
+                    {images.length > 0 && (
+                        <div className={styles['ai-detect-container']} style={{ marginTop: '15px' }}>
+                            <button
+                                className={styles['ai-detect-btn']}
+                                onClick={handleAIDetect}
+                                disabled={isAnalyzing}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    border: 'none',
+                                    background: isAnalyzing ? '#ccc' : 'linear-gradient(135deg, #FF9B63 0%, #FF6B6B 100%)',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    fontSize: '16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+                                    cursor: isAnalyzing ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                {isAnalyzing ? (
+                                    <>
+                                        <span className={styles['loader']}></span>
+                                        Analyzing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>🔍</span>
+                                        AI Detect Categories
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
                     <div className={styles['image-count-status']} style={{ textAlign: 'center', marginTop: '12px', display: 'block', background: 'transparent', color: '#888' }}>
                         Up to 10 images ({images.length}/10)
                     </div>
