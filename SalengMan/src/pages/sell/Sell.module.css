@@ -605,3 +605,138 @@
         background-color: #ccc6c0;
     }
 }
+
+/* Photo Options Modal (Bottom Sheet Style) */
+.photo-options-modal {
+    background-color: #2e2e2e;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 24px calc(24px + env(safe-area-inset-bottom));
+    width: 100%;
+    margin-top: auto;
+    /* Push to bottom */
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.photo-options-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.photo-options-header h3 {
+    font-family: var(--font-eng-fun);
+    font-size: 1.25rem;
+    color: #fff;
+}
+
+.photo-options-header .close-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.photo-options-header .close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.photo-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.photo-option-btn {
+    display: flex;
+    align-items: center;
+    background-color: #3e3e3e;
+    padding: 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.photo-option-btn:hover {
+    background-color: #4a4a4a;
+}
+
+.photo-option-icon {
+    width: 48px;
+    height: 48px;
+    background-color: #2e2e2e;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.photo-option-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.photo-option-title {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.photo-option-desc {
+    color: #a0a0a0;
+    font-size: 0.85rem;
+}
+
+/* Photo Options Modal Light Mode Support */
+@media (prefers-color-scheme: light) {
+    .photo-options-modal {
+        background-color: #f5f0ec;
+    }
+
+    .photo-options-header h3 {
+        color: var(--color-text);
+    }
+
+    .photo-options-header .close-btn {
+        background-color: #d9d3cf;
+        color: var(--color-text);
+    }
+
+    .photo-options-header .close-btn:hover {
+        background-color: #ccc6c0;
+    }
+
+    .photo-option-btn {
+        background-color: #e9e3df;
+    }
+
+    .photo-option-btn:hover {
+        background-color: #d9d3cf;
+    }
+
+    .photo-option-title {
+        color: var(--color-text);
+    }
+
+    .photo-option-desc {
+        color: #666;
+    }
+
+    .photo-option-icon {
+        background-color: #f5f0ec;
+    }
+}

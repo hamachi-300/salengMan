@@ -16,6 +16,7 @@ const ItemUpload: React.FC = () => {
     const [categories, setCategories] = useState<string[]>(sellData.categories);
     const [remarks, setRemarks] = useState(sellData.remarks);
     const [showAddCategory, setShowAddCategory] = useState(false);
+    const [showPhotoOptions, setShowPhotoOptions] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [customCategories, setCustomCategories] = useState<string[]>([]);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
@@ -103,14 +104,20 @@ const ItemUpload: React.FC = () => {
                         <span className={styles['main-label']}>Item Photos</span>
                         <span className={styles['tag-required']}>Required</span>
                     </div>
-                    <label className={styles['upload-area']}>
-                        <input type="file" hidden multiple onChange={handleImageChange} accept="image/*" />
+                    {/* Hidden inputs for camera and gallery */}
+                    <input id="camera-upload" type="file" hidden accept="image/*" capture="environment" onChange={(e) => { handleImageChange(e); setShowPhotoOptions(false); }} />
+                    <input id="gallery-upload" type="file" hidden multiple accept="image/*" onChange={(e) => { handleImageChange(e); setShowPhotoOptions(false); }} />
+                    
+                    <div className={styles['upload-area']} onClick={() => setShowPhotoOptions(true)}>
                         <div className={styles['upload-placeholder']}>
-                            <div className={styles['icon-up']}>↑</div>
-                            <div className={styles['text-orange']}>Upload Photos</div>
-                            <div className={styles['text-small']}>Up to 10 images ({images.length}/10)</div>
+                            <div className={styles['icon-up']}>+</div>
+                            <div className={styles['text-orange']}>Add Photos</div>
+                            <div className={styles['text-small']}>Take photo or upload from gallery</div>
                         </div>
-                    </label>
+                    </div>
+                    <div className={styles['image-count-status']} style={{ textAlign: 'center', marginTop: '12px', display: 'block', background: 'transparent', color: '#888' }}>
+                        Up to 10 images ({images.length}/10)
+                    </div>
 
                     {images.length > 0 && (
                         <div className={styles['thumbnail-grid']}>
@@ -213,6 +220,33 @@ const ItemUpload: React.FC = () => {
                             >
                                 Add
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showPhotoOptions && (
+                <div className={styles['modal-overlay']} onClick={() => setShowPhotoOptions(false)}>
+                    <div className={styles['photo-options-modal']} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles['photo-options-header']}>
+                            <h3 className={styles['modal-title']} style={{ margin: 0 }}>Add Photos</h3>
+                            <button className={styles['close-btn']} onClick={() => setShowPhotoOptions(false)}>×</button>
+                        </div>
+                        <div className={styles['photo-options-list']}>
+                            <label htmlFor="camera-upload" className={styles['photo-option-btn']}>
+                                <div className={styles['photo-option-icon']}>📷</div>
+                                <div className={styles['photo-option-text']}>
+                                    <div className={styles['photo-option-title']}>Take Photo</div>
+                                    <div className={styles['photo-option-desc']}>Use your camera to snap a photo</div>
+                                </div>
+                            </label>
+                            <label htmlFor="gallery-upload" className={styles['photo-option-btn']}>
+                                <div className={styles['photo-option-icon']}>🖼️</div>
+                                <div className={styles['photo-option-text']}>
+                                    <div className={styles['photo-option-title']}>Choose from Gallery</div>
+                                    <div className={styles['photo-option-desc']}>Select existing photos from your device</div>
+                                </div>
+                            </label>
                         </div>
                     </div>
                 </div>
