@@ -9,6 +9,8 @@ import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
 import SuccessPopup from "../../components/SuccessPopup";
 import AlertPopup from "../../components/AlertPopup";
+import ReviewPopup from "../../components/ReviewPopup";
+import ImageViewer from "../../components/ImageViewer";
 import { useSell } from "../../context/SellContext";
 import profileLogo from "../../assets/icon/profile.svg";
 
@@ -47,6 +49,13 @@ function PostDetail() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [completing, setCompleting] = useState(false);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [showReviewPopup, setShowReviewPopup] = useState(false);
+    const [submittingReview, setSubmittingReview] = useState(false);
+
+    // Image viewer state
+    const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerIndex, setViewerIndex] = useState(0);
+
     const isEditable = post?.status === 'waiting';
 
     useEffect(() => {
@@ -209,6 +218,57 @@ function PostDetail() {
         }
     };
 
+    const handleOpenReview = async () => {
+        if (!post || !post.contacts || post.contacts.length === 0) return;
+        const token = getToken();
+        if (!token) return;
+
+        const driverId = post.contacts[0].driver_id;
+        if (!driverId) {
+            setAlertMessage("Error: Driver information is missing.");
+            return;
+        }
+
+        try {
+            const { hasReviewed } = await api.checkReviewStatus(token, driverId, post.id);
+            if (hasReviewed) {
+                setAlertMessage("You have already reviewed this user for this post");
+            } else {
+                setShowReviewPopup(true);
+            }
+        } catch (err: any) {
+            console.error("Failed to check review status:", err);
+            // Fallback to showing popup if check fails, the backend will still catch double-reviews
+            setShowReviewPopup(true);
+        }
+    };
+
+    const handleReviewSubmit = async (score: number) => {
+        if (!post || !post.contacts || post.contacts.length === 0) return;
+        const token = getToken();
+        if (!token) return;
+
+        const driverId = post.contacts[0].driver_id;
+        if (!driverId) {
+            setAlertMessage("Error: Driver information is missing.");
+            return;
+        }
+
+        setSubmittingReview(true);
+        try {
+            await api.reviewUser(token, driverId, score, post.id);
+            setShowReviewPopup(false);
+            setAlertMessage("Review submitted successfully! Thank you.");
+            // Refresh to ensure we get the latest state or just to be safe
+            await fetchPost();
+        } catch (err: any) {
+            console.error("Failed to submit review:", err);
+            setAlertMessage(err.message || "Failed to submit review");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
     const renderChatIcon = () => (
         <div className={styles['chat-room-icon']} onClick={handleChat}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
@@ -289,7 +349,17 @@ function PostDetail() {
                         </div>
                         <div className={styles['image-grid']}>
                             {post.images.map((img, idx) => (
-                                <img key={idx} src={img} alt={`Item ${idx + 1}`} className={styles['image-item']} />
+                                <img
+                                    key={idx}
+                                    src={img}
+                                    alt={`Item ${idx + 1}`}
+                                    className={styles['image-item']}
+                                    onClick={() => {
+                                        setViewerImages(post.images!);
+                                        setViewerIndex(idx);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
                             ))}
                         </div>
                     </div>
@@ -501,13 +571,31 @@ function PostDetail() {
                 }}
             />
 
+            <ReviewPopup
+                isOpen={showReviewPopup}
+                onClose={() => setShowReviewPopup(false)}
+                onSubmit={handleReviewSubmit}
+                isLoading={submittingReview}
+                title="Rate the Driver"
+                message={`How was your experience with ${post.contacts?.[0]?.driver_name || 'the driver'}?`}
+            />
+
             {post.status.toLowerCase() === 'completed' && (
                 <PageFooter
-                    title="Completed"
-                    onClick={() => { }}
-                    disabled={true}
+                    title="Review Driver"
+                    onClick={handleOpenReview}
+                    disabled={false}
                     showArrow={false}
-                    variant="green"
+                    variant="orange"
+                />
+            )}
+
+            {/* Image Viewer */}
+            {viewerImages.length > 0 && (
+                <ImageViewer
+                    images={viewerImages}
+                    initialIndex={viewerIndex}
+                    onClose={() => setViewerImages([])}
                 />
             )}
         </div>

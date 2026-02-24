@@ -16,6 +16,18 @@ CREATE TABLE IF NOT EXISTS users (
     UNIQUE(email, role)
 );
 
+-- Notifies table
+CREATE TABLE IF NOT EXISTS notifies (
+    notify_id SERIAL PRIMARY KEY,
+    notify_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    notify_header TEXT NOT NULL,
+    notify_content TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    type VARCHAR(50),
+    refer_id VARCHAR(255),
+    contact_type VARCHAR(50)
+);
+
 -- Addresses table
 CREATE TABLE IF NOT EXISTS addresses (
     id SERIAL PRIMARY KEY,
@@ -133,3 +145,29 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_contacts_seller_id ON contacts(seller_id);
 CREATE INDEX IF NOT EXISTS idx_contacts_buyer_id ON contacts(buyer_id);
 CREATE INDEX IF NOT EXISTS idx_contacts_post_id ON contacts(post_id);
+
+-- Old item post scores table (user ratings)
+CREATE TABLE IF NOT EXISTS old_item_post_scores (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    score DECIMAL(3,2) DEFAULT 0.0,
+    reviewed_user_id JSONB DEFAULT '[]'::JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Trigger function to automatically create a score record for new users
+CREATE OR REPLACE FUNCTION public.create_user_score_record()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.old_item_post_scores (user_id, score, reviewed_user_id)
+    VALUES (NEW.id, 0.0, '[]'::JSONB)
+    ON CONFLICT (user_id) DO NOTHING;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create the trigger on the users table
+DROP TRIGGER IF EXISTS on_user_created_score ON public.users;
+CREATE TRIGGER on_user_created_score
+    AFTER INSERT ON public.users
+    FOR EACH ROW EXECUTE FUNCTION public.create_user_score_record();

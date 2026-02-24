@@ -17,13 +17,26 @@ function Account() {
   const [uploading, setUploading] = useState(false);
   const [defaultAddress, setDefaultAddress] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [userScore, setUserScore] = useState<any>(null);
 
   // Refresh user data and fetch default address every time page loads
   useEffect(() => {
     discardEdit(); // Clear edit mode data if user was editing
     refreshUser();
     fetchDefaultAddress();
-  }, []);
+    if (user && user.id) fetchUserScore(user.id);
+  }, [user?.id]);
+
+  const fetchUserScore = async (userId: string) => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const data = await api.getUserScore(token, userId);
+      setUserScore(data);
+    } catch (error) {
+      console.error("Error fetching user score:", error);
+    }
+  };
 
   const fetchDefaultAddress = async () => {
     const token = getToken();
@@ -226,6 +239,28 @@ function Account() {
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>
           </div>
         </div>
+
+        {/* Score */}
+        {userScore && (
+          <div className={styles.infoCard}>
+            <div className={styles.cardLeft}>
+              <div className={styles.cardIcon}>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              </div>
+              <div className={styles.cardContent}>
+                <span className={styles.cardLabel}>SCORE</span>
+                <span className={styles.cardValue}>
+                  {Number(userScore.score).toFixed(1)} / 5.0
+                  <span style={{ fontSize: '0.8rem', color: '#888', marginLeft: '6px' }}>
+                    ({userScore.reviewed_user_id?.length || 0} reviews)
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 

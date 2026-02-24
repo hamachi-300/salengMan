@@ -6,6 +6,7 @@ import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
+import ImageViewer from "../../components/ImageViewer";
 
 function ConfirmPost() {
   const navigate = useNavigate();
@@ -15,6 +16,10 @@ function ConfirmPost() {
 
   const [createdPostId, setCreatedPostId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Image viewer state
+  const [viewerImages, setViewerImages] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   const isEditing = sellData.editingPostId !== null;
 
@@ -156,7 +161,17 @@ function ConfirmPost() {
           </div>
           <div className={styles['image-grid']}>
             {sellData.images.map((img, idx) => (
-              <img key={idx} src={img} alt={`Item ${idx}`} className={styles['image-item']} />
+              <img
+                key={idx}
+                src={img}
+                alt={`Item ${idx}`}
+                className={styles['image-item']}
+                onClick={() => {
+                  setViewerImages(sellData.images);
+                  setViewerIndex(idx);
+                }}
+                style={{ cursor: 'pointer' }}
+              />
             ))}
           </div>
         </div>
@@ -244,6 +259,15 @@ function ConfirmPost() {
         onClick={handleSubmit}
         disabled={loading}
       />
+
+      {/* Image Viewer */}
+      {viewerImages.length > 0 && (
+        <ImageViewer
+          images={viewerImages}
+          initialIndex={viewerIndex}
+          onClose={() => setViewerImages([])}
+        />
+      )}
     </div>
   );
 }

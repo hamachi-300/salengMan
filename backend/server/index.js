@@ -159,6 +159,7 @@ app.post('/auth/register', async (req, res) => {
     );
 
     const user = result.rows[0];
+
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
       process.env.JWT_SECRET,
@@ -319,6 +320,138 @@ app.get('/users/:id/public', authMiddleware, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Get user score
+app.get('/users/:id/score', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT score, reviewed_user_id FROM old_item_post_scores WHERE user_id = $1',
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ score: 0.0, reviewed_user_id: [] });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Submit a review for a user
+app.post('/users/:id/review', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const targetUserId = req.params.id;
+    const reviewerId = req.user.user_id;
+    const { score, postId } = req.body;
+
+    if (score === undefined || postId === undefined) {
+      return res.status(400).json({ error: 'Score and postId are required' });
+    }
+
+    if (score < 1 || score > 5) {
+      return res.status(400).json({ error: 'Score must be between 1 and 5' });
+    }
+
+    if (targetUserId === reviewerId) {
+      return res.status(400).json({ error: 'You cannot review yourself' });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Get current score data and lock the row
+    const scoreResult = await client.query(
+      'SELECT score, reviewed_user_id FROM old_item_post_scores WHERE user_id = $1 FOR UPDATE',
+      [targetUserId]
+    );
+
+    let currentScore = 0.0;
+    let reviews = [];
+
+    if (scoreResult.rows.length > 0) {
+      currentScore = parseFloat(scoreResult.rows[0].score);
+      reviews = scoreResult.rows[0].reviewed_user_id || [];
+    }
+
+    // 2. Check if this specific reviewer already reviewed this specific post
+    const existingReview = reviews.find(
+      r => r.reviewer_id === reviewerId && r.post_id === postId
+    );
+
+    if (existingReview) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'You have already reviewed this user for this post' });
+    }
+
+    // 3. Add new review
+    const newReview = {
+      reviewer_id: reviewerId,
+      post_id: postId,
+      score: score,
+      created_at: new Date().toISOString()
+    };
+
+    reviews.push(newReview);
+
+    // 4. Calculate new average score
+    const totalScore = reviews.reduce((sum, r) => sum + r.score, 0);
+    const newAverage = totalScore / reviews.length;
+
+    // 5. Update or Insert
+    if (scoreResult.rows.length > 0) {
+      await client.query(
+        'UPDATE old_item_post_scores SET score = $1, reviewed_user_id = $2::jsonb, updated_at = CURRENT_TIMESTAMP WHERE user_id = $3',
+        [newAverage, JSON.stringify(reviews), targetUserId]
+      );
+    } else {
+      // Fallback in case the user doesn't have a score record yet (should be rare due to our trigger)
+      await client.query(
+        'INSERT INTO old_item_post_scores (user_id, score, reviewed_user_id) VALUES ($1, $2, $3::jsonb)',
+        [targetUserId, newAverage, JSON.stringify(reviews)]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true, newScore: newAverage, reviewCount: reviews.length });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error submitting review:', error);
+    res.status(500).json({ error: 'Failed to submit review' });
+  } finally {
+    client.release();
+  }
+});
+
+// Check if a review already exists
+app.get('/users/:id/review/check', authMiddleware, async (req, res) => {
+  try {
+    const targetUserId = req.params.id;
+    const reviewerId = req.user.user_id;
+    const postId = req.query.postId;
+
+    if (!postId) {
+      return res.status(400).json({ error: 'postId is required' });
+    }
+
+    const scoreResult = await pool.query(
+      'SELECT reviewed_user_id FROM old_item_post_scores WHERE user_id = $1',
+      [targetUserId]
+    );
+
+    let hasReviewed = false;
+    if (scoreResult.rows.length > 0) {
+      const reviews = scoreResult.rows[0].reviewed_user_id || [];
+      hasReviewed = reviews.some(r => r.reviewer_id === reviewerId && r.post_id === parseInt(postId));
+    }
+
+    res.json({ hasReviewed });
+  } catch (error) {
+    console.error('Error checking review status:', error);
+    res.status(500).json({ error: 'Failed to check review status' });
   }
 });
 
@@ -1630,6 +1763,15 @@ app.get('/chats/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Chat not found' });
     }
 
+    // Auto-clear active chat notifications for this user and this chat room
+    await pool.query(
+      `DELETE FROM notifies 
+       WHERE notify_user_id = $1 
+         AND refer_id = $2 
+         AND type = 'chat'`,
+      [req.user.user_id, req.params.id]
+    ).catch(err => console.error('Error auto-clearing chat notifications:', err));
+
     res.json(result.rows[0]);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -1691,7 +1833,40 @@ app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Chat not found' });
     }
 
-    res.json({ message, chat: result.rows[0] });
+    const updatedChat = result.rows[0];
+
+    // Notification Logic
+    const oppositeUserId = contactCheck.rows[0].seller_id === req.user.user_id
+      ? contactCheck.rows[0].buyer_id
+      : contactCheck.rows[0].seller_id;
+
+    // We only notify if the new message is the first message OR if the previous message was from the opposite user.
+    // That means we don't spam notifications if the same user sends 5 messages in a row.
+    let shouldNotify = false;
+    const allMessages = updatedChat.messages || [];
+
+    if (allMessages.length === 1) {
+      // First message in chat
+      shouldNotify = true;
+    } else if (allMessages.length > 1) {
+      const prevMessage = allMessages[allMessages.length - 2];
+      if (prevMessage.sender_id !== req.user.user_id) {
+        shouldNotify = true;
+      }
+    }
+
+    if (shouldNotify && oppositeUserId) {
+      const notifyHeader = "new chat";
+      const notifyContent = text ? (text.length > 50 ? text.substring(0, 50) + "..." : text) : "Sent an image";
+
+      await pool.query(
+        `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [oppositeUserId, notifyHeader, notifyContent, 'chat', req.params.id]
+      ).catch(err => console.error('Error inserting chat notification:', err));
+    }
+
+    res.json({ message, chat: updatedChat });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -1858,9 +2033,28 @@ async function start() {
         notify_content TEXT,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         type VARCHAR(50),
-        refer_id INTEGER
+        refer_id VARCHAR(255),
+        contact_type VARCHAR(50)
     );
   `).catch(err => console.error('Migration error (notifies):', err.message));
+
+  // Migration for existing tables
+  await pool.query(`
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'notifies' AND column_name = 'contact_type'
+        ) THEN
+            ALTER TABLE notifies ADD COLUMN contact_type VARCHAR(50);
+        END IF;
+    END $$;
+  `).catch(err => console.error('Migration error (notifies contact_type):', err.message));
+
+  // Migration for refer_id to VARCHAR
+  await pool.query(`
+    ALTER TABLE notifies ALTER COLUMN refer_id TYPE VARCHAR(255);
+  `).catch(err => console.error('Migration error (notifies refer_id VARCHAR):', err.message));
 
   // Start background jobs
   setInterval(checkExpiredPosts, 60000); // Check every 60 seconds

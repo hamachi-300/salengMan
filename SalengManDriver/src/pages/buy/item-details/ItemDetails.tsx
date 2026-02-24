@@ -9,6 +9,7 @@ import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
 import { useUser } from "../../../context/UserContext";
 import profileLogo from "../../../assets/icon/profile.svg";
 import ConfirmPopup from "../../../components/ConfirmPopup";
+import ImageViewer from "../../../components/ImageViewer";
 
 interface Post {
   id: number;
@@ -48,6 +49,10 @@ function ItemDetails() {
   const [showAddressPrompt, setShowAddressPrompt] = useState(false);
 
   const [isInCart, setIsInCart] = useState(false);
+
+  // Image viewer state
+  const [viewerImages, setViewerImages] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
     fetchPostDetails();
@@ -234,6 +239,11 @@ function ItemDetails() {
                   src={post.images[currentImageIndex]}
                   alt={`Item ${currentImageIndex + 1}`}
                   className={styles.itemImage}
+                  onClick={() => {
+                    setViewerImages(post.images!);
+                    setViewerIndex(currentImageIndex);
+                  }}
+                  style={{ cursor: 'pointer' }}
                 />
 
                 {post.images.length > 1 && (
@@ -371,6 +381,15 @@ function ItemDetails() {
         cancelText="Cancel"
         confirmColor="#4CAF50"
       />
+
+      {/* Image Viewer */}
+      {viewerImages.length > 0 && (
+        <ImageViewer
+          images={viewerImages}
+          initialIndex={viewerIndex}
+          onClose={() => setViewerImages([])}
+        />
+      )}
     </div>
   );
 }

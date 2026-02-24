@@ -69,7 +69,7 @@ export interface Notification {
   notify_content: string;
   timestamp: string;
   type: string;
-  refer_id?: number;
+  refer_id?: number | string;
 }
 
 export const api = {
@@ -304,6 +304,53 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to fetch contact');
+    }
+
+    return res.json();
+  },
+
+  // Get user score
+  getUserScore: async (token: string, userId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/users/${userId}/score`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch user score');
+    }
+
+    return res.json();
+  },
+
+  // Submit a review
+  reviewUser: async (token: string, userId: string, score: number, postId: number): Promise<any> => {
+    const res = await fetch(`${API_URL}/users/${userId}/review`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ score, postId }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to submit review');
+    }
+
+    return res.json();
+  },
+
+  // Check review status
+  checkReviewStatus: async (token: string, userId: string, postId: number): Promise<{ hasReviewed: boolean }> => {
+    const res = await fetch(`${API_URL}/users/${userId}/review/check?postId=${postId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to check review status');
     }
 
     return res.json();

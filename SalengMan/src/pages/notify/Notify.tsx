@@ -206,7 +206,15 @@ function Notify() {
                   <div
                     key={n.notify_id}
                     className={styles.notificationCard}
-                    onClick={() => n.refer_id && navigate(`/history/${n.refer_id}`)}
+                    onClick={() => {
+                      if (n.refer_id) {
+                        if (n.type === 'chat') {
+                          navigate(`/chat/${n.refer_id}`);
+                        } else {
+                          navigate(`/history/${n.refer_id}`);
+                        }
+                      }
+                    }}
                   >
                     {getIcon(n.type)}
                     <div className={styles.notificationInfo}>
