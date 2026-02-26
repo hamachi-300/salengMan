@@ -18,10 +18,13 @@ import ConfirmBuyer from "./pages/history/ConfirmBuyer";
 import Chat from "./pages/history/Chat";
 import DriverProfile from "./pages/history/DriverProfile";
 import Notify from "./pages/notify/Notify";
+import NotifyMessage from "./pages/notify/NotifyMessage";
 import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
+import HelpSupport from "./pages/settings/HelpSupport";
+import UserReport from "./pages/account/UserReport";
 import HistoryCoin from "./pages/trash/coin/HistoryCoin";
 import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
@@ -69,16 +72,27 @@ function AppRoutes() {
         <Route path="/driver-profile/:id" element={<DriverProfile />} />
         <Route path="/chat/:id" element={<Chat />} />
         <Route path="/notify" element={<Notify />} />
+        <Route path="/notify/message" element={<NotifyMessage />} />
         <Route path="/account" element={<Account />} />
         <Route path="/add-address" element={<AddAddress />} />
         <Route path="/new-address" element={<NewAddress />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/help-support" element={<HelpSupport />} />
+        <Route path="/user-report" element={<UserReport />} />
       </Route>
     </Routes>
   );
 }
 
+import { useEffect } from "react";
+import { notificationService } from "./services/notificationService";
+
 function App() {
+  useEffect(() => {
+    notificationService.init();
+    return () => notificationService.stopPolling();
+  }, []);
+
   return (
     <BrowserRouter>
       <UserProvider>

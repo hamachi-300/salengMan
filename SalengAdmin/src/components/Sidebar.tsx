@@ -1,40 +1,51 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Users, ShoppingBag, MapPin, MessageCircle, Settings, LogOut } from 'lucide-react';
+import { Users, MapPin, X, FileText, Mail } from 'lucide-react';
 
-const Sidebar = () => {
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+
     return (
-        <div className="sidebar">
-            <div className="logo-section">
-                <MapPin className="text-primary" size={28} />
-                <h2>Saleng Admin</h2>
+        <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+            <div className="sidebar-header">
+                <div className="logo-section">
+                    <MapPin className="text-primary" size={28} />
+                    <h2>Saleng Admin</h2>
+                </div>
+                <button className="mobile-close" onClick={onClose}>
+                    <X size={24} />
+                </button>
             </div>
 
             <nav className="nav-links">
-                <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-                    <Home size={20} />
-                    <span>Dashboard</span>
-                </NavLink>
-                <NavLink to="/users" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+                <NavLink
+                    to="/users"
+                    onClick={onClose}
+                    className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+                >
                     <Users size={20} />
                     <span>Users</span>
                 </NavLink>
-                <NavLink to="/orders" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-                    <ShoppingBag size={20} />
-                    <span>Orders</span>
+                <NavLink
+                    to="/reports"
+                    onClick={onClose}
+                    className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+                >
+                    <FileText size={20} />
+                    <span>Reports</span>
                 </NavLink>
-                <NavLink to="/chats" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-                    <MessageCircle size={20} />
-                    <span>Chats</span>
+                <NavLink
+                    to="/notify"
+                    onClick={onClose}
+                    className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+                >
+                    <Mail size={20} />
+                    <span>Send Message</span>
                 </NavLink>
                 <div style={{ flex: 1 }} />
-                <NavLink to="/settings" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-                    <Settings size={20} />
-                    <span>Settings</span>
-                </NavLink>
-                <button className="nav-item" style={{ background: 'none', border: 'none', width: '100%', justifyContent: 'flex-start', color: 'var(--error)' }}>
-                    <LogOut size={20} />
-                    <span>Logout</span>
-                </button>
             </nav>
         </div>
     );

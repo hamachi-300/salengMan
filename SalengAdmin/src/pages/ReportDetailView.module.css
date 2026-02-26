@@ -1,0 +1,245 @@
+.reportDetailPage {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: max-content;
+    padding: 0;
+}
+
+.backBtn:hover {
+    color: var(--text-main);
+    transform: translateX(-4px);
+}
+
+.reportDetailContainer {
+    padding: 2.5rem;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.detailHeader h1 {
+    margin: 0.75rem 0;
+    font-size: 2.25rem;
+    line-height: 1.2;
+    color: var(--text-main);
+}
+
+.statusBadge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    width: max-content;
+}
+
+.timestamp {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.detailGrid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+
+.detailSidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.detailSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sectionTitle {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.contentBox {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    line-height: 1.6;
+    color: var(--text-main);
+}
+
+.evidenceImg {
+    margin-top: 1rem;
+    max-width: 600px;
+    width: 100%;
+}
+
+.evidenceImg img {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.evidenceImg img:hover {
+    transform: scale(1.02);
+}
+
+.userCard {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.userCard.reported {
+    border-color: rgba(239, 68, 68, 0.2);
+    background-color: rgba(239, 68, 68, 0.02);
+}
+
+.userIcon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.userCard.reported .userIcon {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.userDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.userDetails .name {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.userDetails .email {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.detailActionsVertical {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.detailActionsVertical button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnSecondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.btnSecondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btnError {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.btnError:hover {
+    background: #ef4444;
+    color: white;
+}
+
+@media (max-width: 1100px) {
+    .detailGrid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .detailSidebar {
+        order: -1;
+    }
+
+    .reportDetailContainer {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .detailHeader h1 {
+        font-size: 1.75rem;
+    }
+
+    .reportDetailContainer {
+        padding: 1.5rem;
+    }
+
+    .detailActionsVertical {
+        flex-direction: row;
+    }
+
+    .detailActionsVertical button {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .detailActionsVertical {
+        flex-direction: column;
+    }
+}

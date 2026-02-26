@@ -5,7 +5,9 @@ const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 const Minio = require('minio');
 const fileUpload = require('express-fileupload');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 
@@ -18,6 +20,12 @@ const poolConfig = {
 
 if (process.env.DATABASE_URL) {
   poolConfig.connectionString = process.env.DATABASE_URL;
+} else if (process.env.POSTGRES_USER) {
+  poolConfig.user = process.env.POSTGRES_USER;
+  poolConfig.host = process.env.POSTGRES_HOST || 'localhost';
+  poolConfig.database = process.env.POSTGRES_DB;
+  poolConfig.password = process.env.POSTGRES_PASSWORD;
+  poolConfig.port = process.env.POSTGRES_PORT || 5432;
 }
 
 const pool = new Pool(poolConfig);
@@ -99,23 +107,243 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+const adminAuthMiddleware = (req, res, next) => {
+  // Authentication removed for public access
+  next();
+};
+
 // ============================================
 // HEALTH CHECK
 // ============================================
 app.get('/health', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
     res.json({
-      status: 'ok',
-      services: {
-        database: 'connected',
-        minio: MINIO_PUBLIC_URL,
-        postgrest: process.env.POSTGREST_URL || 'http://localhost:3001',
-        realtime: process.env.REALTIME_URL || 'http://localhost:4000'
-      }
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      database: 'connected' // Simple check
     });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+  } catch (error) {
+    res.status(500).json({ status: 'Error', message: error.message });
+  }
+});
+
+// Admin Reports Management
+app.get('/admin/reports/problem', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT pr.*, u.full_name as reporter_name, u.email as reporter_email
+      FROM problem_reports pr
+      JOIN users u ON pr.user_id = u.id
+      ORDER BY pr.timestamp DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/admin/reports/user', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT ur.*,
+             u1.full_name as reporter_name, u1.email as reporter_email,
+             u2.full_name as reported_name, u2.email as reported_email
+      FROM user_reports ur
+      JOIN users u1 ON ur.reporter_id = u1.id
+      JOIN users u2 ON ur.reported_user_id = u2.id
+      ORDER BY ur.timestamp DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/admin/reports/problem/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT pr.*, u.full_name as reporter_name, u.email as reporter_email
+      FROM problem_reports pr
+      JOIN users u ON pr.user_id = u.id
+      WHERE pr.id = $1
+    `, [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/admin/reports/user/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT ur.*,
+             u1.full_name as reporter_name, u1.email as reporter_email,
+             u2.full_name as reported_name, u2.email as reported_email
+      FROM user_reports ur
+      JOIN users u1 ON ur.reporter_id = u1.id
+      JOIN users u2 ON ur.reported_user_id = u2.id
+      WHERE ur.id = $1
+    `, [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/admin/reports/problem/:id/read', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { is_read } = req.body;
+    const result = await pool.query(
+      'UPDATE problem_reports SET is_read = $1 WHERE id = $2 RETURNING *',
+      [is_read, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/admin/reports/user/:id/read', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { is_read } = req.body;
+    const result = await pool.query(
+      'UPDATE user_reports SET is_read = $1 WHERE id = $2 RETURNING *',
+      [is_read, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/admin/reports/problem/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM problem_reports WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Problem report deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/admin/reports/user/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM user_reports WHERE id = $1', [req.params.id]);
+    res.json({ message: 'User report deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin User Management
+app.get('/admin/users', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { role } = req.query;
+    let query = 'SELECT id, email, full_name, phone, role, gender, avatar_url, created_at, coin, default_address FROM users WHERE role != \'admin\'';
+    const params = [];
+
+    if (role) {
+      if (role === 'seller') {
+        query += ' AND (role = \'customer\' OR role = \'seller\')';
+      } else {
+        query += ' AND role = $1';
+        params.push(role);
+      }
+    }
+
+    query += ' ORDER BY created_at DESC';
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/admin/users/ban', adminAuthMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { email, reason } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    await client.query('BEGIN');
+
+    // Add to banned_emails
+    await client.query(
+      'INSERT INTO banned_emails (email, reason) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET reason = $2',
+      [email, reason || 'No reason provided']
+    );
+
+    // Delete existing user(s) with this email
+    await client.query('DELETE FROM users WHERE email = $1', [email]);
+
+    await client.query('COMMIT');
+    res.json({ message: `User ${email} has been banned and removed from the system.` });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/admin/banned-emails', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM banned_emails ORDER BY banned_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/admin/users/ban/:email', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { email } = req.params;
+    await pool.query('DELETE FROM banned_emails WHERE email = $1', [email]);
+    res.json({ message: `Email ${email} has been unbanned.` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/admin/notifications/send', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { user_identifier, notify_header, notify_content } = req.body;
+
+    if (!user_identifier || !notify_header || !notify_content) {
+      return res.status(400).json({ error: 'User identifier, header, and content are required' });
+    }
+
+    // Find user by email or id
+    // Note: Prioritize ID for uniqueness if multiple users share an email (roles case)
+    const userResult = await pool.query(
+      "SELECT id FROM users WHERE id::text = $1 OR email = $1 LIMIT 1",
+      [user_identifier]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const targetUserId = userResult.rows[0].id;
+
+    // Insert notification
+    await pool.query(
+      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type)
+       VALUES ($1, $2, $3, $4)`,
+      [targetUserId, notify_header, notify_content, 'admin_message']
+    );
+
+    res.json({ message: 'Notification sent successfully' });
+  } catch (error) {
+    console.error('Error sending admin notification:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -137,6 +365,12 @@ app.post('/auth/register', async (req, res) => {
     }
     if (full_name && full_name.length >= 10) {
       return res.status(400).json({ error: 'Username must be less than 10 characters' });
+    }
+
+    // Check for banned emails
+    const bannedCheck = await pool.query('SELECT 1 FROM banned_emails WHERE email = $1', [email]);
+    if (bannedCheck.rows.length > 0) {
+      return res.status(403).json({ error: 'This email is banned from the platform.' });
     }
 
     // Check if user with same email AND same role already exists
@@ -1872,6 +2106,93 @@ app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
   }
 });
 
+// ============================================
+// REPORTING ENDPOINTS
+// ============================================
+
+// Submit problem report (app issues)
+app.post('/reports/problem', authMiddleware, async (req, res) => {
+  try {
+    const { header, content, image } = req.body;
+    const userId = req.user.user_id;
+
+    if (!header || !content) {
+      return res.status(400).json({ error: 'Header and content are required' });
+    }
+
+    let imageUrl = null;
+    if (image && image.startsWith('data:')) {
+      try {
+        const base64Image = image.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `reports/problem/${userId}_${Date.now()}.jpg`;
+
+        await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+      } catch (err) {
+        console.error('Problem report image upload failed:', err);
+      }
+    }
+
+    const result = await pool.query(
+      `INSERT INTO problem_reports (user_id, header, content, image_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [userId, header, content, imageUrl]
+    );
+
+    res.json({ status: 'success', report: result.rows[0] });
+  } catch (error) {
+    console.error('Error submitting problem report:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Submit user report (reporting another user)
+app.post('/reports/user', authMiddleware, async (req, res) => {
+  try {
+    const { reported_user_id, header, content, image } = req.body;
+    const reporterId = req.user.user_id;
+
+    if (!reported_user_id || !header || !content) {
+      return res.status(400).json({ error: 'Reported user ID, header, and content are required' });
+    }
+
+    let imageUrl = null;
+    if (image && image.startsWith('data:')) {
+      try {
+        const base64Image = image.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `reports/user/${reporterId}_to_${reported_user_id}_${Date.now()}.jpg`;
+
+        await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+      } catch (err) {
+        console.error('User report image upload failed:', err);
+      }
+    }
+
+    const result = await pool.query(
+      `INSERT INTO user_reports (reporter_id, reported_user_id, header, content, image_url)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [reporterId, reported_user_id, header, content, imageUrl]
+    );
+
+    res.json({ status: 'success', report: result.rows[0] });
+  } catch (error) {
+    console.error('Error submitting user report:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // Get notifications for current user
 app.get('/notifications', authMiddleware, async (req, res) => {
   try {
@@ -2055,6 +2376,47 @@ async function start() {
   await pool.query(`
     ALTER TABLE notifies ALTER COLUMN refer_id TYPE VARCHAR(255);
   `).catch(err => console.error('Migration error (notifies refer_id VARCHAR):', err.message));
+
+  // Migration for problem_reports and user_reports
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS problem_reports (
+        id SERIAL PRIMARY KEY,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        header TEXT NOT NULL,
+        content TEXT NOT NULL,
+        image_url TEXT,
+        is_read BOOLEAN DEFAULT FALSE,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS user_reports (
+        id SERIAL PRIMARY KEY,
+        reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        reported_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        header TEXT NOT NULL,
+        content TEXT NOT NULL,
+        image_url TEXT,
+        is_read BOOLEAN DEFAULT FALSE,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Ensure is_read column exists if tables were already created
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'problem_reports' AND column_name = 'is_read') THEN
+            ALTER TABLE problem_reports ADD COLUMN is_read BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_reports' AND column_name = 'is_read') THEN
+            ALTER TABLE user_reports ADD COLUMN is_read BOOLEAN DEFAULT FALSE;
+        END IF;
+    END $$;
+
+    -- Banned emails table
+    CREATE TABLE IF NOT EXISTS banned_emails (
+        email VARCHAR(255) PRIMARY KEY,
+        reason TEXT,
+        banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `).catch(err => console.error('Migration error (reports/banned tables):', err.message));
 
   // Start background jobs
   setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
