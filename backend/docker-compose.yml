@@ -163,6 +163,8 @@ services:
     build:
       context: ../SalengAdmin
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
     container_name: salengman-admin
     restart: unless-stopped
     ports:
