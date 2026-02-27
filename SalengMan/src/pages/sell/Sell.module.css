@@ -740,3 +740,26 @@
         background-color: #f5f0ec;
     }
 }
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+.ai-detect-btn:active {
+    transform: scale(0.98);
+}
+
+.ai-detect-btn:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    filter: brightness(1.1);
+}
