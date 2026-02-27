@@ -1,28 +1,30 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useEffect, ReactNode } from "react";
 import { getCurrentPosition } from '@tauri-apps/plugin-geolocation';
+import { ReactNode, useEffect, useState } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
-import Splash from "./pages/splash_signin/Splash";
-import SignIn from "./pages/splash_signin/Signin";
-import Signup from "./pages/splash_signin/Signup";
-import Login from "./pages/splash_signin/Login";
-import Home from "./pages/home/Home";
+import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
+import { UserProvider, useUser } from "./context/UserContext";
 import Account from "./pages/account/Account";
-import Notify from "./pages/notify/Notify";
-import History from "./pages/history/History";
-import Chat from "./pages/history/Chat";
-import BuyOldItem from "./pages/buy/buy-old-item/BuyOldItem";
-import ItemDetails from "./pages/buy/item-details/ItemDetails";
-import ContactDetail from "./pages/history/ContactDetail";
-import ConfirmCart from "./pages/buy/confirm-cart/ConfirmCart";
-import SellerProfile from "./pages/buy/seller-profile/SellerProfile";
 import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
-import Settings from "./pages/settings/Settings";
+import BuyOldItem from "./pages/buy/buy-old-item/BuyOldItem";
+import ConfirmCart from "./pages/buy/confirm-cart/ConfirmCart";
+import ItemDetails from "./pages/buy/item-details/ItemDetails";
+import SellerProfile from "./pages/buy/seller-profile/SellerProfile";
+import ConfirmJob from "./pages/ConfirmJob/ConfirmJob";
+import Chat from "./pages/history/Chat";
+import ContactDetail from "./pages/history/ContactDetail";
+import History from "./pages/history/History";
+import Home from "./pages/home/Home";
 import ContactList from "./pages/jobs/contact_list/ContactList";
 import ExploreMap from "./pages/jobs/ExploreMap";
-import { UserProvider, useUser } from "./context/UserContext";
-import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
+import Notify from "./pages/notify/Notify";
+import Settings from "./pages/settings/Settings";
+import Login from "./pages/splash_signin/Login";
+import SignIn from "./pages/splash_signin/Signin";
+import Signup from "./pages/splash_signin/Signup";
+import Splash from "./pages/splash_signin/Splash";
+import DriverTimeSlot from "./pages/TimeSlot/DriverTimeSlot";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -61,6 +63,9 @@ function AppRoutes() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
+        <Route path="/time-slot" element={<DriverTimeSlot />} />
+        <Route path="/time-slot" element={<DriverTimeSlot />} />
+        <Route path="/confirm-job" element={<ConfirmJob />} />
       </Route>
     </Routes>
   );

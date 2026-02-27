@@ -1,0 +1,209 @@
+.container {
+  padding: 20px;
+  background: #fdfaf7;
+  min-height: 100vh;
+  font-family: 'Anuphan', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #333;
+  font-family: 'Itim', cursive;
+}
+
+.calendarBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: #fff;
+  border: 1.5px solid #eee;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Anuphan', sans-serif;
+  font-size: 14px;
+}
+
+.dateDisplay {
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid #ff7a00;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #ff7a00;
+  font-size: 16px;
+  font-family: 'Itim', cursive;
+}
+
+/* ===== Calendar Modal ===== */
+.calendarOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.calendarModal {
+  background: #fff;
+  border-radius: 28px;
+  padding: 24px;
+  width: 90%;
+  max-width: 340px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendarMonthYear {
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-family: 'Itim', cursive;
+}
+
+/* แก้ไขส่วนวันที่ Sun-Sat ให้กระจายตัวสวยงาม ไม่ติดกัน */
+.calendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* แบ่ง 7 คอลัมน์เท่ากัน */
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 0 5px;
+}
+
+.calendarWeekday {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 700;
+  font-family: 'Anuphan', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.calendarDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px; /* เพิ่มระยะห่างระหว่างวัน */
+  padding: 0 5px;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Anuphan', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.selectedDay {
+  background: #ff7a00 !important;
+  color: white !important;
+  font-weight: 700 !important;
+}
+
+.calendarFooter {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.calendarTodayBtn {
+  flex: 1.2;
+  background: rgba(255, 122, 0, 0.1);
+  border: 1.5px solid #ff7a00;
+  color: #ff7a00;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: 'Anuphan', sans-serif;
+}
+
+.calendarCloseBtn {
+  flex: 0.8;
+  background: #f5f5f5;
+  border: none;
+  color: #666;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: 'Anuphan', sans-serif;
+}
+
+/* ===== Job Card ===== */
+.jobCard {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
+
+.jobHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.jobTitle {
+  font-weight: 700;
+  font-size: 15px;
+  color: #333;
+}
+
+.badge {
+  background: #eef7f6;
+  color: #5ba4a4;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.jobTime {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff7a00;
+  font-family: 'Itim', cursive;
+  margin: 2px 0;
+}
+
+.jobAddress {
+  font-size: 13px;
+  color: #777;
+  font-weight: 500;
+  line-height: 1.4;
+}
