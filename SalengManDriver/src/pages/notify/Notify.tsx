@@ -206,7 +206,9 @@ function Notify() {
                     key={n.notify_id}
                     className={styles.notificationCard}
                     onClick={() => {
-                      if (n.refer_id) {
+                      if (n.type === 'admin_message') {
+                        navigate('/notify/message', { state: { notification: n } });
+                      } else if (n.refer_id) {
                         if (n.type === 'chat') {
                           navigate(`/chat/${n.refer_id}`);
                         } else {

@@ -9,6 +9,7 @@ import Login from "./pages/splash_signin/Login";
 import Home from "./pages/home/Home";
 import Account from "./pages/account/Account";
 import Notify from "./pages/notify/Notify";
+import NotifyMessage from "./pages/notify/NotifyMessage";
 import History from "./pages/history/History";
 import Chat from "./pages/history/Chat";
 import BuyOldItem from "./pages/buy/buy-old-item/BuyOldItem";
@@ -19,6 +20,8 @@ import SellerProfile from "./pages/buy/seller-profile/SellerProfile";
 import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
+import HelpSupport from "./pages/settings/HelpSupport";
+import UserReport from "./pages/account/UserReport";
 import ContactList from "./pages/jobs/contact_list/ContactList";
 import ExploreMap from "./pages/jobs/ExploreMap";
 import { UserProvider, useUser } from "./context/UserContext";
@@ -48,6 +51,7 @@ function AppRoutes() {
         <Route path="/home" element={<Home />} />
         <Route path="/account" element={<Account />} />
         <Route path="/notify" element={<Notify />} />
+        <Route path="/notify/message" element={<NotifyMessage />} />
         <Route path="/history" element={<History />} />
         <Route path="/chat/:id" element={<Chat />} />
         <Route path="/buy-old-item" element={<BuyOldItem />} />
@@ -59,6 +63,8 @@ function AppRoutes() {
         <Route path="/new-address" element={<NewAddress />} />
         <Route path="/edit-address/:id" element={<NewAddress />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/help-support" element={<HelpSupport />} />
+        <Route path="/user-report" element={<UserReport />} />
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
       </Route>
@@ -169,7 +175,14 @@ function LocationGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+import { notificationService } from "./services/notificationService";
+
 function App() {
+  useEffect(() => {
+    notificationService.init();
+    return () => notificationService.stopPolling();
+  }, []);
+
   return (
     <BrowserRouter>
       <UserProvider>

@@ -136,6 +136,65 @@
   background-color: #3a3a3a;
 }
 
+.deleteAccountButton:active {
+  background-color: #fee2e2;
+}
+
+.helpButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  background-color: var(--color-bg-2);
+  color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-text-secondary);
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-eng-fun);
+  margin-bottom: 12px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.helpButton svg {
+  width: 22px;
+  height: 22px;
+}
+
+.helpButton:active {
+  background-color: var(--color-bg);
+  transform: scale(0.96);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.testNotifyButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bcf0da;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.testNotifyButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.testNotifyButton:active {
+  background-color: #dcfce7;
+  transform: scale(0.98);
+}
+
 .deleteAccountButton svg {
   width: 20px;
   height: 20px;
