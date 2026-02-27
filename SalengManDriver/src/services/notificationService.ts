@@ -8,6 +8,12 @@ class NotificationService {
     private STORAGE_KEY = 'saleng_driver_last_seen_notify_id';
 
     async init() {
+        // Guard against non-Tauri environments
+        if (!(window as any).__TAURI_INTERNALS__) {
+            console.log('[NotificationService] Running in browser: Skipping system notification initialization');
+            return;
+        }
+
         console.log('[NotificationService] Initializing...');
 
         // Load last seen ID from storage
@@ -66,12 +72,14 @@ class NotificationService {
                     this.updateLastSeenId(latest.notify_id);
 
                     // Trigger system notification
-                    sendNotification({
-                        title: latest.notify_header,
-                        body: latest.notify_content
-                        // Note: icon is omitted to use default app icon and avoid path issues on Android
-                    });
-                    console.log('[NotificationService] System notification sent');
+                    if ((window as any).__TAURI_INTERNALS__) {
+                        sendNotification({
+                            title: latest.notify_header,
+                            body: latest.notify_content
+                            // Note: icon is omitted to use default app icon and avoid path issues on Android
+                        });
+                        console.log('[NotificationService] System notification sent');
+                    }
                 }
             }
         } catch (error) {
