@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom';
-import { Users, MapPin, X, FileText, Mail } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Users, LogOut, MapPin, X, FileText, Mail } from 'lucide-react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -7,6 +7,14 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        onClose();
+        navigate('/login');
+    };
 
     return (
         <div className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -46,6 +54,14 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     <span>Send Message</span>
                 </NavLink>
                 <div style={{ flex: 1 }} />
+                <button
+                    className="nav-item"
+                    onClick={handleLogout}
+                    style={{ background: 'none', border: 'none', width: '100%', justifyContent: 'flex-start', color: '#ef4444', cursor: 'pointer' }}
+                >
+                    <LogOut size={20} />
+                    <span>Logout</span>
+                </button>
             </nav>
         </div>
     );
