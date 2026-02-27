@@ -213,6 +213,21 @@ openssl rand -hex 64 | tr -d '\n'
 MINIO_PUBLIC_URL=http://your-server-ip:9000
 ```
 
+#### ADMIN_SEED_EMAIL
+```
+ADMIN_SEED_EMAIL=your-email
+```
+
+#### ADMIN_SEED_USERNAME
+```
+ADMIN_SEED_USERNAME=your-username
+```
+
+#### ADMIN_SEED_PASSWORD
+```
+ADMIN_SEED_PASSWORD=your-password
+```
+
 ### 4. install docker
 ``` bash
 sudo snap install docker

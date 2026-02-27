@@ -108,9 +108,38 @@ const authMiddleware = (req, res, next) => {
 };
 
 const adminAuthMiddleware = (req, res, next) => {
-  // Authentication removed for public access
-  next();
+  authMiddleware(req, res, () => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    next();
+  });
 };
+
+// Seed initial admin user
+async function seedAdmin() {
+  try {
+    const adminCheck = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");
+    if (adminCheck.rows.length === 0) {
+      const email = process.env.ADMIN_SEED_EMAIL || 'admin@salengman.com';
+      const username = process.env.ADMIN_SEED_USERNAME || 'pluem';
+      const password = process.env.ADMIN_SEED_PASSWORD || '12345678';
+
+      console.log(`No admin found. Seeding default admin (${username})...`);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await pool.query(
+        `INSERT INTO users (email, password_hash, full_name, role, gender)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [email, hashedPassword, username, 'admin', 'other']
+      );
+      console.log(`Default admin (${username}) created successfully.`);
+    } else {
+      console.log('Admin user already exists.');
+    }
+  } catch (err) {
+    console.error('Error seeding admin:', err.message);
+  }
+}
 
 // ============================================
 // HEALTH CHECK
@@ -413,7 +442,13 @@ app.post('/auth/login', async (req, res) => {
     const { email, password, role } = req.body;
 
     let result;
-    if (role) {
+    if (role === 'admin') {
+      // For admin, use full_name as the username
+      result = await pool.query(
+        'SELECT * FROM users WHERE full_name = $1 AND role = $2',
+        [email, role]
+      );
+    } else if (role) {
       // If role is specified, find user with that email AND role
       result = await pool.query(
         'SELECT * FROM users WHERE email = $1 AND role = $2',
@@ -2345,6 +2380,24 @@ const PORT = process.env.PORT || 3000;
 
 async function start() {
   await waitForDatabase();
+  await initBucket();
+  await seedAdmin(); // Add seeding here
+
+  // Create driver_locations with all columns and unique constraint
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS driver_locations (
+      id SERIAL PRIMARY KEY,
+      driver_id TEXT UNIQUE NOT NULL,
+      lat DECIMAL NOT NULL,
+      lng DECIMAL NOT NULL,
+      heading DECIMAL,
+      speed DECIMAL,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  console.log('Database tables initialized');
+
   // Ensure notifies table exists
   await pool.query(`
     CREATE TABLE IF NOT EXISTS notifies (
