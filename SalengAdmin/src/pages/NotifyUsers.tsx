@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Search, Users, Truck, ArrowLeft, X, Calendar, Phone } from 'lucide-react';
 import styles from './NotifyUsers.module.css';
+import { API_URL } from '../config';
 
 interface User {
     id: string;
@@ -26,7 +27,6 @@ const NotifyUsers = () => {
     const [sendingNotify, setSendingNotify] = useState(false);
     const [notifyStatus, setNotifyStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const token = localStorage.getItem('token');
 
     const fetchUsers = async () => {

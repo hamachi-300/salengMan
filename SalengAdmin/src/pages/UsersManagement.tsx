@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Truck, ShoppingBag, Ban, Search, UserCheck, Mail, Phone, Calendar, Coins, MapPin, X } from 'lucide-react';
 import styles from './UsersManagement.module.css';
+import { API_URL } from '../config';
 
 interface User {
     id: string;
@@ -33,7 +34,6 @@ const UsersManagement = () => {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const token = localStorage.getItem('token');
 
     const fetchUsers = async () => {

@@ -10,6 +10,7 @@ import {
     EyeOff
 } from 'lucide-react';
 import styles from './ReportDetailView.module.css';
+import { API_URL } from '../config';
 
 interface ProblemReport {
     id: number;
@@ -45,7 +46,6 @@ const ReportDetailView = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const token = localStorage.getItem('token');
 
     const fetchReport = async () => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Clock, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Reports.module.css';
+import { API_URL } from '../config';
 
 interface ProblemReport {
     id: number;
@@ -38,7 +39,6 @@ const Reports = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const token = localStorage.getItem('token');
 
     const fetchReports = async () => {

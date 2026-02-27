@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Lock, User, AlertCircle } from 'lucide-react';
 import styles from './Login.module.css';
+import { API_URL } from '../config';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -9,8 +10,6 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
