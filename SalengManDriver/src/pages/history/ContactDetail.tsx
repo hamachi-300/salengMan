@@ -11,6 +11,8 @@ import profileLogo from "../../assets/icon/profile.svg";
 import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
 import AlertPopup from "../../components/AlertPopup";
+import ReviewPopup from "../../components/ReviewPopup";
+import ImageViewer from "../../components/ImageViewer";
 
 interface Contact {
     id: string;
@@ -53,6 +55,12 @@ function ContactDetail() {
     const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
     const [completing, setCompleting] = useState(false);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [showReviewPopup, setShowReviewPopup] = useState(false);
+    const [submittingReview, setSubmittingReview] = useState(false);
+
+    // Image viewer state
+    const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerIndex, setViewerIndex] = useState(0);
 
     useEffect(() => {
         fetchContactDetails();
@@ -220,6 +228,56 @@ function ContactDetail() {
         }
     };
 
+    const handleOpenReview = async () => {
+        if (!contact) return;
+        const token = getToken();
+        if (!token) return;
+
+        const sellerId = contact.seller_id;
+        if (!sellerId) {
+            setAlertMessage("Error: Seller information is missing.");
+            return;
+        }
+
+        try {
+            const { hasReviewed } = await api.checkReviewStatus(token, sellerId, contact.post_id);
+            if (hasReviewed) {
+                setAlertMessage("You have already reviewed this user for this post");
+            } else {
+                setShowReviewPopup(true);
+            }
+        } catch (error: any) {
+            console.error("Failed to check review status:", error);
+            // Fallback to showing popup if check fails, backend still protects
+            setShowReviewPopup(true);
+        }
+    };
+
+    const handleReviewSubmit = async (score: number) => {
+        if (!contact) return;
+        const token = getToken();
+        if (!token) return;
+
+        const sellerId = contact.seller_id;
+        if (!sellerId) {
+            setAlertMessage("Error: Seller information is missing.");
+            return;
+        }
+
+        setSubmittingReview(true);
+        try {
+            await api.reviewUser(token, sellerId, score, contact.post_id);
+            setShowReviewPopup(false);
+            setAlertMessage("Review submitted successfully! Thank you.");
+            await fetchContactDetails();
+        } catch (error: any) {
+            console.error("Failed to submit review:", error);
+            setAlertMessage(error.message || "Failed to submit review");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
     const renderChatIcon = () => (
         <div className={styles.chatRoomIcon} onClick={handleChat}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
@@ -296,6 +354,11 @@ function ContactDetail() {
                                     src={contact.images[currentImageIndex]}
                                     alt={`Item ${currentImageIndex + 1}`}
                                     className={styles.itemImage}
+                                    onClick={() => {
+                                        setViewerImages(contact.images!);
+                                        setViewerIndex(currentImageIndex);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
                                 />
 
                                 {contact.images.length > 1 && (
@@ -430,6 +493,17 @@ function ContactDetail() {
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                         </svg>
                     </button>
+                ) : contact.post_status === 'completed' ? (
+                    <button
+                        className={styles.completeContactButton}
+                        style={{ backgroundColor: 'var(--color-text-secondary)', color: 'white' }}
+                        onClick={handleOpenReview}
+                    >
+                        Review Seller
+                        <svg viewBox="0 0 24 24" fill="currentColor" className={styles.cartIcon}>
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                    </button>
                 ) : (
                     <button
                         className={styles.addToCartButton}
@@ -442,6 +516,15 @@ function ContactDetail() {
                     </button>
                 )}
             </div>
+
+            <ReviewPopup
+                isOpen={showReviewPopup}
+                onClose={() => setShowReviewPopup(false)}
+                onSubmit={handleReviewSubmit}
+                isLoading={submittingReview}
+                title="Rate the Seller"
+                message={`How was your pickup experience with ${contact.seller_name || 'the seller'}?`}
+            />
 
             <ConfirmPopup
                 isOpen={showConfirm}
@@ -480,6 +563,15 @@ function ContactDetail() {
                 message={alertMessage || ""}
                 onClose={() => setAlertMessage(null)}
             />
+
+            {/* Image Viewer */}
+            {viewerImages.length > 0 && (
+                <ImageViewer
+                    images={viewerImages}
+                    initialIndex={viewerIndex}
+                    onClose={() => setViewerImages([])}
+                />
+            )}
         </div>
     );
 }

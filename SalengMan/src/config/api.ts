@@ -516,4 +516,29 @@ export const api = {
 
     return res.json();
   },
+
+  // Create Trash Post
+  createTrashPost: async (token: string, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to create trash post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
 };

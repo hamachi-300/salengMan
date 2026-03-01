@@ -302,10 +302,11 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                     lng,
                     address: fullAddress,
                     province: addr.province || addr.state || addr.city || "",
-                    district: addr.district || addr.county || "",
-                    sub_district: addr.suburb || addr.quarter || "",
+                    district: addr.district || addr.county || addr.city_district || addr.town || addr.municipality || "",
+                    sub_district: addr.suburb || addr.quarter || addr.subdistrict || addr.hamlet || addr.village || "",
                     zipcode: addr.postcode || ""
                 };
+
 
                 onLocationSelect(result);
             }

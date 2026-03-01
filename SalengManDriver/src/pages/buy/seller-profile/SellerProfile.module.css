@@ -185,3 +185,41 @@
     background-color: var(--color-bg);
     font-family: var(--font-eng-fun);
 }
+
+.reportSection {
+    margin-top: 32px;
+}
+
+.reportButton {
+    width: 100%;
+    padding: 18px;
+    background-color: var(--color-bg-2);
+    color: #ef4444;
+    border: 2.5px dotted #ef4444;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: var(--font-eng-fun);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.reportButton:active {
+    background-color: #fee2e2;
+    transform: scale(0.96);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+    .reportButton {
+        background-color: #2a2a2a;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+}

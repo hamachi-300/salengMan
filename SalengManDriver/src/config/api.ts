@@ -69,7 +69,7 @@ export interface Notification {
   notify_content: string;
   timestamp: string;
   type: string;
-  refer_id?: number;
+  refer_id?: number | string;
 }
 
 export const api = {
@@ -309,6 +309,53 @@ export const api = {
     return res.json();
   },
 
+  // Get user score
+  getUserScore: async (token: string, userId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/users/${userId}/score`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch user score');
+    }
+
+    return res.json();
+  },
+
+  // Submit a review
+  reviewUser: async (token: string, userId: string, score: number, postId: number): Promise<any> => {
+    const res = await fetch(`${API_URL}/users/${userId}/review`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ score, postId }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to submit review');
+    }
+
+    return res.json();
+  },
+
+  // Check review status
+  checkReviewStatus: async (token: string, userId: string, postId: number): Promise<{ hasReviewed: boolean }> => {
+    const res = await fetch(`${API_URL}/users/${userId}/review/check?postId=${postId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to check review status');
+    }
+
+    return res.json();
+  },
+
   // Update contact status
   updateContactStatus: async (token: string, contactId: string, status: string): Promise<any> => {
     const res = await fetch(`${API_URL}/contacts/${contactId}/status`, {
@@ -433,4 +480,87 @@ export const api = {
 
     return res.json();
   },
+
+  // Submit problem report
+  submitProblemReport: async (token: string, header: string, content: string, image?: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/reports/problem`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ header, content, image }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to submit problem report');
+    }
+
+    return res.json();
+  },
+
+  // Submit user report
+  submitUserReport: async (token: string, reported_user_id: string, header: string, content: string, image?: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/reports/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ reported_user_id, header, content, image }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to submit user report');
+    }
+
+    return res.json();
+  },
+  // Get all available trash posts (for drivers)
+  getAvailableTrashPosts: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-posts/available/all`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch available trash posts');
+    }
+
+    return res.json();
+  },
+
+  // Get single trash post by ID
+  getTrashPostById: async (token: string, id: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch trash post details');
+    }
+
+    return res.json();
+  },
+
+  // Create contacts (driver initiates contact with sellers - supports both old items and trash)
+  createContacts: async (token: string, postItems: (number | { id: number, type: string })[]): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/contacts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ post_ids: postItems }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to create contacts');
+    }
+
+    return res.json();
+  },
 };
+
+

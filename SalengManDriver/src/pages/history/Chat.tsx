@@ -5,6 +5,7 @@ import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
 import { useUser } from "../../context/UserContext";
+import ImageViewer from "../../components/ImageViewer";
 
 interface Message {
     id: string;
@@ -29,6 +30,10 @@ function Chat() {
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Image viewer state
+    const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerIndex, setViewerIndex] = useState(0);
 
     useEffect(() => {
         fetchChat();
@@ -131,7 +136,16 @@ function Chat() {
                         >
                             <div className={`${styles.messageBubble} ${isMe ? styles.myMessage : styles.otherMessage}`}>
                                 {msg.image_url && (
-                                    <img src={msg.image_url} alt="Shared" className={styles.sharedImage} />
+                                    <img
+                                        src={msg.image_url}
+                                        alt="Shared"
+                                        className={styles.sharedImage}
+                                        onClick={() => {
+                                            setViewerImages([msg.image_url!]);
+                                            setViewerIndex(0);
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    />
                                 )}
                                 {msg.text && <p className={styles.messageText}>{msg.text}</p>}
                                 <span className={styles.timestamp}>{formatTime(msg.timestamp)}</span>
@@ -180,6 +194,15 @@ function Chat() {
                     style={{ display: 'none' }}
                 />
             </div>
+
+            {/* Image Viewer */}
+            {viewerImages.length > 0 && (
+                <ImageViewer
+                    images={viewerImages}
+                    initialIndex={viewerIndex}
+                    onClose={() => setViewerImages([])}
+                />
+            )}
         </div>
     );
 }

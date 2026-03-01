@@ -15,7 +15,6 @@ type GroupedNotifications = {
 function Notify() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [contacts, setContacts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [confirmPopup, setConfirmPopup] = useState<{
@@ -42,12 +41,8 @@ function Notify() {
     }
 
     try {
-      const [notifsData, contactsData] = await Promise.all([
-        api.getNotifications(token),
-        api.getContacts(token)
-      ]);
+      const notifsData = await api.getNotifications(token);
       setNotifications(notifsData);
-      setContacts(contactsData);
     } catch (error) {
       console.error("Failed to fetch notification data:", error);
     } finally {
@@ -175,17 +170,6 @@ function Notify() {
     return 0;
   });
 
-  const handleNotificationClick = (n: Notification) => {
-    if (n.refer_id) {
-      const contact = contacts.find(c => c.post_id === n.refer_id);
-      if (contact) {
-        navigate(`/contact/${contact.id}`);
-      } else {
-        setAlertMessage("Details for this post are no longer available in your contacts.");
-      }
-    }
-  };
-
   return (
     <div className={styles.pageContainer}>
       <PageHeader title="Notification" backTo="/home" />
@@ -221,7 +205,17 @@ function Notify() {
                   <div
                     key={n.notify_id}
                     className={styles.notificationCard}
-                    onClick={() => handleNotificationClick(n)}
+                    onClick={() => {
+                      if (n.type === 'admin_message') {
+                        navigate('/notify/message', { state: { notification: n } });
+                      } else if (n.refer_id) {
+                        if (n.type === 'chat') {
+                          navigate(`/chat/${n.refer_id}`);
+                        } else {
+                          navigate(`/history/${n.refer_id}`);
+                        }
+                      }
+                    }}
                   >
                     {getIcon(n.type)}
                     <div className={styles.notificationInfo}>

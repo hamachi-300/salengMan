@@ -32,13 +32,14 @@ function ConfirmPost() {
       return;
     }
 
+    // Check if all required data is present: รูปภาพ, ประเภทของ, ที่อยู่ และเวลา ครบถ้วนหรือไม่
     if (!sellData.images.length || !sellData.categories.length || !sellData.address || !sellData.pickupTime) {
       setError('Missing required data. Please complete all steps.');
       // navigate('/sell'); // Don't navigate away immediately so user can see error
       return;
     }
 
-    setLoading(true);
+    setLoading(true); // Set loading state to true
     setError(null); // Clear previous errors
     try {
       // Create a promise that rejects after 20 seconds
@@ -46,6 +47,7 @@ function ConfirmPost() {
         setTimeout(() => reject(new Error('Request timed out. Please try again.')), 20000);
       });
 
+      // Prepare the data (Payload) to be sent to the API
       const postData = {
         images: sellData.images,
         categories: sellData.categories,
@@ -65,6 +67,7 @@ function ConfirmPost() {
         }
       };
 
+      // ใช้ Promise.race (บรรทัดที่ 69) เพื่อแข่งขันกันระหว่าง การส่งข้อมูลจริง กับ ตัวนับเวลาถอยหลัง (Timeout):
       // Race the API call against the timeout
       const response: any = await Promise.race([
         isEditing
