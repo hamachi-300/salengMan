@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./PostDetail.module.css";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
@@ -20,12 +20,17 @@ interface Post {
     address_snapshot: any;
     pickup_time: any;
     post_type?: 'old_item' | 'trash_disposal';
+    trash_status?: string;
+    mode?: string;
+    trash_bag_amount?: number;
+    coins_selected?: number;
     contacts?: { contact_id: string; driver_id: string; chat_id?: string }[];
 }
 
 function PostDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { setEditingPost, discardEdit } = useSell();
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
@@ -53,8 +58,13 @@ function PostDetail() {
         if (!id) return;
 
         try {
-            const data = await api.getPostById(token, id);
-            setPost(data);
+            const postType = (location.state as any)?.post_type;
+            const data = postType === 'trash_disposal'
+                ? await api.getTrashPostById(token, id)
+                : await api.getPostById(token, id);
+
+            // Re-inject post_type because the backend response might not include it
+            setPost({ ...data, post_type: postType || 'old_item' });
         } catch (err: any) {
             console.error("Failed to load post:", err);
             setError("Failed to load post details");
@@ -80,7 +90,11 @@ function PostDetail() {
         if (!token || !post) return;
 
         try {
-            await api.deletePost(token, post.id);
+            if (post.post_type === 'trash_disposal') {
+                await api.deleteTrashPost(token, post.id);
+            } else {
+                await api.deletePost(token, post.id);
+            }
             navigate("/history");
         } catch (err: any) {
             console.error("Failed to delete post:", err);
@@ -288,22 +302,47 @@ function PostDetail() {
                 {/* Details Card */}
                 <div className={styles['card']}>
                     <div className={styles['card-title']}>
-                        <span>Item Details</span>
+                        <span>{post.post_type === 'trash_disposal' ? 'Disposal Summary' : 'Item Details'}</span>
                         {isEditable && (
                             <span className={styles['edit-link']} onClick={() => handleEdit('/sell')}>Edit</span>
                         )}
                     </div>
 
-                    <div className={styles['detail-row']}>
-                        <div className={styles['detail-content']}>
-                            <span className={styles['detail-label']}>Categories</span>
-                            <div className={styles['tags-wrapper']}>
-                                {post.categories.map(cat => (
-                                    <span key={cat} className={styles['category-chip']}>{cat}</span>
-                                ))}
+                    {post.post_type === 'trash_disposal' ? (
+                        <>
+                            <div className={styles['detail-row']}>
+                                <div className={styles['detail-content']}>
+                                    <span className={styles['detail-label']}>Mode</span>
+                                    <span className={styles['detail-value']} style={{ textTransform: 'capitalize' }}>
+                                        {post.trash_status || post.mode || 'Anytime'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
+                                <div className={styles['detail-content']}>
+                                    <span className={styles['detail-label']}>Number of Bags</span>
+                                    <span className={styles['detail-value']}>{post.trash_bag_amount} Bags</span>
+                                </div>
+                            </div>
+                            <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
+                                <div className={styles['detail-content']}>
+                                    <span className={styles['detail-label']}>Offered Incentive</span>
+                                    <span className={styles['detail-value']}>🪙 {post.coins_selected} Coins</span>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className={styles['detail-row']}>
+                            <div className={styles['detail-content']}>
+                                <span className={styles['detail-label']}>Categories</span>
+                                <div className={styles['tags-wrapper']}>
+                                    {post.categories && post.categories.map(cat => (
+                                        <span key={cat} className={styles['category-chip']}>{cat}</span>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {post.remarks && (
                         <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
@@ -357,26 +396,28 @@ function PostDetail() {
                         </div>
                     </div>
 
-                    {/* Time Row */}
-                    <div className={styles['detail-row']} style={{ marginTop: '16px' }}>
-                        <svg className={styles['detail-icon']} viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                        </svg>
-                        <div className={styles['detail-content']}>
-                            <div className={styles['detail-header']}>
-                                <span className={styles['detail-label']}>Pickup Time</span>
-                                {isEditable && (
-                                    <span className={styles['change-link']} onClick={() => handleEdit('/sell/select-time')}>Change</span>
+                    {/* Time Row (Only for Old Items) */}
+                    {post.post_type !== 'trash_disposal' && (
+                        <div className={styles['detail-row']} style={{ marginTop: '16px' }}>
+                            <svg className={styles['detail-icon']} viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                            </svg>
+                            <div className={styles['detail-content']}>
+                                <div className={styles['detail-header']}>
+                                    <span className={styles['detail-label']}>Pickup Time</span>
+                                    {isEditable && (
+                                        <span className={styles['change-link']} onClick={() => handleEdit('/sell/select-time')}>Change</span>
+                                    )}
+                                </div>
+                                {pickupTime && (
+                                    <>
+                                        <span className={styles['detail-value']}>{formatDate(pickupTime.date)}</span>
+                                        <span className={styles['detail-value']}>{pickupTime.startTime} - {pickupTime.endTime}</span>
+                                    </>
                                 )}
                             </div>
-                            {pickupTime && (
-                                <>
-                                    <span className={styles['detail-value']}>{formatDate(pickupTime.date)}</span>
-                                    <span className={styles['detail-value']}>{pickupTime.startTime} - {pickupTime.endTime}</span>
-                                </>
-                            )}
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Action Buttons */}
@@ -396,7 +437,7 @@ function PostDetail() {
                                 </button>
                             </>
                         ) : (
-                            post.status !== 'cancelled' && (
+                            post.status !== 'cancelled' && post.post_type !== 'trash_disposal' && (
                                 <button
                                     className={styles['view-buyers-btn']}
                                     onClick={() => navigate(`/history/${post.id}/buyers`)}

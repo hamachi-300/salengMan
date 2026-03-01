@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './Coin.module.css';
 import PageHeader from '../../../components/PageHeader';
 import PageFooter from '../../../components/PageFooter';
@@ -18,6 +18,7 @@ interface Package {
 
 export default function Coin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
   const [userCoins, setUserCoins] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
@@ -116,8 +117,10 @@ export default function Coin() {
         return;
       }
 
+      const returnTo = location.state?.returnTo;
+
       // Navigate to confirmation page with package details
-      navigate('/coin/confirm', { state: { package: pkg } });
+      navigate('/coin/confirm', { state: { package: pkg, returnTo } });
     }
   };
 

@@ -26,6 +26,7 @@ export default function ConfirmBuyCoin() {
     const [showLoginPopup, setShowLoginPopup] = useState(false);
 
     const pkg = location.state?.package as Package | undefined;
+    const returnTo = location.state?.returnTo as string | undefined;
 
     useEffect(() => {
         if (!pkg) {
@@ -66,6 +67,11 @@ export default function ConfirmBuyCoin() {
 
             // Success
             setShowSuccess(true);
+            if (returnTo) {
+                // navigate back to the originating page (e.g. confirm post)
+                navigate(returnTo, { replace: true });
+                return;
+            }
         } catch (err: any) {
             console.error('Purchase error:', err);
             setError(err.message || 'Failed to purchase coins. Please try again.');
@@ -101,7 +107,8 @@ export default function ConfirmBuyCoin() {
                     <button
                         className={styles['btn-secondary']}
                         onClick={() => {
-                            navigate('/account');
+                            if (returnTo) navigate(returnTo, { replace: true });
+                            else navigate('/account');
                         }}
                     >
                         Return

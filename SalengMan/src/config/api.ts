@@ -314,6 +314,19 @@ export const api = {
     return res.json();
   },
 
+  // Get Trash Posts
+  getTrashPosts: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-posts`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch trash posts');
+    }
+
+    return res.json();
+  },
+
   getPostById: async (token: string, id: string): Promise<any> => {
     try {
       const res = await fetch(`${API_URL}/old-item-posts/${id}`, {
@@ -334,6 +347,26 @@ export const api = {
     }
   },
 
+  getTrashPostById: async (token: string, id: string): Promise<any> => {
+    try {
+      const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch trash post');
+      }
+
+      return res.json();
+    } catch (error) {
+      console.error("Error fetching trash post:", error);
+      throw error;
+    }
+  },
+
   deletePost: async (token: string, id: number): Promise<void> => {
     const res = await fetch(`${API_URL}/old-item-posts/${id}`, {
       method: 'DELETE',
@@ -345,6 +378,20 @@ export const api = {
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Failed to delete post');
+    }
+  },
+
+  deleteTrashPost: async (token: string, id: number): Promise<void> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to delete trash post');
     }
   },
 
@@ -500,6 +547,31 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to fetch driver location');
+    }
+
+    return res.json();
+  },
+
+  // Create Trash Post
+  createTrashPost: async (token: string, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to create trash post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     return res.json();
