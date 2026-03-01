@@ -45,12 +45,17 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const poolConfig = {
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-});
+};
+
+if (process.env.DATABASE_URL) {
+  poolConfig.connectionString = process.env.DATABASE_URL;
+}
+
+const pool = new Pool(poolConfig);
 
 // MinIO Client (Docker-aware configuration)
 const minioClient = new Minio.Client({
@@ -308,7 +313,15 @@ app.post('/auth/login', async (req, res) => {
     );
 
     res.json({
-      user: { id: user.id, email: user.email, full_name: user.full_name, role: user.role, gender: user.gender, coin: user.coin },
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        gender: user.gender,
+        coin: user.coin,
+        default_address: user.default_address
+      },
       token
     });
   } catch (error) {
@@ -333,7 +346,7 @@ app.post('/auth/login', async (req, res) => {
 app.get('/auth/me', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, full_name, phone, role, avatar_url, gender, coin FROM users WHERE id = $1',
+      'SELECT id, email, full_name, phone, role, avatar_url, gender, coin, default_address FROM users WHERE id = $1',
       [req.user.user_id]
     );
     res.json(result.rows[0]);
@@ -907,15 +920,32 @@ app.get('/old-item-posts/:id', authMiddleware, async (req, res) => {
 
     const post = result.rows[0];
 
-    // If pending or completed, ensure it has chat_id in contacts
-    if ((post.status === 'pending' || post.status === 'completed') && post.contacts && post.contacts.length > 0) {
+    // If pending, completed, or cancelled, ensure it has chat_id and driver info in contacts
+    if ((post.status === 'pending' || post.status === 'completed' || post.status === 'cancelled') && post.contacts && post.contacts.length > 0) {
       const contactId = post.contacts[0].contact_id;
+      const driverId = post.contacts[0].driver_id;
+
       const contactResult = await client.query(
         'SELECT chat_id FROM contacts WHERE id = $1',
         [contactId]
       );
       if (contactResult.rows.length > 0 && contactResult.rows[0].chat_id) {
         post.contacts[0].chat_id = contactResult.rows[0].chat_id;
+      }
+
+      // Fetch driver details
+      if (driverId) {
+        const driverResult = await client.query(
+          'SELECT full_name, avatar_url, phone FROM users WHERE id = $1',
+          [driverId]
+        );
+        if (driverResult.rows.length > 0) {
+          const driverData = driverResult.rows[0];
+          post.contacts[0].driver_name = driverData.full_name;
+          post.contacts[0].driver_avatar = driverData.avatar_url;
+          // You might combine phone logic depending on database structure
+          post.contacts[0].driver_phone = driverData.phone;
+        }
       }
     }
 
@@ -992,6 +1022,190 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// ============================================
+// TRASH POSTS ENDPOINTS
+// ============================================
+
+app.post('/trash-posts', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { images, mode, bag_count, coins, remarks, address } = req.body;
+
+    // Validate required coins parameter
+    const requiredCoins = parseInt(coins) || 0;
+    if (requiredCoins < 0) {
+      return res.status(400).json({ error: 'Invalid coin amount' });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Fetch current user coin balance with FOR UPDATE to prevent race conditions
+    const userResult = await client.query('SELECT coin FROM users WHERE id = $1 FOR UPDATE', [req.user.user_id]);
+    const currentBalance = userResult.rows[0]?.coin || 0;
+
+    // 2. Check if user has enough coins
+    if (currentBalance < requiredCoins) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Insufficient coins for this request' });
+    }
+
+    const uploadedImageUrls = [];
+
+    // 3. Image upload to MinIO (similar to old-item-posts)
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const base64Data = images[i];
+        if (!base64Data || !base64Data.startsWith('data:')) continue; // Skip if not base64
+
+        const base64Image = base64Data.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `trash_posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
+
+        await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+        uploadedImageUrls.push(imageUrl);
+      }
+    }
+
+    // 4. Deduct coins from user balance
+    if (requiredCoins > 0) {
+      await client.query(
+        'UPDATE users SET coin = coin - $1 WHERE id = $2',
+        [requiredCoins, req.user.user_id]
+      );
+
+      // 5. Record the transaction
+      await client.query(
+        `INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'use')`,
+        [req.user.user_id, requiredCoins]
+      );
+    }
+
+    // 6. Insert into trash_posts table
+    const result = await client.query(
+      `INSERT INTO trash_posts 
+       (user_id, images, post_type, coins_selected, user_coin_snapshot, trash_bag_amount, remarks, address_snapshot, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [
+        req.user.user_id,
+        uploadedImageUrls,
+        mode === 'fixtime' ? 'fast' : 'anytime', // Map frontend mode to backend post_type
+        requiredCoins,
+        currentBalance,
+        bag_count,
+        remarks,
+        JSON.stringify(address),
+        'waiting'
+      ]
+    );
+
+    await client.query('COMMIT');
+    res.json(result.rows[0]);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error creating trash post:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Get user's own trash posts
+/**
+ * @swagger
+ * /trash-posts:
+ *   get:
+ *     summary: ดึงโพสต์ทิ้งขยะของตนเอง
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการโพสต์ทิ้งขยะ
+ */
+app.get('/trash-posts', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM trash_posts WHERE user_id = $1 ORDER BY created_at DESC`,
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get single trash post by ID
+app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT * FROM trash_posts WHERE id = $1`,
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash post not found' });
+    }
+
+    const post = result.rows[0];
+
+    // Follow the same pattern as old_item_posts for contacts
+    if ((post.status === 'pending' || post.status === 'completed' || post.status === 'cancelled') && post.contacts && post.contacts.length > 0) {
+      const contactId = post.contacts[0].contact_id;
+      const driverId = post.contacts[0].driver_id;
+
+      const contactResult = await client.query(
+        'SELECT chat_id FROM contacts WHERE id = $1',
+        [contactId]
+      );
+      if (contactResult.rows.length > 0 && contactResult.rows[0].chat_id) {
+        post.contacts[0].chat_id = contactResult.rows[0].chat_id;
+      }
+
+      // Fetch driver details
+      if (driverId) {
+        const driverResult = await client.query(
+          'SELECT full_name, avatar_url, phone FROM users WHERE id = $1',
+          [driverId]
+        );
+        if (driverResult.rows.length > 0) {
+          const driverData = driverResult.rows[0];
+          post.contacts[0].driver_name = driverData.full_name;
+          post.contacts[0].driver_avatar = driverData.avatar_url;
+          post.contacts[0].driver_phone = driverData.phone;
+        }
+      }
+    }
+
+    res.json(post);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+
+// Delete all notifications for a user
+app.delete('/notifications', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    await pool.query(
+      'DELETE FROM notifies WHERE notify_user_id = $1',
+      [userId]
+    );
+    res.json({ message: 'Notifications cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing notifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1206,6 +1420,72 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error deleting post:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete trash post
+app.delete('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    const check = await client.query(
+      'SELECT * FROM trash_posts WHERE id = $1 AND user_id = $2 FOR UPDATE',
+      [id, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trash post not found or unauthorized' });
+    }
+
+    const post = check.rows[0];
+
+    if (post.status !== 'waiting' && post.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only waiting/pending posts can be deleted' });
+    }
+
+    // Refund coins if any were used
+    const coinsUsed = parseInt(post.coins_selected) || 0;
+    if (coinsUsed > 0) {
+      await client.query(
+        'UPDATE users SET coin = coin + $1 WHERE id = $2',
+        [coinsUsed, req.user.user_id]
+      );
+      // Log as 'buy' to represent incoming coins (since type is constrained to buy/use)
+      await client.query(
+        `INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'buy')`,
+        [req.user.user_id, coinsUsed]
+      );
+    }
+
+    // Delete images from MinIO
+    if (post.images && post.images.length > 0) {
+      for (const imgUrl of post.images) {
+        try {
+          const objectName = imgUrl.split(`${BUCKET_NAME}/`)[1];
+          if (objectName) {
+            await minioClient.removeObject(BUCKET_NAME, objectName);
+          }
+        } catch (err) {
+          console.error('Failed to delete image:', err);
+        }
+      }
+    }
+
+    await client.query('DELETE FROM trash_posts WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+    res.json({ message: 'Trash post deleted successfully and coins refunded' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting trash post:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -1675,7 +1955,7 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
 
     // 1. Fetch current status and check permissions
     const currentContact = await client.query(
-      'SELECT id, status, seller_id, buyer_id, post_id, chat_id FROM contacts WHERE id = $1',
+      'SELECT id, status, seller_id, buyer_id, post_id, chat_id, type FROM contacts WHERE id = $1',
       [contactId]
     );
 
@@ -1768,6 +2048,21 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
       );
     }
 
+    if (status === 'wait complete') {
+      await client.query(
+        `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id, contact_type)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          contact.seller_id,
+          "Driver make complete old item post contact",
+          "Your post have required to check if it complete from buyer, Make it complete if you already recieve money from buyer.",
+          "require complete",
+          contact.post_id,
+          contact.type
+        ]
+      );
+    }
+
     await client.query('COMMIT');
     res.json(contact);
   } catch (error) {
@@ -1826,14 +2121,15 @@ app.post('/contacts/:id/cancel', authMiddleware, async (req, res) => {
 
     // 4. Create notification for seller
     await client.query(
-      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
-       VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id, contact_type)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         contact.seller_id,
         "Post Old Item Cancelled From Buyer",
         reason,
         "cancelled contact",
-        contact.post_id
+        contact.post_id,
+        contact.type
       ]
     );
 
@@ -2106,8 +2402,65 @@ app.get('/driver-location/:driver_id', authMiddleware, async (req, res) => {
 });
 
 // ============================================
-// START SERVER
+// BACKGROUND JOBS
 // ============================================
+async function checkExpiredPosts() {
+  try {
+    const result = await pool.query(
+      `SELECT id, user_id, pickup_time 
+       FROM old_item_posts 
+       WHERE status = 'waiting' AND pickup_time IS NOT NULL`
+    );
+
+    const now = new Date();
+
+    for (const post of result.rows) {
+      // pickup_time is stored as JSONB, so it's already parsed into an object by pg if connected properly, or it might be string.
+      let pickup_time = post.pickup_time;
+      if (typeof pickup_time === 'string') {
+        try {
+          pickup_time = JSON.parse(pickup_time);
+        } catch (e) { continue; }
+      }
+
+      if (!pickup_time || typeof pickup_time !== 'object') continue;
+
+      const { date, endTime } = pickup_time;
+      if (!date || !endTime) continue;
+
+      // Construct expiration date in +07:00 timezone
+      const expireString = `${date}T${endTime}:00+07:00`;
+      const expireDate = new Date(expireString);
+
+      if (now > expireDate) {
+        // Post has expired. Check if notification already exists.
+        const checkNotify = await pool.query(
+          `SELECT 1 FROM notifies 
+           WHERE refer_id = $1 AND type = 'old item post' AND notify_header = 'Old Item Post Expired'`,
+          [post.id]
+        );
+
+        if (checkNotify.rows.length === 0) {
+          await pool.query(
+            `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type, refer_id)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              post.user_id,
+              "Old Item Post Expired",
+              "Your post is reach out of the time consider to delete it.",
+              "old item post",
+              post.id
+            ]
+          );
+          console.log(`Notification sent for expired post ${post.id}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error checking expired posts:', err);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 
 async function start() {
@@ -2124,6 +2477,9 @@ async function start() {
         refer_id INTEGER
     );
   `).catch(err => console.error('Migration error (notifies):', err.message));
+
+  // Start background jobs
+  setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
