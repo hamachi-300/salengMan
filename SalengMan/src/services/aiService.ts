@@ -15,9 +15,7 @@ const labelMap: Record<string, string> = {
     "Plastic Bottle": "ขวดพลาสติก",
     "Glass": "เครื่องแก้ว"
 };
-
 let model: tmImage.CustomMobileNet | null = null;
-let maxPredictions: number = 0;
 
 /**
  * Loads the Teachable Machine model if it hasn't been loaded yet.
@@ -33,7 +31,6 @@ export async function loadModel(): Promise<tmImage.CustomMobileNet> {
     const metadataURL = MODEL_URL + 'metadata.json';
 
     model = await tmImage.load(checkpointURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
 
     return model;
 }
