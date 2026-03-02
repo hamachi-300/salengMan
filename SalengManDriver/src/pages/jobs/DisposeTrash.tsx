@@ -26,21 +26,33 @@ interface TrashPost {
     calculatedDistance?: number;
 }
 
+// This component displays a list of available trash posts for Saleng riders (drivers).
+// It tracks the user's location, fetches posts from the API, and allows filtering/sorting.
 function DisposeTrash() {
     const { initialLocation } = useUser();
     const navigate = useNavigate();
+
+    // --- State Management ---
+    // List of trash posts fetched from the backend
     const [posts, setPosts] = useState<TrashPost[]>([]);
+    // Loading indicator for API requests
     const [loading, setLoading] = useState(true);
+    // Distance filter controlled by the slider (default to 10km)
     const [distanceFilter, setDistanceFilter] = useState(10);
+    // User's real-time or initial location for distance calculations
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+    // Active sorting metric (distance vs coins)
     const [sortBy, setSortBy] = useState<'distance' | 'coins'>('distance');
+    // Active sorting order (Min to Max = 'asc', Max to Min = 'desc')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
+    // When component mounts: Fetch posts and start location tracking
     useEffect(() => {
         fetchPosts();
 
         let watchId: number | null = null;
 
+        // Start tracking user location either via Tauri API (for desktop app) or fallback to Web API
         const startTracking = async () => {
             const isTauri = !!(window as any).__TAURI_INTERNALS__;
 
@@ -83,8 +95,10 @@ function DisposeTrash() {
         };
     }, []);
 
+    // Function to fetch the available trash posts from the backend API
     const fetchPosts = async () => {
         const token = getToken();
+        // Redirect to login if user is not authenticated
         if (!token) {
             navigate("/signin");
             return;
@@ -101,6 +115,7 @@ function DisposeTrash() {
         }
     };
 
+    // Function to calculate the great-circle distance between two points on the earth (using Haversine formula)
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371; // Radius of the earth in km
         const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -116,6 +131,7 @@ function DisposeTrash() {
 
     // Filter and Sort posts
     const filteredPosts = posts
+        // 1. Calculate distance for each post
         .map(post => {
             let distance = Infinity;
             if (userLocation && post.address_snapshot?.lat && post.address_snapshot?.lng) {
@@ -132,23 +148,28 @@ function DisposeTrash() {
             }
             return { ...post, calculatedDistance: distance };
         })
+        // 2. Filter posts by distance
         .filter(post => {
-            if (post.calculatedDistance === Infinity) return true; // can't calculate, show it
+            // Keep posts with uncalculable distance (e.g. no location provided)
+            if (post.calculatedDistance === Infinity) return true;
+            // Only show posts within the selected distance filter
             return post.calculatedDistance !== undefined && post.calculatedDistance <= distanceFilter;
         })
+        // 3. Sort posts based on the selected metric and order
         .sort((a, b) => {
+            // If sorting by coins, compare coins first
             if (sortBy === 'coins') {
                 const coinDiff = sortOrder === 'asc'
-                    ? (a.coins_selected ?? 0) - (b.coins_selected ?? 0)
-                    : (b.coins_selected ?? 0) - (a.coins_selected ?? 0);
+                    ? (a.coins_selected ?? 0) - (b.coins_selected ?? 0) // Min to Max (Ascending)
+                    : (b.coins_selected ?? 0) - (a.coins_selected ?? 0); // Max to Min (Descending)
 
-                if (coinDiff !== 0) return coinDiff;
+                if (coinDiff !== 0) return coinDiff; // If coins are different, return the difference
             }
 
-            // Distance fallback or primary sort
+            // Fallback to sorting by distance (or if sorting by distance is primary)
             return sortOrder === 'asc'
-                ? (a.calculatedDistance ?? Infinity) - (b.calculatedDistance ?? Infinity)
-                : (b.calculatedDistance ?? Infinity) - (a.calculatedDistance ?? Infinity);
+                ? (a.calculatedDistance ?? Infinity) - (b.calculatedDistance ?? Infinity) // Min to Max
+                : (b.calculatedDistance ?? Infinity) - (a.calculatedDistance ?? Infinity); // Max to Min
         });
 
 
