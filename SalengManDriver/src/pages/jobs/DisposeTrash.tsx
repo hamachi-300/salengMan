@@ -6,6 +6,7 @@ import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
 import { useUser } from "../../context/UserContext";
 import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
+import { Icon } from "@iconify/react";
 
 interface TrashPost {
     id: number;
@@ -30,8 +31,10 @@ function DisposeTrash() {
     const navigate = useNavigate();
     const [posts, setPosts] = useState<TrashPost[]>([]);
     const [loading, setLoading] = useState(true);
+    const [distanceFilter, setDistanceFilter] = useState(10);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
-
+    const [sortBy, setSortBy] = useState<'distance' | 'coins'>('distance');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     useEffect(() => {
         fetchPosts();
@@ -130,11 +133,22 @@ function DisposeTrash() {
             return { ...post, calculatedDistance: distance };
         })
         .filter(post => {
-            // Show ALL posts ONLY if they are within 10km
-            return post.calculatedDistance !== undefined && post.calculatedDistance <= 10;
+            if (post.calculatedDistance === Infinity) return true; // can't calculate, show it
+            return post.calculatedDistance !== undefined && post.calculatedDistance <= distanceFilter;
         })
         .sort((a, b) => {
-            return (a.calculatedDistance ?? Infinity) - (b.calculatedDistance ?? Infinity);
+            if (sortBy === 'coins') {
+                const coinDiff = sortOrder === 'asc'
+                    ? (a.coins_selected ?? 0) - (b.coins_selected ?? 0)
+                    : (b.coins_selected ?? 0) - (a.coins_selected ?? 0);
+
+                if (coinDiff !== 0) return coinDiff;
+            }
+
+            // Distance fallback or primary sort
+            return sortOrder === 'asc'
+                ? (a.calculatedDistance ?? Infinity) - (b.calculatedDistance ?? Infinity)
+                : (b.calculatedDistance ?? Infinity) - (a.calculatedDistance ?? Infinity);
         });
 
 
@@ -150,8 +164,60 @@ function DisposeTrash() {
             <div className={styles.titleSection}>
                 <div className={styles.titleRow}>
                     <p className={styles.subtitle}>
-                        Showing trash posts within 10km radius of your current location
+                        Showing trash posts within {distanceFilter} km of your location
                     </p>
+                </div>
+
+                <div className={styles.sortSection}>
+                    <span className={styles.sortLabel}>Sort by</span>
+
+                    <div className={styles.sortButtonsGroup}>
+                        <button
+                            className={`${styles.sortButton} ${sortBy === 'distance' ? styles.sortButtonActive : ''}`}
+                            onClick={() => setSortBy('distance')}
+                        >
+                            Distance
+                        </button>
+                        <button
+                            className={`${styles.sortButton} ${sortBy === 'coins' ? styles.sortButtonActive : ''}`}
+                            onClick={() => setSortBy('coins')}
+                        >
+                            Coins
+                        </button>
+                    </div>
+
+                    <button
+                        className={styles.sortOrderToggle}
+                        onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                    >
+                        {sortOrder === 'asc' ? (
+                            <><Icon icon="eva:arrow-ios-upward-outline" style={{ fontSize: "20px" }} /></>
+                        ) : (
+                            <><Icon icon="eva:arrow-ios-downward-outline" style={{ fontSize: "20px" }} /></>
+                        )}
+                    </button>
+                </div>
+
+                <div className={styles.sliderSection}>
+                    <div className={styles.sliderLabelRow}>
+                        <span className={styles.sliderLabel}>Distance Range</span>
+                        <span className={styles.sliderValue}>{distanceFilter} km</span>
+                    </div>
+                    <input
+                        type="range"
+                        min={10}
+                        max={100}
+                        value={distanceFilter}
+                        onChange={(e) => setDistanceFilter(Number(e.target.value))}
+                        className={styles.slider}
+                        style={{
+                            background: `linear-gradient(to right, #FF9800 10%, #FF9800 ${distanceFilter}%, #e0e0e0 ${distanceFilter}%, #e0e0e0 100%)`
+                        }}
+                    />
+                    <div className={styles.sliderTicks}>
+                        <span>10 km</span>
+                        <span>100 km</span>
+                    </div>
                 </div>
             </div>
 
@@ -205,9 +271,13 @@ function DisposeTrash() {
 
                                     </div>
                                     <span className={styles.distanceText}>
-                                        {post.calculatedDistance !== Infinity && post.calculatedDistance !== undefined
+
+                                        {post.calculatedDistance !== Infinity && post.calculatedDistance !== undefined && post.calculatedDistance <= distanceFilter
                                             ? `${post.calculatedDistance.toFixed(1)} km`
                                             : ''}
+                                        {/* {post.calculatedDistance !== Infinity && post.calculatedDistance !== undefined
+                                            ? `${post.calculatedDistance.toFixed(1)} km`
+                                            : ''} */}
                                     </span>
                                 </div>
                             </div>
@@ -215,7 +285,7 @@ function DisposeTrash() {
                     ))
                 ) : (
                     <div className={styles.emptyState}>
-                        No trash posts available within 10km of your location
+                        No trash posts available within {distanceFilter} km of your location
                     </div>
                 )}
 

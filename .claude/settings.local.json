@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd D:\\\\III_yrs\\\\2ndsem\\\\SE\\\\salengMan - Copy\\\\backend:*)"
+    ]
+  }
+}
