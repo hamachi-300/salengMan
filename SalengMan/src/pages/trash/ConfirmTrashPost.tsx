@@ -46,7 +46,7 @@ function ConfirmTrashPost() {
             return;
         }
 
-        if (userBalance !== null && userBalance < trashData.coins) {
+        if (!trashData.editingPostId && userBalance !== null && userBalance < trashData.coins) {
             setShowBalanceModal(true);
             return;
         }
@@ -230,9 +230,13 @@ function ConfirmTrashPost() {
             </div>
 
             <PageFooter
-                title={userBalance !== null && userBalance < trashData.coins ? "Top Up Now" : "Confirm & Post"}
+                title={
+                    trashData.editingPostId
+                        ? "Save Changes"
+                        : (userBalance !== null && userBalance < trashData.coins ? "Top Up Now" : "Confirm & Post")
+                }
                 onClick={() => {
-                    if (userBalance !== null && userBalance < trashData.coins) {
+                    if (!trashData.editingPostId && userBalance !== null && userBalance < trashData.coins) {
                         navigate('/coin', { state: { returnTo: '/trash/confirm' } });
                     } else {
                         handleSubmit();
