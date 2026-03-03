@@ -419,6 +419,30 @@ export const api = {
     return res.json();
   },
 
+  updateTrashPost: async (token: string, id: string | number, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to update trash post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
+
   // Get Contacts
   getContacts: async (token: string): Promise<Contact[]> => {
     const res = await fetch(`${API_URL}/contacts`, {

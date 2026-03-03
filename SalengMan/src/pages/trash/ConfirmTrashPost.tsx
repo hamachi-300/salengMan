@@ -65,12 +65,17 @@ function ConfirmTrashPost() {
                 address: trashData.address
             };
 
-            await api.createTrashPost(token, postData);
+            if (trashData.editingPostId) {
+                await api.updateTrashPost(token, trashData.editingPostId, postData);
+            } else {
+                await api.createTrashPost(token, postData);
+            }
             setSuccess(true);
+            const returnPath = trashData.returnTo || '/history';
             resetTrashData();
 
             setTimeout(() => {
-                navigate('/history');
+                navigate(returnPath);
             }, 2000);
         } catch (err: any) {
             console.error("Error creating trash post:", err);
@@ -87,8 +92,8 @@ function ConfirmTrashPost() {
                 <div className={styles['success-modal']}>
                     <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
                     <h2 className={styles['success-title']}>Success!</h2>
-                    <p className={styles['success-message']}>Your trash disposal request has been posted.</p>
-                    <button className={styles['btn-home']} onClick={() => navigate('/history')}>View History</button>
+                    <p className={styles['success-message']}>Your trash disposal request has been {trashData.editingPostId ? 'updated' : 'posted'}.</p>
+                    <button className={styles['btn-home']} onClick={() => navigate(trashData.returnTo || '/history')}>{trashData.returnTo ? 'Back to Details' : 'View History'}</button>
                 </div>
             </div>
         );

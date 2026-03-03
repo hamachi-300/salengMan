@@ -33,7 +33,7 @@ function PostDetail() {
     const navigate = useNavigate();
     const location = useLocation();
     const { setEditingPost, discardEdit } = useSell();
-    const { setImages, setBagCount, setCoins, setRemarks, setAddress } = useTrash();
+    const { setImages, setBagCount, setCoins, setRemarks, setAddress, setReturnTo, setEditingPostId } = useTrash();
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -162,6 +162,8 @@ function PostDetail() {
             setCoins(post.coins_selected || 1);
             setRemarks(post.remarks || '');
             setAddress(addressData);
+            setEditingPostId(post.id);
+            setReturnTo(`/history/${post.id}`);
 
             // Map the targetPage properly since Edit link might pass '/sell' 
             // but we need to go to '/trash/details' or similar.

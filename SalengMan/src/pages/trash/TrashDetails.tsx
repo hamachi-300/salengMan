@@ -41,7 +41,7 @@ function TrashDetails() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title="Post Trash" backTo="/home" />
+            <PageHeader title={trashData.editingPostId ? "Edit Post Trash" : "Post Trash"} backTo={trashData.returnTo || "/home"} />
 
             <div className={styles['scrollable-content']}>
                 {/* Image Section */}

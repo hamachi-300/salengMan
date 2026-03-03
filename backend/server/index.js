@@ -1423,6 +1423,40 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Update trash post
+app.put('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { mode, images, bag_count, coins, remarks, address } = req.body;
+
+  try {
+    // Check if post exists and belongs to user
+    const checkPost = await pool.query(
+      'SELECT id, status FROM trash_posts WHERE id = $1 AND user_id = $2',
+      [id, req.user.user_id]
+    );
+
+    if (checkPost.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash post not found or unauthorized' });
+    }
+
+    if (checkPost.rows[0].status !== 'waiting') {
+      return res.status(400).json({ error: 'Cannot edit post that is already in progress' });
+    }
+
+    await pool.query(
+      `UPDATE trash_posts 
+       SET mode = $1, images = $2, trash_bag_amount = $3, coins_selected = $4, remarks = $5, address_snapshot = $6 
+       WHERE id = $7 AND user_id = $8`,
+      [mode, JSON.stringify(images), bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
+    );
+
+    res.json({ message: 'Trash post updated successfully' });
+  } catch (error) {
+    console.error('Error updating trash post:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Delete trash post
 app.delete('/trash-posts/:id', authMiddleware, async (req, res) => {
   const client = await pool.connect();
