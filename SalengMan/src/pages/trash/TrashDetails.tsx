@@ -41,7 +41,11 @@ function TrashDetails() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title={trashData.editingPostId ? "Edit Post Trash" : "Post Trash"} backTo={trashData.returnTo || "/home"} />
+            <PageHeader
+                title={trashData.editingPostId ? "Edit Post Trash" : "Post Trash"}
+                backTo={trashData.returnTo || "/home"}
+                backState={trashData.returnTo?.includes('/history') ? { post_type: 'trash_disposal' } : undefined}
+            />
 
             <div className={styles['scrollable-content']}>
                 {/* Image Section */}

@@ -75,7 +75,11 @@ function ConfirmTrashPost() {
             resetTrashData();
 
             setTimeout(() => {
-                navigate(returnPath);
+                if (returnPath.includes('/history/')) {
+                    navigate(returnPath, { state: { post_type: 'trash_disposal' } });
+                } else {
+                    navigate(returnPath);
+                }
             }, 2000);
         } catch (err: any) {
             console.error("Error creating trash post:", err);
@@ -93,7 +97,13 @@ function ConfirmTrashPost() {
                     <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
                     <h2 className={styles['success-title']}>Success!</h2>
                     <p className={styles['success-message']}>Your trash disposal request has been {trashData.editingPostId ? 'updated' : 'posted'}.</p>
-                    <button className={styles['btn-home']} onClick={() => navigate(trashData.returnTo || '/history')}>{trashData.returnTo ? 'Back to Details' : 'View History'}</button>
+                    <button className={styles['btn-home']} onClick={() => {
+                        if (trashData.returnTo?.includes('/history/')) {
+                            navigate(trashData.returnTo, { state: { post_type: 'trash_disposal' } });
+                        } else {
+                            navigate(trashData.returnTo || '/history');
+                        }
+                    }}>{trashData.returnTo ? 'Back to Details' : 'View History'}</button>
                 </div>
             </div>
         );

@@ -61,12 +61,29 @@ function PostDetail() {
 
         try {
             const postType = (location.state as any)?.post_type;
-            const data = postType === 'trash_disposal'
-                ? await api.getTrashPostById(token, id)
-                : await api.getPostById(token, id);
+            let data: any = null;
+            let actualPostType = postType;
+
+            if (postType === 'trash_disposal') {
+                data = await api.getTrashPostById(token, id);
+            } else if (postType === 'old_item') {
+                data = await api.getPostById(token, id);
+            } else {
+                // If post_type is completely missing from state (e.g. direct link or lost state)
+                // We try old item first
+                try {
+                    data = await api.getPostById(token, id);
+                    actualPostType = 'old_item';
+                } catch (e) {
+                    // Fallback to trash
+                    console.log("Not an old item, trying trash post...");
+                    data = await api.getTrashPostById(token, id);
+                    actualPostType = 'trash_disposal';
+                }
+            }
 
             // Re-inject post_type because the backend response might not include it
-            setPost({ ...data, post_type: postType || 'old_item' });
+            setPost({ ...data, post_type: actualPostType });
         } catch (err: any) {
             console.error("Failed to load post:", err);
             setError("Failed to load post details");
