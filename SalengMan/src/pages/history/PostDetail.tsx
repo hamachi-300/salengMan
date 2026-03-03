@@ -9,6 +9,7 @@ import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
 import SuccessPopup from "../../components/SuccessPopup";
 import { useSell } from "../../context/SellContext";
+import { useTrash } from "../../context/TrashContext";
 
 interface Post {
     id: number;
@@ -32,6 +33,7 @@ function PostDetail() {
     const navigate = useNavigate();
     const location = useLocation();
     const { setEditingPost, discardEdit } = useSell();
+    const { setImages, setBagCount, setCoins, setRemarks, setAddress } = useTrash();
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -154,19 +156,36 @@ function PostDetail() {
             lng: address.lng,
         } : null;
 
-        setEditingPost(post.id, {
-            images: post.images || [],
-            categories: post.categories || [],
-            remarks: post.remarks || '',
-            address: addressData,
-            pickupTime: pickupTime ? {
-                date: pickupTime.date,
-                startTime: pickupTime.startTime,
-                endTime: pickupTime.endTime,
-            } : null,
-        });
+        if (post.post_type === 'trash_disposal') {
+            setImages(post.images || []);
+            setBagCount(post.trash_bag_amount || 1);
+            setCoins(post.coins_selected || 1);
+            setRemarks(post.remarks || '');
+            setAddress(addressData);
 
-        navigate(targetPage);
+            // Map the targetPage properly since Edit link might pass '/sell' 
+            // but we need to go to '/trash/details' or similar.
+            // If targetPage includes 'time', we ignore since trash has no time.
+            let trashTarget = '/trash';
+            if (targetPage.includes('address')) {
+                trashTarget = '/trash/select-address';
+            }
+            navigate(trashTarget);
+        } else {
+            setEditingPost(post.id, {
+                images: post.images || [],
+                categories: post.categories || [],
+                remarks: post.remarks || '',
+                address: addressData,
+                pickupTime: pickupTime ? {
+                    date: pickupTime.date,
+                    startTime: pickupTime.startTime,
+                    endTime: pickupTime.endTime,
+                } : null,
+            });
+
+            navigate(targetPage);
+        }
     };
 
     const handleChat = () => {
