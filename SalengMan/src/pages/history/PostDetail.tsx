@@ -312,14 +312,6 @@ function PostDetail() {
                         <>
                             <div className={styles['detail-row']}>
                                 <div className={styles['detail-content']}>
-                                    <span className={styles['detail-label']}>Mode</span>
-                                    <span className={styles['detail-value']} style={{ textTransform: 'capitalize' }}>
-                                        {post.trash_status || post.mode || 'Anytime'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
-                                <div className={styles['detail-content']}>
                                     <span className={styles['detail-label']}>Number of Bags</span>
                                     <span className={styles['detail-value']}>{post.trash_bag_amount} Bags</span>
                                 </div>

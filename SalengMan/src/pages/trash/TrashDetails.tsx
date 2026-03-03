@@ -41,7 +41,7 @@ function TrashDetails() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title="Post Trash" backTo="/trash/mode" />
+            <PageHeader title="Post Trash" backTo="/home" />
 
             <div className={styles['scrollable-content']}>
                 {/* Image Section */}

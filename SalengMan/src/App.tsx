@@ -9,7 +9,7 @@ import Sell from "./pages/sell/Sell";
 import SelectAddress from "./pages/sell/SelectAddress";
 import SelectTime from "./pages/sell/SelectTime";
 import ConfirmPost from "./pages/sell/ConfirmPost";
-import PostTrash from "./pages/trash/PostTrash";
+
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
 import TrackDriver from "./pages/history/TrackDriver";
@@ -22,7 +22,7 @@ import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
 import HistoryCoin from "./pages/trash/coin/HistoryCoin";
-import SelectTrashMode from "./pages/trash/SelectTrashMode";
+
 import TrashDetails from "./pages/trash/TrashDetails";
 import TrashSelectAddress from "./pages/trash/TrashSelectAddress";
 import ConfirmTrashPost from "./pages/trash/ConfirmTrashPost";
@@ -61,9 +61,7 @@ function AppRoutes() {
         <Route path="/sell/select-address" element={<SelectAddress />} />
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
-        <Route path="/trash" element={<SelectTrashMode />} />
-        <Route path="/trash/mode" element={<SelectTrashMode />} />
-        <Route path="/trash/details" element={<TrashDetails />} />
+        <Route path="/trash" element={<TrashDetails />} />
         <Route path="/trash/select-address" element={<TrashSelectAddress />} />
         <Route path="/trash/confirm" element={<ConfirmTrashPost />} />
         <Route path="/coin" element={<Coin />} />
