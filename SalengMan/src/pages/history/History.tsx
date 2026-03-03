@@ -24,6 +24,7 @@ function History() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
+  const [postTypeFilter, setPostTypeFilter] = useState<"old_item" | "trash_disposal">("old_item");
 
   const location = useLocation();
 
@@ -114,16 +115,38 @@ function History() {
     return postType === 'trash_disposal' ? 'ทิ้งขยะ' : 'ขายของเก่า';
   };
 
-  const tabs = ["All", "Pending", "Waiting", "Completed", "Cancelled"];
+  const tabs = postTypeFilter === "trash_disposal"
+    ? ["All", "Waiting", "Completed", "Cancelled"]
+    : ["All", "Pending", "Waiting", "Completed", "Cancelled"];
 
   const filteredPosts = posts.filter((post) => {
-    if (activeTab === "All") return true;
-    return post.status.toLowerCase() === activeTab.toLowerCase();
+    if (post.post_type !== postTypeFilter) return false;
+    if (activeTab !== "All" && post.status.toLowerCase() !== activeTab.toLowerCase()) return false;
+    return true;
   });
 
   return (
     <div className={styles["page-container"]}>
       <PageHeader title="History" backTo="/home" />
+
+      {/* Type Filters: 2 Sides */}
+      <div className={styles["type-toggle-container"]}>
+        <button
+          className={`${styles["type-toggle-btn"]} ${postTypeFilter === "old_item" ? styles.active : ""}`}
+          onClick={() => setPostTypeFilter("old_item")}
+        >
+          ขายของเก่า
+        </button>
+        <button
+          className={`${styles["type-toggle-btn"]} ${postTypeFilter === "trash_disposal" ? styles.active : ""}`}
+          onClick={() => {
+            setPostTypeFilter("trash_disposal");
+            if (activeTab === "Pending") setActiveTab("All");
+          }}
+        >
+          ทิ้งขยะ
+        </button>
+      </div>
 
       {/* Filters */}
       <div className={styles["filters-scroll"]}>
