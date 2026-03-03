@@ -93,7 +93,11 @@ const ItemUpload: React.FC = () => {
 
     return (
         <div className={styles['post-item-container']}>
-            <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo={isEditing ? `/history/${sellData.editingPostId}` : "/home"} />
+            <PageHeader
+                title={isEditing ? "Edit Post" : "Post Item"}
+                backTo={isEditing ? `/history/${sellData.editingPostId}` : "/home"}
+                backState={isEditing ? { post_type: 'old_item' } : undefined}
+            />
 
             <div className={styles['scrollable-content']}>
                 <div className={styles['section']}>
