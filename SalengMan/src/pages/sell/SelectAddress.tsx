@@ -62,7 +62,11 @@ function SelectAddress() {
     if (selectedAddress) {
       // Save to context (in-memory only)
       setAddress(selectedAddress);
-      navigate('/sell/select-time');
+      if (isEditing) {
+        navigate('/sell/confirm');
+      } else {
+        navigate('/sell/select-time');
+      }
     }
   };
 
@@ -72,7 +76,7 @@ function SelectAddress() {
 
   return (
     <div className={styles['page']}>
-      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo="/sell" />
+      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo={isEditing ? "/sell/confirm" : "/sell"} />
 
       <div className={styles['content']}>
         {/* Section Title */}

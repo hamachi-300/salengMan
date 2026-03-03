@@ -193,7 +193,7 @@ function SelectTime() {
 
   return (
     <div className={styles['page']}>
-      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo="/sell/select-address" />
+      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo={isEditing ? "/sell/confirm" : "/sell/select-address"} />
 
       <div className={styles['content']}>
         {/* Section Title */}
