@@ -19,6 +19,7 @@ const EsgSubscriptorList: React.FC = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showWarning, setShowWarning] = useState<string | null>(null);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [activeTab, setActiveTab] = useState<'accept' | 'waiting' | 'discover'>('discover');
     const [pendingContract, setPendingContract] = useState<{ sup_id: string, date: number } | null>(null);
 
     useEffect(() => {
@@ -74,6 +75,27 @@ const EsgSubscriptorList: React.FC = () => {
                 onBack={() => navigate('/esg/search_sub')}
             />
 
+            <div className={styles.tabs}>
+                <button
+                    className={`${styles.tab} ${activeTab === 'accept' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('accept')}
+                >
+                    Accept
+                </button>
+                <button
+                    className={`${styles.tab} ${activeTab === 'waiting' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('waiting')}
+                >
+                    Waiting
+                </button>
+                <button
+                    className={`${styles.tab} ${activeTab === 'discover' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('discover')}
+                >
+                    Discover
+                </button>
+            </div>
+
             <div className={styles.content}>
                 {loading ? (
                     <div className={styles.loading}>กำลังโหลด...</div>
@@ -83,7 +105,11 @@ const EsgSubscriptorList: React.FC = () => {
                     <div className={styles.list}>
                         {subscriptors.flatMap(sub =>
                             sub.pickup_days
-                                .filter((d: any) => !filterDate || d.date === Number(filterDate))
+                                .filter((day: any) => {
+                                    const matchesDate = !filterDate || day.date === Number(filterDate);
+                                    const matchesTab = day.category === activeTab;
+                                    return matchesDate && matchesTab;
+                                })
                                 .map((day: any) => (
                                     <div key={`${sub.sup_id}-${day.date}`} className={styles.subCard}>
                                         <div className={styles.subInfo} onClick={() => setSelectedUser(sub)}>
@@ -92,7 +118,11 @@ const EsgSubscriptorList: React.FC = () => {
                                                 <div className={styles.onlineIndicator} />
                                             </div>
                                             <div className={styles.details}>
-                                                <h3 className={styles.name}>{sub.full_name}</h3>
+                                                <div className={styles.nameRow}>
+                                                    <h3 className={styles.name}>{sub.full_name}</h3>
+                                                    {day.category === 'accept' && <span className={styles.statusBadge}>ยืนยันแล้ว</span>}
+                                                    {day.category === 'waiting' && <span className={styles.statusBadgeWaiting}>รอการยืนยัน</span>}
+                                                </div>
                                                 <p className={styles.address}>
                                                     <span className={styles.supIdDisplay}>{sub.sup_id}</span> : <span className={styles.dateDisplay}>{day.date}</span>
                                                 </p>
@@ -102,12 +132,25 @@ const EsgSubscriptorList: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <button
-                                            className={styles.contractButton}
-                                            onClick={() => handleSignContract(sub.sup_id, day.date)}
-                                        >
-                                            ทำสัญญา
-                                        </button>
+                                        {day.category === 'discover' && (
+                                            <button
+                                                className={styles.contractButton}
+                                                onClick={() => handleSignContract(sub.sup_id, day.date)}
+                                            >
+                                                ทำสัญญา
+                                            </button>
+                                        )}
+                                        {day.category === 'waiting' && (
+                                            <div className={styles.waitingLabel}>รอการยืนยัน</div>
+                                        )}
+                                        {day.category === 'accept' && (
+                                            <div className={styles.acceptedLabel}>
+                                                <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                                </svg>
+                                                <span>ตกลงแล้ว</span>
+                                            </div>
+                                        )}
                                     </div>
                                 ))
                         )}

@@ -2773,14 +2773,40 @@ app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
     `;
     const params = [];
 
+    // 1. Get current user's driver_id if they are a driver
+    const driverLookup = await pool.query('SELECT driver_id FROM esg_driver WHERE user_id = $1', [req.user.user_id]);
+    const currentEsgDriverId = driverLookup.rows.length > 0 ? driverLookup.rows[0].driver_id : null;
+
     const result = await pool.query(query, params);
 
-    // List available subscriptions (filter out any days that already have a confirmed driver)
+    // List available subscriptions
     let filtered = result.rows.map(row => {
       const days = Array.isArray(row.pickup_days) ? row.pickup_days : [];
-      // Strictly filter out days where have_driver is true
-      const availableDays = days.filter(d => d && d.have_driver !== true);
-      return { ...row, pickup_days: availableDays };
+
+      const processedDays = days.map(d => {
+        if (!d) return null;
+
+        // Category Logic:
+        // 1. Accept: finalized for this driver
+        if (d.have_driver === true && d.confirmed_driver_id === currentEsgDriverId) {
+          return { ...d, category: 'accept', alreadySigned: true };
+        }
+
+        // 2. Waiting: driver signed but subscriber hasn't finalized
+        if (d.have_driver === false && currentEsgDriverId && d.driver && d.driver.includes(currentEsgDriverId)) {
+          return { ...d, category: 'waiting', alreadySigned: true };
+        }
+
+        // 3. Discover: slot is open and driver hasn't signed yet
+        if (d.have_driver === false && (!currentEsgDriverId || !d.driver || !d.driver.includes(currentEsgDriverId))) {
+          return { ...d, category: 'discover', alreadySigned: false };
+        }
+
+        // Default: slot finalized for someone else (Exclude)
+        return null;
+      }).filter(Boolean);
+
+      return { ...row, pickup_days: processedDays };
     }).filter(row => row.pickup_days.length > 0);
 
     // If specific date is requested, filter further
@@ -2934,7 +2960,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       if (contractIdx !== -1) {
         dPickupDays[dDayIdx].contract_user[contractIdx].is_accept = true;
         await client.query(
-          'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1',
+          'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
           [JSON.stringify(dPickupDays), driver_id]
         );
       }

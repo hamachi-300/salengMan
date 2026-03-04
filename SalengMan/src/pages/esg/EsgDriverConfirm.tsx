@@ -26,6 +26,7 @@ function EsgDriverConfirm() {
     const [error, setError] = useState<string | null>(null);
     const [userScore, setUserScore] = useState<any>(null);
     const [confirming, setConfirming] = useState(false);
+    const [isDateOccupied, setIsDateOccupied] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
@@ -50,6 +51,19 @@ function EsgDriverConfirm() {
                 setUserScore(scoreData);
             } catch (scoreErr) {
                 console.warn("Failed to load driver score:", scoreErr);
+            }
+
+            // Check if date is already occupied
+            try {
+                const subStatus = await api.checkEsgSubscriptionStatus(token);
+                if (subStatus.pickup_days && date) {
+                    const currentDay = subStatus.pickup_days.find(d => d && d.date === parseInt(date));
+                    if (currentDay?.have_driver) {
+                        setIsDateOccupied(true);
+                    }
+                }
+            } catch (subErr) {
+                console.warn("Failed to check subscription occupancy:", subErr);
             }
         } catch (err: any) {
             console.error("Failed to load driver data:", err);
@@ -189,21 +203,25 @@ function EsgDriverConfirm() {
                 </div>
             </div>
 
-            <div className={styles['footer-wrapper']}>
-                <div className={styles['agreement-text']}>
-                    <svg className={styles['info-icon']} viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-                    </svg>
-                    <span>By confirming, you agree to select this driver for your waste pickup and other requests for this date will be closed.</span>
-                </div>
-            </div>
+            {!isDateOccupied && (
+                <>
+                    <div className={styles['footer-wrapper']}>
+                        <div className={styles['agreement-text']}>
+                            <svg className={styles['info-icon']} viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                            </svg>
+                            <span>By confirming, you agree to select this driver for your waste pickup and other requests for this date will be closed.</span>
+                        </div>
+                    </div>
 
-            <PageFooter
-                title={confirming ? 'Confirming...' : 'Confirm Driver'}
-                onClick={handleConfirm}
-                disabled={confirming}
-                showArrow={false}
-            />
+                    <PageFooter
+                        title={confirming ? 'Confirming...' : 'Confirm Driver'}
+                        onClick={handleConfirm}
+                        disabled={confirming}
+                        showArrow={false}
+                    />
+                </>
+            )}
 
             <SuccessPopup
                 isOpen={showSuccess}

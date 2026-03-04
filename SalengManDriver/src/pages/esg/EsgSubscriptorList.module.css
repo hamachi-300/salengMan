@@ -6,6 +6,32 @@
     background-color: var(--color-bg);
 }
 
+.tabs {
+    display: flex;
+    padding: 0 16px;
+    gap: 8px;
+    margin-bottom: 8px;
+    background-color: var(--color-bg);
+}
+
+.tab {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.activeTab {
+    color: var(--orange-button);
+    border-bottom-color: var(--orange-button);
+}
+
 .content {
     flex: 1;
     padding: 16px;
@@ -76,11 +102,35 @@
     gap: 4px;
 }
 
+.nameRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .name {
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
     color: var(--color-text);
+}
+
+.statusBadge {
+    font-size: 0.65rem;
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.statusBadgeWaiting {
+    font-size: 0.65rem;
+    background-color: rgba(255, 122, 48, 0.2);
+    color: var(--orange-button);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 700;
 }
 
 .address {
@@ -148,6 +198,27 @@
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
+}
+
+.alreadySigned {
+    background-color: #555;
+    color: #888;
+    cursor: default;
+}
+
+.waitingLabel {
+    font-size: 0.85rem;
+    color: var(--orange-button);
+    font-weight: 700;
+}
+
+.acceptedLabel {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #22c55e;
+    font-weight: 700;
 }
 
 /* Modal Overlay */

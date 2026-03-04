@@ -52,8 +52,8 @@ function ChooseDateDriver() {
                             <div
                                 key={index}
                                 className={styles.dateRow}
-                                onClick={() => !day.have_driver && supId && navigate(`/esg/drivers/${supId}/${day.date}`)}
-                                style={{ cursor: day.have_driver ? 'default' : 'pointer' }}
+                                onClick={() => supId && navigate(`/esg/drivers/${supId}/${day.date}`)}
+                                style={{ cursor: 'pointer' }}
                             >
                                 <div className={styles.dateBox}>
                                     วันที่ {day.date}
