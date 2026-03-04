@@ -1431,7 +1431,7 @@ app.put('/trash-posts/:id', authMiddleware, async (req, res) => {
   try {
     // Check if post exists and belongs to user
     const checkPost = await pool.query(
-      'SELECT id, status FROM trash_posts WHERE id = $1 AND user_id = $2',
+      'SELECT id, status, images FROM trash_posts WHERE id = $1 AND user_id = $2',
       [id, req.user.user_id]
     );
 
@@ -1439,15 +1439,58 @@ app.put('/trash-posts/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Trash post not found or unauthorized' });
     }
 
-    if (checkPost.rows[0].status !== 'waiting') {
+    const post = checkPost.rows[0];
+
+    if (post.status !== 'waiting') {
       return res.status(400).json({ error: 'Cannot edit post that is already in progress' });
+    }
+
+    // Handle images - separate new base64 images from existing URLs
+    const uploadedImageUrls = [];
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+
+        if (img.startsWith('data:')) {
+          // New image - upload to MinIO
+          const base64Image = img.split(';base64,').pop();
+          const buffer = Buffer.from(base64Image, 'base64');
+          const fileName = `trash_posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
+
+          await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+            'Content-Type': 'image/jpeg'
+          });
+
+          const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+          uploadedImageUrls.push(imageUrl);
+        } else {
+          // Existing image URL - keep it
+          uploadedImageUrls.push(img);
+        }
+      }
+    }
+
+    // Delete old images that are no longer in the list
+    if (post.images && Array.isArray(post.images) && post.images.length > 0) {
+      for (const oldImg of post.images) {
+        if (!uploadedImageUrls.includes(oldImg)) {
+          try {
+            const objectName = oldImg.split(`${BUCKET_NAME}/`)[1];
+            if (objectName) {
+              await minioClient.removeObject(BUCKET_NAME, objectName);
+            }
+          } catch (err) {
+            console.error('Failed to delete old image:', err);
+          }
+        }
+      }
     }
 
     await pool.query(
       `UPDATE trash_posts 
-       SET mode = $1, images = $2, trash_bag_amount = $3, coins_selected = $4, remarks = $5, address_snapshot = $6 
+       SET post_type = $1, images = $2, trash_bag_amount = $3, coins_selected = $4, remarks = $5, address_snapshot = $6 
        WHERE id = $7 AND user_id = $8`,
-      [mode, JSON.stringify(images), bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
+      [mode === 'fixtime' ? 'fast' : 'anytime', uploadedImageUrls, bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
     );
 
     res.json({ message: 'Trash post updated successfully' });
