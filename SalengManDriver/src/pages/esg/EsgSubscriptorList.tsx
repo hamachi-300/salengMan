@@ -5,34 +5,66 @@ import PageHeader from '../../components/PageHeader';
 import { api } from '../../config/api';
 import { getToken } from '../../services/auth';
 import profileLogo from '../../assets/icon/profile.svg';
-import SuccessPopup from '../../components/SuccessPopup';
-import ConfirmPopup from '../../components/ConfirmPopup';
+import { useUser } from '../../context/UserContext';
+
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+};
 
 const EsgSubscriptorList: React.FC = () => {
+    const { initialLocation } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
-    const filterDate = location.state?.filterDate;
 
     const [subscriptors, setSubscriptors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedUser, setSelectedUser] = useState<any>(null);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [showWarning, setShowWarning] = useState<string | null>(null);
-    const [showConfirm, setShowConfirm] = useState(false);
+    const [filterDate, setFilterDate] = useState<string>("");
     const [activeTab, setActiveTab] = useState<'accept' | 'waiting' | 'discover'>('discover');
-    const [pendingContract, setPendingContract] = useState<{ sup_id: string, date: number } | null>(null);
+    const [subLocations, setSubLocations] = useState<Record<string, { lat: number, lng: number }>>({});
 
     useEffect(() => {
+        if (location.state?.filterDate) {
+            setFilterDate(location.state.filterDate);
+        }
         fetchSubscriptors();
-    }, [filterDate]);
+    }, [location.state?.filterDate, filterDate]);
 
     const fetchSubscriptors = async () => {
         setLoading(true);
         try {
             const token = getToken();
             if (!token) return;
-            const data = await api.getAvailableEsgSubscriptions(token, filterDate);
+            const data = await api.getAvailableEsgSubscriptions(token);
             setSubscriptors(data);
+
+            // Fetch addresses for distance calculation
+            const locations: Record<string, { lat: number, lng: number }> = {};
+            for (const sub of data) {
+                if (!locations[sub.user_id]) {
+                    if (sub.lat !== undefined && sub.lng !== undefined) {
+                        locations[sub.user_id] = { lat: sub.lat, lng: sub.lng };
+                    } else {
+                        try {
+                            const addresses = await api.getAddressesByUserId(token, sub.user_id);
+                            const subAddr = addresses.find((a: any) => a.id === sub.address_id);
+                            if (subAddr?.lat !== undefined && subAddr?.lng !== undefined) {
+                                locations[sub.user_id] = { lat: subAddr.lat, lng: subAddr.lng };
+                            }
+                        } catch (e) {
+                            console.warn("Failed to fetch address for subscriber", sub.user_id);
+                        }
+                    }
+                }
+            }
+            setSubLocations(locations);
         } catch (error) {
             console.error('Failed to fetch subscriptors:', error);
         } finally {
@@ -40,47 +72,25 @@ const EsgSubscriptorList: React.FC = () => {
         }
     };
 
-    const handleSignContract = async (sup_id: string, date: number) => {
-        setPendingContract({ sup_id, date });
-        setShowConfirm(true);
-    };
 
-    const executeSignContract = async () => {
-        if (!pendingContract) return;
-        const { sup_id, date } = pendingContract;
-
-        try {
-            const token = getToken();
-            if (!token) return;
-            const result = await api.signEsgContract(token, sup_id, date);
-
-            if (result.warning) {
-                setShowWarning(result.warning);
-            } else {
-                setShowSuccess(true);
-            }
-            fetchSubscriptors(); // Refresh
-        } catch (error: any) {
-            alert(error.message || 'Failed to sign contract');
-        } finally {
-            setShowConfirm(false);
-            setPendingContract(null);
-        }
-    };
+    const filteredSubscriptors = subscriptors.filter((sub: any) => {
+        return sub.pickup_days.some((day: any) => {
+            const matchesDate = filterDate ? day.date === parseInt(filterDate) : true;
+            const matchesTab = day.category === activeTab;
+            return matchesDate && matchesTab;
+        });
+    });
 
     return (
         <div className={styles.container}>
-            <PageHeader
-                title={filterDate ? `วันที่ ${filterDate} (ESG ผู้จอง)` : "ผู้จอง ESG ทั้งหมด"}
-                onBack={() => navigate('/esg/search_sub')}
-            />
+            <PageHeader title="รายการผู้จองทิ้งขยะ" backTo="/esg/search_sub" />
 
             <div className={styles.tabs}>
                 <button
-                    className={`${styles.tab} ${activeTab === 'accept' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('accept')}
+                    className={`${styles.tab} ${activeTab === 'discover' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('discover')}
                 >
-                    Accept
+                    Discover
                 </button>
                 <button
                     className={`${styles.tab} ${activeTab === 'waiting' ? styles.activeTab : ''}`}
@@ -89,154 +99,77 @@ const EsgSubscriptorList: React.FC = () => {
                     Waiting
                 </button>
                 <button
-                    className={`${styles.tab} ${activeTab === 'discover' ? styles.activeTab : ''}`}
-                    onClick={() => setActiveTab('discover')}
+                    className={`${styles.tab} ${activeTab === 'accept' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('accept')}
                 >
-                    Discover
+                    Accept
                 </button>
             </div>
 
             <div className={styles.content}>
                 {loading ? (
                     <div className={styles.loading}>กำลังโหลด...</div>
-                ) : subscriptors.length === 0 ? (
-                    <div className={styles.empty}>ไม่พบผู้จองในวันที่เลือก</div>
+                ) : filteredSubscriptors.length === 0 ? (
+                    <div className={styles.empty}>ไม่พบรายการที่ตรงกับเงื่อนไข</div>
                 ) : (
-                    <div className={styles.list}>
-                        {subscriptors.flatMap(sub =>
+                    <div className={styles.subList}>
+                        {filteredSubscriptors.map((sub: any) =>
                             sub.pickup_days
                                 .filter((day: any) => {
-                                    const matchesDate = !filterDate || day.date === Number(filterDate);
+                                    const matchesDate = filterDate ? day.date === parseInt(filterDate) : true;
                                     const matchesTab = day.category === activeTab;
                                     return matchesDate && matchesTab;
                                 })
-                                .map((day: any) => (
-                                    <div key={`${sub.sup_id}-${day.date}`} className={styles.subCard}>
-                                        <div className={styles.subInfo} onClick={() => setSelectedUser(sub)}>
-                                            <div className={styles.avatarContainer}>
-                                                <img src={sub.avatar_url || profileLogo} className={styles.avatar} alt="Avatar" />
-                                                <div className={styles.onlineIndicator} />
-                                            </div>
-                                            <div className={styles.details}>
-                                                <div className={styles.nameRow}>
-                                                    <h3 className={styles.name}>{sub.full_name}</h3>
-                                                    {day.category === 'accept' && <span className={styles.statusBadge}>ยืนยันแล้ว</span>}
-                                                    {day.category === 'waiting' && <span className={styles.statusBadgeWaiting}>รอการยืนยัน</span>}
+                                .map((day: any) => {
+                                    const loc = subLocations[sub.user_id];
+                                    const distance = initialLocation && loc ? calculateDistance(initialLocation.lat, initialLocation.lng, loc.lat, loc.lng) : null;
+
+                                    return (
+                                        <div
+                                            key={`${sub.sup_id}-${day.date}`}
+                                            className={styles.subCard}
+                                            onClick={() => navigate(`/esg/subscriptor-detail/${sub.sup_id}/${day.date}`)}
+                                        >
+                                            <div className={styles.subInfo}>
+                                                <div className={styles.avatarContainer}>
+                                                    <img src={sub.avatar_url || profileLogo} className={styles.avatar} alt="Avatar" />
+                                                    <div className={styles.onlineIndicator} />
                                                 </div>
-                                                <p className={styles.address}>
-                                                    <span className={styles.supIdDisplay}>{sub.sup_id}</span> : <span className={styles.dateDisplay}>{day.date}</span>
-                                                </p>
-                                                <p className={styles.subAddress}>{sub.sub_district}, {sub.district}</p>
-                                                <div className={styles.tags}>
-                                                    <span className={styles.packageTag}>{sub.package_name}</span>
+                                                <div className={styles.details}>
+                                                    <div className={styles.nameRow}>
+                                                        <h3 className={styles.name}>{sub.full_name}</h3>
+                                                        {day.category === 'accept' && <span className={styles.statusBadge}>ยืนยันแล้ว</span>}
+                                                        {day.category === 'waiting' && <span className={styles.statusBadgeWaiting}>รอการยืนยัน</span>}
+                                                    </div>
+                                                    <p className={styles.address}>
+                                                        date : <span className={styles.dateDisplay}>{day.date}</span>
+                                                        {distance !== null && <span className={styles.distanceText}> ({distance.toFixed(1)} km)</span>}
+                                                    </p>
+                                                    <div className={styles.tags}>
+                                                        <span className={styles.packageTag}>{sub.package_name}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            {day.category === 'waiting' && (
+                                                <div className={styles.waitingLabel}>รอการยืนยัน</div>
+                                            )}
+                                            {day.category === 'accept' && (
+                                                <div className={styles.acceptedLabel}>
+                                                    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+                                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                                    </svg>
+                                                    <span>ตกลงแล้ว</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        {day.category === 'discover' && (
-                                            <button
-                                                className={styles.contractButton}
-                                                onClick={() => handleSignContract(sub.sup_id, day.date)}
-                                            >
-                                                ทำสัญญา
-                                            </button>
-                                        )}
-                                        {day.category === 'waiting' && (
-                                            <div className={styles.waitingLabel}>รอการยืนยัน</div>
-                                        )}
-                                        {day.category === 'accept' && (
-                                            <div className={styles.acceptedLabel}>
-                                                <svg viewBox="0 0 24 24" fill="currentColor" width="20">
-                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                                </svg>
-                                                <span>ตกลงแล้ว</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
+                                    );
+                                })
                         )}
                     </div>
                 )}
             </div>
 
-            {/* Profile Detail Overlay */}
-            {selectedUser && (
-                <div className={styles.overlay} onClick={() => setSelectedUser(null)}>
-                    <div className={styles.modal} onClick={e => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <img src={selectedUser.avatar_url || profileLogo} className={styles.largeAvatar} alt="Avatar" />
-                            <h2 className={styles.modalName}>{selectedUser.full_name}</h2>
-                        </div>
-                        <div className={styles.modalBody}>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>เบอร์โทร:</span>
-                                <span className={styles.value}>{selectedUser.phone}</span>
-                            </div>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>ที่อยู่:</span>
-                                <span className={styles.value}>
-                                    {selectedUser.house_no} {selectedUser.moo} {selectedUser.soi} {selectedUser.road} {selectedUser.sub_district} {selectedUser.district} {selectedUser.province}
-                                </span>
-                            </div>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>แพ็กเกจ:</span>
-                                <span className={styles.value}>{selectedUser.package_name}</span>
-                            </div>
-                            <div className={styles.infoRow}>
-                                <span className={styles.label}>วันที่ว่าง:</span>
-                                <div className={styles.tags}>
-                                    {selectedUser.pickup_days.map((d: any) => (
-                                        <span
-                                            key={d.date}
-                                            className={`${styles.dateTag} ${filterDate == d.date ? styles.highlightDate : ''}`}
-                                        >
-                                            วันที่ {d.date}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            className={styles.modalContractButton}
-                            onClick={() => {
-                                handleSignContract(selectedUser.sup_id, filterDate || selectedUser.pickup_days[0]?.date);
-                                setSelectedUser(null);
-                            }}
-                        >
-                            ทำสัญญาเข้ารับขยะ
-                        </button>
-                        <button className={styles.closeButton} onClick={() => setSelectedUser(null)}>ปิด</button>
-                    </div>
-                </div>
-            )}
-
-            <ConfirmPopup
-                isOpen={showConfirm}
-                title="ยืนยันการทำสัญญา"
-                message="คุณต้องการทำสัญญารับขยะกับผู้ใช้งานท่านนี้ใช่หรือไม่?"
-                onConfirm={executeSignContract}
-                onCancel={() => setShowConfirm(false)}
-            />
-
-            <SuccessPopup
-                isOpen={showSuccess}
-                title="ทำสัญญาสำเร็จ"
-                message="ระบบบันทึกสัญญาเรียบร้อยแล้ว"
-                onConfirm={() => setShowSuccess(false)}
-            />
-
-            {/* Warning Popup (Mock using ConfirmPopup for simplicity if needed, or separate) */}
-            <ConfirmPopup
-                isOpen={!!showWarning}
-                title="แจ้งเตือนจำนวนงาน"
-                message={`${showWarning} คุณยังต้องการรับงานต่อหรือไม่?`}
-                onConfirm={() => {
-                    setShowWarning(null);
-                    setShowSuccess(true);
-                }}
-                onCancel={() => setShowWarning(null)}
-                confirmText="รับงานต่อ"
-                cancelText="ยกเลิก"
-            />
         </div>
     );
 };

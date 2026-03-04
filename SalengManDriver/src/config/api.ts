@@ -156,6 +156,19 @@ export const api = {
     return res.json();
   },
 
+  // Get Addresses for a specific user
+  getAddressesByUserId: async (token: string, userId: string): Promise<Address[]> => {
+    const res = await fetch(`${API_URL}/addresses/user/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      console.warn(`API /addresses/user/${userId} failed`);
+      return [];
+    }
+    return res.json();
+  },
+
   // Get single address
   getAddress: async (token: string, id: string): Promise<Address> => {
     const res = await fetch(`${API_URL}/addresses/${id}`, {

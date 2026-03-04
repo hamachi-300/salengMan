@@ -28,6 +28,7 @@ import EsgRegister from "./pages/esg/EsgRegister";
 import EsgDriverHome from "./pages/esg/EsgDriverHome";
 import EsgSearchSub from "./pages/esg/EsgSearchSub";
 import EsgSubscriptorList from "./pages/esg/EsgSubscriptorList";
+import EsgSubscriptorDetail from "./pages/esg/EsgSubscriptorDetail";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="/esg/driver" element={<EsgDriverHome />} />
         <Route path="/esg/search_sub" element={<EsgSearchSub />} />
         <Route path="/esg/subscriptors" element={<EsgSubscriptorList />} />
+        <Route path="/esg/subscriptor-detail/:supId/:date" element={<EsgSubscriptorDetail />} />
       </Route>
     </Routes>
   );

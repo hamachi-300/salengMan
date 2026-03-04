@@ -817,6 +817,19 @@ app.get('/addresses', authMiddleware, async (req, res) => {
   }
 });
 
+// Get addresses for a specific user (restricted to authenticated users)
+app.get('/addresses/user/:id', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM addresses WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC',
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 app.post('/addresses', authMiddleware, async (req, res) => {
   try {
     const { label, address, lat, lng, phone, note, is_default, province, district, sub_district, zipcode } = req.body;
@@ -1903,78 +1916,7 @@ app.post('/contacts/:id/cancel', authMiddleware, async (req, res) => {
   }
 });
 
-// Cancel contact
-app.delete('/contacts/:id', authMiddleware, async (req, res) => {
-  try {
-    const contactId = req.params.id;
-    const userId = req.user.user_id;
-
-    // Fetch contact first
-    const contactCheck = await pool.query(
-      'SELECT * FROM contacts WHERE id = $1',
-      [contactId]
-    );
-
-    if (contactCheck.rows.length === 0) {
-      return res.status(404).json({ error: 'Contact not found' });
-    }
-
-    const contact = contactCheck.rows[0];
-
-    // Check permissions (only seller or buyer involved can delete)
-    if (contact.seller_id !== userId && contact.buyer_id !== userId) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    const { post_id, chat_id } = contact;
-
-    // 1. Remove contact from old_item_posts contacts array
-    if (post_id) {
-      const postResult = await pool.query(
-        'SELECT contacts FROM old_item_posts WHERE id = $1',
-        [post_id]
-      );
-
-      if (postResult.rows.length > 0) {
-        let contactsArray = postResult.rows[0].contacts || [];
-        // Filter out the deleted contact
-        const updatedContacts = contactsArray.filter(c => c.contact_id !== contactId);
-
-        await pool.query(
-          'UPDATE old_item_posts SET contacts = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-          [JSON.stringify(updatedContacts), post_id]
-        );
-      }
-    }
-
-    // 2. Delete the contact record
-    await pool.query('DELETE FROM contacts WHERE id = $1', [contactId]);
-
-    // 3. Delete the associated chat (if exists)
-    if (chat_id) {
-      // Check if chat is used by other contacts (unlikely in this flow but safe)
-      const otherContacts = await pool.query(
-        'SELECT 1 FROM contacts WHERE chat_id = $1',
-        [chat_id]
-      );
-
-      if (otherContacts.rows.length === 0) {
-        await pool.query('DELETE FROM chats WHERE id = $1', [chat_id]);
-      }
-    }
-
-    res.json({ message: 'Contact cancelled successfully' });
-  } catch (error) {
-    console.error('Error cancelling contact:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// ============================================
-// CHAT ENDPOINTS
-// ============================================
-
-// Get chat messages
+// Get chat details
 app.get('/chats/:id', authMiddleware, async (req, res) => {
   try {
     // Verify user has access to this chat through contacts
@@ -2765,7 +2707,7 @@ app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
     const { date } = req.query; // date index 1-28
 
     let query = `
-      SELECT s.*, u.full_name, u.avatar_url, u.phone as user_phone, a.address, a.sub_district, a.district, a.province, a.phone as address_phone
+      SELECT s.*, u.full_name, u.avatar_url, u.phone as user_phone, a.address, a.sub_district, a.district, a.province, a.phone as address_phone, a.lat, a.lng
       FROM esg_subscriptors s
       JOIN users u ON s.user_id = u.id
       JOIN addresses a ON s.address_id = a.id
@@ -2902,34 +2844,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
 
     await client.query('BEGIN');
 
-    const result = await client.query(
-      'SELECT pickup_days FROM esg_subscriptors WHERE sup_id = $1 AND user_id = $2 FOR UPDATE',
-      [sup_id, user_id]
-    );
-
-    if (result.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Subscription not found' });
-    }
-
-    const pickup_days = result.rows[0].pickup_days;
-    const dayIndex = pickup_days.findIndex(d => d && d.date === parseInt(date));
-
-    if (dayIndex === -1) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Date not found in subscription' });
-    }
-
-    // 2. Update Subscriber Table
-    pickup_days[dayIndex].have_driver = true;
-    pickup_days[dayIndex].confirmed_driver_id = driver_id;
-
-    await client.query(
-      'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
-      [JSON.stringify(pickup_days), sup_id]
-    );
-
-    // 2. Get Driver Info to get their ESG ID
+    // 1. Get Driver Info to get their ESG ID
     const driverRes = await client.query(
       'SELECT driver_id, pickup_days FROM esg_driver WHERE user_id = $1 FOR UPDATE',
       [driver_id]
@@ -2941,11 +2856,44 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     }
 
     const esg_driver_id = driverRes.rows[0].driver_id;
+    const dPickupDays = driverRes.rows[0].pickup_days;
 
-    // 3. Update Subscriber Table
+    // 2. Create Chat
+    const chatResult = await client.query(
+      "INSERT INTO chats (messages) VALUES ('[]'::JSONB) RETURNING id"
+    );
+    const chatId = chatResult.rows[0].id;
+
+    // 2.1 Create Contact Record for Authorization
+    await client.query(
+      `INSERT INTO contacts (id, post_id, seller_id, buyer_id, chat_id, status, type) 
+       VALUES (uuid_generate_v4(), NULL, $1, $2, $3, 'accepted', 'esg')`,
+      [user_id, driver_id, chatId]
+    );
+
+    // 3. Get and Update Subscriber Table
+    const subResult = await client.query(
+      'SELECT pickup_days FROM esg_subscriptors WHERE sup_id = $1 AND user_id = $2 FOR UPDATE',
+      [sup_id, user_id]
+    );
+
+    if (subResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const pickup_days = subResult.rows[0].pickup_days;
+    const dayIndex = pickup_days.findIndex(d => d && d.date === parseInt(date));
+
+    if (dayIndex === -1) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Date not found in subscription' });
+    }
+
     pickup_days[dayIndex].have_driver = true;
     pickup_days[dayIndex].confirmed_driver_id = esg_driver_id;
-    pickup_days[dayIndex].driver = [esg_driver_id]; // Delete other drivers for this date
+    pickup_days[dayIndex].chat_id = chatId;
+    pickup_days[dayIndex].driver = [esg_driver_id]; // Only the confirmed driver remains
 
     await client.query(
       'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
@@ -2953,7 +2901,6 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     );
 
     // 4. Update Driver Table (Mark is_accept = true)
-    const dPickupDays = driverRes.rows[0].pickup_days;
     const dDayIdx = dPickupDays.findIndex(d => d && d.date === parseInt(date));
     if (dDayIdx !== -1) {
       const contractIdx = dPickupDays[dDayIdx].contract_user.findIndex(c => c.id == sup_id);

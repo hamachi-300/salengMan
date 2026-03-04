@@ -24,9 +24,9 @@ function EsgDriverConfirm() {
     const [driver, setDriver] = useState<DriverProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [userScore, setUserScore] = useState<any>(null);
     const [confirming, setConfirming] = useState(false);
     const [isDateOccupied, setIsDateOccupied] = useState(false);
+    const [chatId, setChatId] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
@@ -45,21 +45,16 @@ function EsgDriverConfirm() {
             const driverData = await api.getPublicProfile(token, driverId);
             setDriver(driverData);
 
-            // Fetch driver score
-            try {
-                const scoreData = await api.getUserScore(token, driverId);
-                setUserScore(scoreData);
-            } catch (scoreErr) {
-                console.warn("Failed to load driver score:", scoreErr);
-            }
-
-            // Check if date is already occupied
+            // Check if date is already occupied and get chatId
             try {
                 const subStatus = await api.checkEsgSubscriptionStatus(token);
                 if (subStatus.pickup_days && date) {
                     const currentDay = subStatus.pickup_days.find(d => d && d.date === parseInt(date));
                     if (currentDay?.have_driver) {
                         setIsDateOccupied(true);
+                        if (currentDay.chat_id) {
+                            setChatId(currentDay.chat_id);
+                        }
                     }
                 }
             } catch (subErr) {
@@ -137,6 +132,17 @@ function EsgDriverConfirm() {
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                         </svg>
                     </div>
+                    {chatId && (
+                        <button
+                            className={styles['chat-button']}
+                            onClick={() => navigate(`/chat/${chatId}`)}
+                            title="Chat with driver"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-5H6V7h12v2z" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
 
                 <div className={styles['info-container']}>
@@ -181,25 +187,6 @@ function EsgDriverConfirm() {
                         </div>
                     </div>
 
-                    {/* Score */}
-                    {userScore && (
-                        <div className={styles['info-card']}>
-                            <div className={styles['icon-wrapper']}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                </svg>
-                            </div>
-                            <div className={styles['info-content']}>
-                                <span className={styles['label']}>Score</span>
-                                <span className={styles['value']}>
-                                    {Number(userScore.score).toFixed(1)} / 5.0
-                                    <span style={{ fontSize: '0.75rem', color: '#888', marginLeft: '6px', fontWeight: 'normal' }}>
-                                        ({userScore.reviewed_user_id?.length || 0} reviews)
-                                    </span>
-                                </span>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 

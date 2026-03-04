@@ -50,7 +50,8 @@ function EsgBill() {
         const pickup_days_json = selectedDates.map((date: number) => ({
             date: date,
             have_driver: false,
-            driver: []
+            driver: [],
+            chat_id: null
         }));
 
         const payload = {

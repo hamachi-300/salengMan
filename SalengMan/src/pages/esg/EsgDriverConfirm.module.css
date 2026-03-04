@@ -163,6 +163,29 @@
     text-align: center;
 }
 
+.chat-button {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: var(--orange-button);
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--color-bg);
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+    z-index: 10;
+}
+
+.chat-button:active {
+    transform: scale(0.9);
+}
+
 .chat-room-icon {
     position: relative;
     cursor: pointer;

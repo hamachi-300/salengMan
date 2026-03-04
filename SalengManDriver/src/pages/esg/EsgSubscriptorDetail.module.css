@@ -1,0 +1,210 @@
+.container {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    display: flex;
+    flex-direction: column;
+}
+
+.loading,
+.error {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+}
+
+.profileHeader {
+    display: flex;
+    justify-content: center;
+    padding: 30px 0;
+    background-color: var(--color-bg);
+}
+
+.avatarWrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--orange-button);
+}
+
+.verifiedBadge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #22c55e;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-bg);
+}
+
+.chatButton {
+    position: absolute;
+    bottom: -5px;
+    left: -15px;
+    background-color: var(--orange-button);
+    color: white;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--color-bg);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.chatButton:active {
+    transform: scale(0.9);
+}
+
+.content {
+    flex: 1;
+    padding: 0 20px 40px;
+}
+
+.sectionTitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.infoCard {
+    background-color: var(--color-bg-2);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cardLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.iconWrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background-color: rgba(255, 122, 48, 0.1);
+    color: var(--orange-button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.infoContent {
+    display: flex;
+    flex-direction: column;
+}
+
+.label {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 2px;
+}
+
+.value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.05);
+    margin: 24px 0;
+}
+
+.locationCard {
+    background-color: var(--color-bg-2);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.locationInfo {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.locIcon {
+    margin-top: 2px;
+    color: var(--orange-button);
+}
+
+.mapButton {
+    background: none;
+    border: none;
+    color: var(--orange-button);
+    cursor: pointer;
+    padding: 8px;
+}
+
+.footer {
+    padding: 20px;
+    background-color: var(--color-bg);
+    position: sticky;
+    bottom: 0;
+}
+
+.signButton {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--orange-button);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.signButton.disabled {
+    background-color: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.mapModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.mapContent {
+    flex: 1;
+}
