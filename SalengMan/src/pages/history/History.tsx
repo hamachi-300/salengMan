@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./History.module.css";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
@@ -24,9 +24,19 @@ function History() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
+  const [postTypeFilter, setPostTypeFilter] = useState<"old_item" | "trash_disposal">("old_item");
+
+  const location = useLocation();
 
   useEffect(() => {
     discardEdit(); // Clear edit mode data if user was editing
+    // If navigated with a status in location.state, set active tab accordingly
+    const statusFromState = (location.state as any)?.status;
+    if (statusFromState) {
+      // Normalize to Title case matching tabs array
+      const normalized = String(statusFromState).charAt(0).toUpperCase() + String(statusFromState).slice(1).toLowerCase();
+      setActiveTab(normalized);
+    }
     fetchPosts();
   }, []);
 
@@ -38,8 +48,22 @@ function History() {
     }
 
     try {
-      const data = await api.getPosts(token);
-      setPosts(data);
+      console.log("Fetching posts...");
+      const [oldItemPosts, trashPosts] = await Promise.all([
+        api.getPosts(token).catch(e => { console.error(e); return []; }),
+        api.getTrashPosts(token).catch(e => { console.error(e); return []; })
+      ]);
+      console.log("Old item posts:", oldItemPosts);
+      console.log("Trash posts:", trashPosts);
+
+      const oldItemsWithType = oldItemPosts.map((p: any) => ({ ...p, post_type: 'old_item' }));
+      const trashPostsWithType = trashPosts.map((p: any) => ({ ...p, post_type: 'trash_disposal', categories: ['ทิ้งขยะ'] }));
+
+      const allPosts = [...oldItemsWithType, ...trashPostsWithType].sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setPosts(allPosts);
     } catch (error) {
       console.error("Failed to fetch posts:", error);
     } finally {
@@ -94,16 +118,38 @@ function History() {
     return postType === 'trash_disposal' ? 'ทิ้งขยะ' : 'ขายของเก่า';
   };
 
-  const tabs = ["All", "Pending", "Waiting", "Completed", "Cancelled"];
+  const tabs = postTypeFilter === "trash_disposal"
+    ? ["All", "Waiting", "Completed", "Cancelled"]
+    : ["All", "Pending", "Waiting", "Completed", "Cancelled"];
 
   const filteredPosts = posts.filter((post) => {
-    if (activeTab === "All") return true;
-    return post.status.toLowerCase() === activeTab.toLowerCase();
+    if (post.post_type !== postTypeFilter) return false;
+    if (activeTab !== "All" && post.status.toLowerCase() !== activeTab.toLowerCase()) return false;
+    return true;
   });
 
   return (
     <div className={styles["page-container"]}>
       <PageHeader title="History" backTo="/home" />
+
+      {/* Type Filters: 2 Sides */}
+      <div className={styles["type-toggle-container"]}>
+        <button
+          className={`${styles["type-toggle-btn"]} ${postTypeFilter === "old_item" ? styles.active : ""}`}
+          onClick={() => setPostTypeFilter("old_item")}
+        >
+          ขายของเก่า
+        </button>
+        <button
+          className={`${styles["type-toggle-btn"]} ${postTypeFilter === "trash_disposal" ? styles.active : ""}`}
+          onClick={() => {
+            setPostTypeFilter("trash_disposal");
+            if (activeTab === "Pending") setActiveTab("All");
+          }}
+        >
+          ทิ้งขยะ
+        </button>
+      </div>
 
       {/* Filters */}
       <div className={styles["filters-scroll"]}>
@@ -128,7 +174,7 @@ function History() {
             <div
               key={post.id}
               className={styles["post-card"]}
-              onClick={() => navigate(`/history/${post.id}`)}
+              onClick={() => navigate(`/history/${post.id}`, { state: { post_type: post.post_type } })}
             >
               <div className={styles["image-container"]}>
                 {post.images && post.images.length > 0 ? (

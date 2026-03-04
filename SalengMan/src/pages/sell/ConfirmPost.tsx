@@ -82,6 +82,14 @@ function ConfirmPost() {
         setCreatedPostId(postId);
       }
       setSuccess(true);
+
+      setTimeout(() => {
+        if (postId) {
+          navigate(`/history/${postId}`, { state: { post_type: 'old_item' } });
+        } else {
+          navigate('/history');
+        }
+      }, 2000);
     } catch (error: any) {
       console.error(isEditing ? 'Error updating post:' : 'Error creating post:', error);
       setError(error.message || `Failed to ${isEditing ? 'update' : 'create'} post. Please try again.`);
@@ -112,7 +120,13 @@ function ConfirmPost() {
           </p>
           <button
             className={styles['btn-home']}
-            onClick={() => navigate(createdPostId ? `/history/${createdPostId}` : '/history')}
+            onClick={() => {
+              if (createdPostId) {
+                navigate(`/history/${createdPostId}`, { state: { post_type: 'old_item' } });
+              } else {
+                navigate('/history');
+              }
+            }}
           >
             View Order Details
           </button>
@@ -145,7 +159,11 @@ function ConfirmPost() {
         </div>
       )}
 
-      <PageHeader title={isEditing ? "Edit Post" : "Post Item"} backTo={isEditing ? `/history/${sellData.editingPostId}` : "/sell/select-time"} />
+      <PageHeader
+        title={isEditing ? "Edit Post" : "Post Item"}
+        backTo={isEditing ? `/history/${sellData.editingPostId}` : "/sell/select-time"}
+        backState={isEditing ? { post_type: 'old_item' } : undefined}
+      />
 
       <div className={styles['content']}>
         <div className={styles['section-header']}>

@@ -8,6 +8,8 @@ interface TrashData {
     coins: number;
     remarks: string;
     address: Address | null;
+    returnTo: string | null;
+    editingPostId: string | number | null;
 }
 
 interface TrashContextType {
@@ -18,6 +20,8 @@ interface TrashContextType {
     setCoins: (coins: number) => void;
     setRemarks: (remarks: string) => void;
     setAddress: (address: Address | null) => void;
+    setReturnTo: (path: string | null) => void;
+    setEditingPostId: (id: string | number | null) => void;
     resetTrashData: () => void;
 }
 
@@ -28,6 +32,8 @@ const initialTrashData: TrashData = {
     coins: 1,
     remarks: "",
     address: null,
+    returnTo: null,
+    editingPostId: null,
 };
 
 const TrashContext = createContext<TrashContextType | undefined>(undefined);
@@ -59,6 +65,14 @@ export function TrashProvider({ children }: { children: ReactNode }) {
         setTrashData((prev) => ({ ...prev, address }));
     };
 
+    const setReturnTo = (path: string | null) => {
+        setTrashData((prev) => ({ ...prev, returnTo: path }));
+    };
+
+    const setEditingPostId = (id: string | number | null) => {
+        setTrashData((prev) => ({ ...prev, editingPostId: id }));
+    };
+
     const resetTrashData = () => {
         setTrashData(initialTrashData);
     };
@@ -73,6 +87,8 @@ export function TrashProvider({ children }: { children: ReactNode }) {
                 setCoins,
                 setRemarks,
                 setAddress,
+                setReturnTo,
+                setEditingPostId,
                 resetTrashData,
             }}
         >

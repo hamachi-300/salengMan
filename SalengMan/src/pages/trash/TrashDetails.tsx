@@ -41,8 +41,11 @@ function TrashDetails() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title="Post Trash" backTo="/home" />
-
+            <PageHeader
+                title={trashData.editingPostId ? "Edit Post Trash" : "Post Trash"}
+                backTo={trashData.returnTo || "/home"}
+                backState={trashData.returnTo?.includes('/history') ? { post_type: 'trash_disposal' } : undefined}
+            />
 
             <div className={styles['scrollable-content']}>
                 {/* Image Section */}
@@ -102,12 +105,19 @@ function TrashDetails() {
                             <button
                                 className={styles['stepper-btn']}
                                 style={{ backgroundColor: '#FF9800', color: 'white', border: 'none' }}
-                                onClick={() => setCoins(Math.min(2, trashData.coins + 1))}
+                                onClick={() => {
+                                    const neededCoins = Math.ceil(trashData.bagCount / 3);
+                                    if (trashData.coins >= neededCoins && trashData.coins < 2) {
+                                        alert("Please add more bags to increase coins (1 coin per 3 bags).");
+                                    } else {
+                                        setCoins(Math.min(2, trashData.coins + 1));
+                                    }
+                                }}
                             >
                                 +
                             </button>
                         </div>
-                        <p style={{ fontSize: '11px', color: '#666', marginTop: '8px' }}>Max: 2 coins (1 coin per 3 bags)</p>
+                        <p style={{ fontSize: '11px', color: '#666', marginTop: '8px', textAlign: 'center' }}>Max: 2 coins (1 coin per 3 bags)</p>
                     </div>
                 </div>
 
@@ -118,7 +128,15 @@ function TrashDetails() {
                         <div className={styles['stepper-row']}>
                             <button
                                 className={styles['stepper-btn']}
-                                onClick={() => setBagCount(Math.max(1, trashData.bagCount - 1))}
+                                onClick={() => {
+                                    const nextBags = Math.max(1, trashData.bagCount - 1);
+                                    setBagCount(nextBags);
+                                    // Auto-decrease coins if they drop into a lower tier
+                                    const neededCoins = Math.ceil(nextBags / 3);
+                                    if (trashData.coins > neededCoins) {
+                                        setCoins(neededCoins);
+                                    }
+                                }}
                             >
                                 -
                             </button>
@@ -126,18 +144,23 @@ function TrashDetails() {
                             <button
                                 className={styles['stepper-btn']}
                                 onClick={() => {
-                                    const maxBags = trashData.coins * 3;
-                                    if (trashData.bagCount < maxBags) {
-                                        setBagCount(trashData.bagCount + 1);
-                                    } else {
-                                        alert(`Notice: ${trashData.coins} coin allows max ${maxBags} bags. Increase coins for more.`);
+                                    if (trashData.bagCount >= 6) {
+                                        alert("Maximum is 6 bags (Requires 2 coins).");
+                                        return;
+                                    }
+                                    const nextBags = trashData.bagCount + 1;
+                                    setBagCount(nextBags);
+                                    // Auto-increase coins if they cross into a new tier
+                                    const neededCoins = Math.ceil(nextBags / 3);
+                                    if (neededCoins > trashData.coins) {
+                                        setCoins(neededCoins);
                                     }
                                 }}
                             >
                                 +
                             </button>
                         </div>
-                        <p style={{ fontSize: '11px', color: '#666', marginTop: '8px' }}>Limit: {trashData.coins * 3} bags for current incentive</p>
+                        <p style={{ fontSize: '11px', color: '#666', marginTop: '8px', textAlign: 'center' }}>Limit: 6 bags for current incentive</p>
                     </div>
                 </div>
 

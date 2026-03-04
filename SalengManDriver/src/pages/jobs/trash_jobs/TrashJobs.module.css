@@ -1,0 +1,242 @@
+.pageContainer {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    padding-bottom: 80px;
+}
+
+.tabs {
+    display: flex;
+    background-color: var(--color-bg-2);
+    margin: 16px;
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: none;
+    color: var(--color-text);
+    font-family: var(--font-eng-fun);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.activeTab {
+    background-color: var(--orange-button);
+    color: white;
+    opacity: 1;
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.3);
+}
+
+.content {
+    padding: 0 16px;
+}
+
+.loading,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--color-text);
+    opacity: 0.5;
+}
+
+.emptyState svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.2;
+}
+
+.jobsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.jobCard {
+    background-color: var(--color-bg-2);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+.jobImageContainer {
+    position: relative;
+    height: 160px;
+    width: 100%;
+}
+
+.jobImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholderImage {
+    width: 100%;
+    height: 100%;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.timeBadge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.jobDetails {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.jobHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sellerName {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.statusBadge {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.pending {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+}
+
+.confirmed {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #2196f3;
+}
+
+.arrived {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+}
+
+.wait_complete {
+    background-color: rgba(156, 39, 176, 0.15);
+    color: #9c27b0;
+}
+
+.completed {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.jobInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.remarks {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    opacity: 0.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.trashInfo {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--orange-button);
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.mapButton,
+.arrivedButton {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    font-family: var(--font-eng-fun);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.mapButton {
+    background-color: #333;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mapButton:hover {
+    background-color: #444;
+}
+
+.arrivedButton {
+    background-color: var(--orange-button);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.2);
+}
+
+.arrivedButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 122, 48, 0.3);
+}
+
+.arrivedButton:disabled {
+    background-color: #444;
+    color: #666;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}

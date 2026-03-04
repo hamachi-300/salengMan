@@ -9,21 +9,20 @@ import Sell from "./pages/sell/Sell";
 import SelectAddress from "./pages/sell/SelectAddress";
 import SelectTime from "./pages/sell/SelectTime";
 import ConfirmPost from "./pages/sell/ConfirmPost";
-import PostTrash from "./pages/trash/PostTrash";
+
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
 import TrackDriver from "./pages/history/TrackDriver";
 import PostBuyerList from "./pages/history/PostBuyerList";
 import ConfirmBuyer from "./pages/history/ConfirmBuyer";
 import Chat from "./pages/history/Chat";
-import DriverProfile from "./pages/history/DriverProfile";
 import Notify from "./pages/notify/Notify";
 import Account from "./pages/account/Account";
 import AddAddress from "./pages/account/AddAddress";
 import NewAddress from "./pages/account/NewAddress";
 import Settings from "./pages/settings/Settings";
 import HistoryCoin from "./pages/trash/coin/HistoryCoin";
-import SelectTrashMode from "./pages/trash/SelectTrashMode";
+
 import TrashDetails from "./pages/trash/TrashDetails";
 import TrashSelectAddress from "./pages/trash/TrashSelectAddress";
 import ConfirmTrashPost from "./pages/trash/ConfirmTrashPost";
@@ -63,8 +62,6 @@ function AppRoutes() {
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
         <Route path="/trash" element={<TrashDetails />} />
-
-        <Route path="/trash/details" element={<TrashDetails />} />
         <Route path="/trash/select-address" element={<TrashSelectAddress />} />
         <Route path="/trash/confirm" element={<ConfirmTrashPost />} />
         <Route path="/coin" element={<Coin />} />
@@ -75,7 +72,6 @@ function AppRoutes() {
         <Route path="/history/:id/track" element={<TrackDriver />} />
         <Route path="/history/:id/buyers" element={<PostBuyerList />} />
         <Route path="/history/buyer/:contactId" element={<ConfirmBuyer />} />
-        <Route path="/driver-profile/:id" element={<DriverProfile />} />
         <Route path="/chat/:id" element={<Chat />} />
         <Route path="/notify" element={<Notify />} />
         <Route path="/account" element={<Account />} />

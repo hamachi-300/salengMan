@@ -8,7 +8,33 @@
     /* Space for bottom nav */
 }
 
+/* Type Toggle Segmented Control */
+.type-toggle-container {
+    display: flex;
+    background-color: var(--color-bg-2);
+    border-radius: 30px;
+    padding: 6px;
+    margin: 16px 16px 0 16px;
+}
 
+.type-toggle-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    border-radius: 25px;
+    background: transparent;
+    color: var(--color-text);
+    font-family: var(--font-th);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.type-toggle-btn.active {
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
+}
 
 /* Filters */
 .filters-scroll {

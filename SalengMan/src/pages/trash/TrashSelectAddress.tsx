@@ -70,7 +70,7 @@ function TrashSelectAddress() {
 
     return (
         <div className={styles['page']}>
-            <PageHeader title="Select Location" backTo="/trash/details" />
+            <PageHeader title="Select Location" backTo="/trash" />
 
             <div className={styles['content']}>
                 <div className={styles['section-header']}>

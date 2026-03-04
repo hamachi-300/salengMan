@@ -165,7 +165,6 @@ app.get('/health', async (req, res) => {
 });
 
 // ============================================
-
 // AUTH ENDPOINTS
 // ============================================
 
@@ -1031,11 +1030,31 @@ app.post('/old-item-posts', authMiddleware, async (req, res) => {
 // ============================================
 
 app.post('/trash-posts', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const { images, mode, bag_count, coins, remarks, address } = req.body;
+
+    // Validate required coins parameter
+    const requiredCoins = parseInt(coins) || 0;
+    if (requiredCoins < 0) {
+      return res.status(400).json({ error: 'Invalid coin amount' });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Fetch current user coin balance with FOR UPDATE to prevent race conditions
+    const userResult = await client.query('SELECT coin FROM users WHERE id = $1 FOR UPDATE', [req.user.user_id]);
+    const currentBalance = userResult.rows[0]?.coin || 0;
+
+    // 2. Check if user has enough coins
+    if (currentBalance < requiredCoins) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Insufficient coins for this request' });
+    }
+
     const uploadedImageUrls = [];
 
-    // 1. Image upload to MinIO (similar to old-item-posts)
+    // 3. Image upload to MinIO (similar to old-item-posts)
     if (images && Array.isArray(images)) {
       for (let i = 0; i < images.length; i++) {
         const base64Data = images[i];
@@ -1054,12 +1073,22 @@ app.post('/trash-posts', authMiddleware, async (req, res) => {
       }
     }
 
-    // 2. Fetch current user coin balance for snapshot
-    const userResult = await pool.query('SELECT coin FROM users WHERE id = $1', [req.user.user_id]);
-    const currentBalance = userResult.rows[0]?.coin || 0;
+    // 4. Deduct coins from user balance
+    if (requiredCoins > 0) {
+      await client.query(
+        'UPDATE users SET coin = coin - $1 WHERE id = $2',
+        [requiredCoins, req.user.user_id]
+      );
 
-    // 3. Insert into trash_posts table
-    const result = await pool.query(
+      // 5. Record the transaction
+      await client.query(
+        `INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'use')`,
+        [req.user.user_id, requiredCoins]
+      );
+    }
+
+    // 6. Insert into trash_posts table
+    const result = await client.query(
       `INSERT INTO trash_posts 
        (user_id, images, post_type, coins_selected, user_coin_snapshot, trash_bag_amount, remarks, address_snapshot, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -1068,7 +1097,7 @@ app.post('/trash-posts', authMiddleware, async (req, res) => {
         req.user.user_id,
         uploadedImageUrls,
         mode === 'fixtime' ? 'fast' : 'anytime', // Map frontend mode to backend post_type
-        coins,
+        requiredCoins,
         currentBalance,
         bag_count,
         remarks,
@@ -1077,27 +1106,35 @@ app.post('/trash-posts', authMiddleware, async (req, res) => {
       ]
     );
 
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating trash post:', error);
     res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
-// Get all available trash posts (for drivers)
-app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
+// Get user's own trash posts
+/**
+ * @swagger
+ * /trash-posts:
+ *   get:
+ *     summary: ดึงโพสต์ทิ้งขยะของตนเอง
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: รายการโพสต์ทิ้งขยะ
+ */
+app.get('/trash-posts', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'driver') {
-      return res.status(403).json({ error: 'Only drivers can view available trash posts' });
-    }
-
     const result = await pool.query(
-      `SELECT tp.*, u.id as user_uuid, u.full_name as user_name, u.phone as user_phone, u.avatar_url as user_avatar
-       FROM trash_posts tp
-       JOIN users u ON tp.user_id = u.id
-       WHERE tp.status = 'waiting'
-       ORDER BY tp.created_at DESC`,
-      []
+      `SELECT * FROM trash_posts WHERE user_id = $1 ORDER BY created_at DESC`,
+      [req.user.user_id]
     );
     res.json(result.rows);
   } catch (error) {
@@ -1105,13 +1142,12 @@ app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
   }
 });
 
+// Get single trash post by ID
 app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
-      `SELECT tp.*, u.id as user_id, u.full_name as user_name, u.phone as user_phone, u.avatar_url as user_avatar
-       FROM trash_posts tp
-       JOIN users u ON tp.user_id = u.id
-       WHERE tp.id = $1`,
+    const result = await client.query(
+      `SELECT * FROM trash_posts WHERE id = $1`,
       [req.params.id]
     );
 
@@ -1119,13 +1155,43 @@ app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Trash post not found' });
     }
 
-    res.json(result.rows[0]);
+    const post = result.rows[0];
+
+    // Follow the same pattern as old_item_posts for contacts
+    if ((post.status === 'pending' || post.status === 'completed' || post.status === 'cancelled') && post.contacts && post.contacts.length > 0) {
+      const contactId = post.contacts[0].contact_id;
+      const driverId = post.contacts[0].driver_id;
+
+      const contactResult = await client.query(
+        'SELECT chat_id FROM contacts WHERE id = $1',
+        [contactId]
+      );
+      if (contactResult.rows.length > 0 && contactResult.rows[0].chat_id) {
+        post.contacts[0].chat_id = contactResult.rows[0].chat_id;
+      }
+
+      // Fetch driver details
+      if (driverId) {
+        const driverResult = await client.query(
+          'SELECT full_name, avatar_url, phone FROM users WHERE id = $1',
+          [driverId]
+        );
+        if (driverResult.rows.length > 0) {
+          const driverData = driverResult.rows[0];
+          post.contacts[0].driver_name = driverData.full_name;
+          post.contacts[0].driver_avatar = driverData.avatar_url;
+          post.contacts[0].driver_phone = driverData.phone;
+        }
+      }
+    }
+
+    res.json(post);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
-
-
 
 
 // Delete all notifications for a user
@@ -1354,6 +1420,149 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error deleting post:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Update trash post
+app.put('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params;
+  const { mode, images, bag_count, coins, remarks, address } = req.body;
+
+  try {
+    // Check if post exists and belongs to user
+    const checkPost = await pool.query(
+      'SELECT id, status, images FROM trash_posts WHERE id = $1 AND user_id = $2',
+      [id, req.user.user_id]
+    );
+
+    if (checkPost.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash post not found or unauthorized' });
+    }
+
+    const post = checkPost.rows[0];
+
+    if (post.status !== 'waiting') {
+      return res.status(400).json({ error: 'Cannot edit post that is already in progress' });
+    }
+
+    // Handle images - separate new base64 images from existing URLs
+    const uploadedImageUrls = [];
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+
+        if (img.startsWith('data:')) {
+          // New image - upload to MinIO
+          const base64Image = img.split(';base64,').pop();
+          const buffer = Buffer.from(base64Image, 'base64');
+          const fileName = `trash_posts/${req.user.user_id}_${Date.now()}_${i}.jpg`;
+
+          await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+            'Content-Type': 'image/jpeg'
+          });
+
+          const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+          uploadedImageUrls.push(imageUrl);
+        } else {
+          // Existing image URL - keep it
+          uploadedImageUrls.push(img);
+        }
+      }
+    }
+
+    // Delete old images that are no longer in the list
+    if (post.images && Array.isArray(post.images) && post.images.length > 0) {
+      for (const oldImg of post.images) {
+        if (!uploadedImageUrls.includes(oldImg)) {
+          try {
+            const objectName = oldImg.split(`${BUCKET_NAME}/`)[1];
+            if (objectName) {
+              await minioClient.removeObject(BUCKET_NAME, objectName);
+            }
+          } catch (err) {
+            console.error('Failed to delete old image:', err);
+          }
+        }
+      }
+    }
+
+    await pool.query(
+      `UPDATE trash_posts 
+       SET post_type = $1, images = $2, trash_bag_amount = $3, coins_selected = $4, remarks = $5, address_snapshot = $6 
+       WHERE id = $7 AND user_id = $8`,
+      [mode === 'fixtime' ? 'fast' : 'anytime', uploadedImageUrls, bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
+    );
+
+    res.json({ message: 'Trash post updated successfully' });
+  } catch (error) {
+    console.error('Error updating trash post:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete trash post
+app.delete('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    const check = await client.query(
+      'SELECT * FROM trash_posts WHERE id = $1 AND user_id = $2 FOR UPDATE',
+      [id, req.user.user_id]
+    );
+
+    if (check.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trash post not found or unauthorized' });
+    }
+
+    const post = check.rows[0];
+
+    if (post.status !== 'waiting' && post.status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only waiting/pending posts can be deleted' });
+    }
+
+    // Refund coins if any were used
+    const coinsUsed = parseInt(post.coins_selected) || 0;
+    if (coinsUsed > 0) {
+      await client.query(
+        'UPDATE users SET coin = coin + $1 WHERE id = $2',
+        [coinsUsed, req.user.user_id]
+      );
+      // Log as 'buy' to represent incoming coins (since type is constrained to buy/use)
+      await client.query(
+        `INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'buy')`,
+        [req.user.user_id, coinsUsed]
+      );
+    }
+
+    // Delete images from MinIO
+    if (post.images && post.images.length > 0) {
+      for (const imgUrl of post.images) {
+        try {
+          const objectName = imgUrl.split(`${BUCKET_NAME}/`)[1];
+          if (objectName) {
+            await minioClient.removeObject(BUCKET_NAME, objectName);
+          }
+        } catch (err) {
+          console.error('Failed to delete image:', err);
+        }
+      }
+    }
+
+    await client.query('DELETE FROM trash_posts WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+    res.json({ message: 'Trash post deleted successfully and coins refunded' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting trash post:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -1685,67 +1894,58 @@ app.post('/contacts', authMiddleware, async (req, res) => {
       END $$;
     `).catch(err => console.error('Migration error:', err.message));
 
-    for (const item of post_ids) {
-      let postId, type;
-      if (typeof item === 'object') {
-        postId = item.id;
-        type = item.type || 'old_item_posts';
-      } else {
-        postId = item;
-        type = 'old_item_posts';
-      }
-
-      // 1. Get post details and seller ID based on type
-      let postResult;
-      let tableName = type === 'trash_posts' ? 'trash_posts' : 'old_item_posts';
-
-      postResult = await pool.query(
-        `SELECT * FROM ${tableName} WHERE id = $1`,
+    for (const postId of post_ids) {
+      // Get post details to find seller
+      const postResult = await pool.query(
+        'SELECT * FROM old_item_posts WHERE id = $1',
         [postId]
       );
 
-      if (postResult.rows.length === 0) continue;
+      if (postResult.rows.length === 0) {
+        continue; // Skip if post not found
+      }
+
       const post = postResult.rows[0];
       const sellerId = post.user_id;
 
-      // 2. Check if contact already exists
+      // Check if contact already exists for this post and buyer
       const existingContact = await pool.query(
-        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2 AND type = $3',
-        [postId, req.user.user_id, type]
+        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2',
+        [postId, req.user.user_id]
       );
 
       if (existingContact.rows.length > 0) {
         createdContacts.push(existingContact.rows[0]);
-        continue;
+        continue; // Skip if contact already exists
       }
 
-      // 3. Create chat and contact
+      // Create chat first
       const chatResult = await pool.query(
-        `INSERT INTO chats (messages) VALUES ('[]'::JSONB) RETURNING id`
+        `INSERT INTO chats (messages) VALUES ('[]'::JSONB) RETURNING *`
       );
       const chatId = chatResult.rows[0].id;
 
+      // Create contact
       const contactResult = await pool.query(
         `INSERT INTO contacts (post_id, seller_id, buyer_id, chat_id, status, type)
-         VALUES ($1, $2, $3, $4, 'pending', $5)
+         VALUES ($1, $2, $3, $4, 'pending', 'old_item_posts')
          RETURNING *`,
-        [postId, sellerId, req.user.user_id, chatId, type]
+        [postId, sellerId, req.user.user_id, chatId]
       );
 
       const contact = contactResult.rows[0];
 
-      // 4. Update post status to pending
+      // Update old_item_posts with contact info
       await pool.query(
-        `UPDATE ${tableName} 
-         SET status = 'pending',
+        `UPDATE old_item_posts
+         SET contacts = COALESCE(contacts, '[]'::JSONB) || $1::JSONB,
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = $1`,
-        [postId]
+         WHERE id = $2`,
+        [JSON.stringify([{ contact_id: contact.id, driver_id: req.user.user_id }]), postId]
       );
 
       createdContacts.push(contact);
     }
-
 
     res.json(createdContacts);
   } catch (error) {

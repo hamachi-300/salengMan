@@ -46,7 +46,7 @@ function ConfirmTrashPost() {
             return;
         }
 
-        if (userBalance !== null && userBalance < trashData.coins) {
+        if (!trashData.editingPostId && userBalance !== null && userBalance < trashData.coins) {
             setShowBalanceModal(true);
             return;
         }
@@ -65,9 +65,22 @@ function ConfirmTrashPost() {
                 address: trashData.address
             };
 
-            await api.createTrashPost(token, postData);
+            if (trashData.editingPostId) {
+                await api.updateTrashPost(token, trashData.editingPostId, postData);
+            } else {
+                await api.createTrashPost(token, postData);
+            }
             setSuccess(true);
+            const returnPath = trashData.returnTo || '/history';
             resetTrashData();
+
+            setTimeout(() => {
+                if (returnPath.includes('/history/')) {
+                    navigate(returnPath, { state: { post_type: 'trash_disposal' } });
+                } else {
+                    navigate(returnPath);
+                }
+            }, 2000);
         } catch (err: any) {
             console.error("Error creating trash post:", err);
             setError(err.message || "Failed to create post. Please try again.");
@@ -83,8 +96,14 @@ function ConfirmTrashPost() {
                 <div className={styles['success-modal']}>
                     <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
                     <h2 className={styles['success-title']}>Success!</h2>
-                    <p className={styles['success-message']}>Your trash disposal request has been posted.</p>
-                    <button className={styles['btn-home']} onClick={() => navigate('/history')}>View History</button>
+                    <p className={styles['success-message']}>Your trash disposal request has been {trashData.editingPostId ? 'updated' : 'posted'}.</p>
+                    <button className={styles['btn-home']} onClick={() => {
+                        if (trashData.returnTo?.includes('/history/')) {
+                            navigate(trashData.returnTo, { state: { post_type: 'trash_disposal' } });
+                        } else {
+                            navigate(trashData.returnTo || '/history');
+                        }
+                    }}>{trashData.returnTo ? 'Back to Details' : 'View History'}</button>
                 </div>
             </div>
         );
@@ -133,7 +152,7 @@ function ConfirmTrashPost() {
                             </button>
                             <button
                                 className={styles['btn-home']}
-                                onClick={() => navigate('/topup')}
+                                onClick={() => navigate('/coin', { state: { returnTo: '/trash/confirm' } })}
                             >
                                 Top Up Now
                             </button>
@@ -177,12 +196,6 @@ function ConfirmTrashPost() {
                     <div className={styles['card-title']}>Disposal Summary</div>
                     <div className={styles['detail-row']}>
                         <div className={styles['detail-content']}>
-                            <span className={styles['detail-label']}>Mode</span>
-                            <span className={styles['detail-value']} style={{ textTransform: 'capitalize' }}>{trashData.mode}</span>
-                        </div>
-                    </div>
-                    <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
-                        <div className={styles['detail-content']}>
                             <span className={styles['detail-label']}>Number of Bags</span>
                             <span className={styles['detail-value']}>{trashData.bagCount} Bags</span>
                         </div>
@@ -201,17 +214,9 @@ function ConfirmTrashPost() {
                     {trashData.address && (
                         <div className={styles['detail-row']}>
                             <div className={styles['detail-content']}>
-                                <span className={styles['detail-value']}>
-                                    {trashData.address.label}
-                                    {trashData.address.district && (
-                                        <span style={{ fontSize: '10px', color: '#FF9800', marginLeft: '8px', fontWeight: 'normal' }}>
-                                            📍 {trashData.address.district}
-                                        </span>
-                                    )}
-                                </span>
+                                <span className={styles['detail-value']}>{trashData.address.label}</span>
                                 <span className={styles['detail-value-small']}>{trashData.address.address}</span>
                             </div>
-
                         </div>
                     )}
                 </div>
@@ -225,9 +230,19 @@ function ConfirmTrashPost() {
             </div>
 
             <PageFooter
-                title={userBalance !== null && userBalance < trashData.coins ? "Balance Insufficient" : "Confirm & Post"}
-                onClick={handleSubmit}
-                disabled={loading || (userBalance !== null && userBalance < trashData.coins)}
+                title={
+                    trashData.editingPostId
+                        ? "Save Changes"
+                        : (userBalance !== null && userBalance < trashData.coins ? "Top Up Now" : "Confirm & Post")
+                }
+                onClick={() => {
+                    if (!trashData.editingPostId && userBalance !== null && userBalance < trashData.coins) {
+                        navigate('/coin', { state: { returnTo: '/trash/confirm' } });
+                    } else {
+                        handleSubmit();
+                    }
+                }}
+                disabled={loading}
             />
         </div>
     );
