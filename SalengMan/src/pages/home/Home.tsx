@@ -5,6 +5,8 @@ import profileLogo from "../../assets/icon/profile.svg";
 import { useUser } from "../../context/UserContext";
 import { useSell } from "../../context/SellContext";
 import BottomNav from "../../components/BottomNav";
+import { api } from "../../config/api";
+import { getToken } from "../../services/auth";
 
 function Home() {
   const navigate = useNavigate();
@@ -83,7 +85,24 @@ function Home() {
         <div className={styles.servicesSection}>
           <h2 className={styles.sectionTitle}>Recycle Service</h2>
           <div className={styles.servicesGrid}>
-            <div className={styles.serviceCard} onClick={() => navigate("/esg/trash")}>
+            <div className={styles.serviceCard} onClick={async () => {
+              const token = getToken();
+              if (!token) {
+                navigate("/esg/subscription");
+                return;
+              }
+              try {
+                const status = await api.checkEsgSubscriptionStatus(token);
+                if (status.hasActiveSubscription) {
+                  navigate("/esg/trash");
+                } else {
+                  navigate("/esg/subscription");
+                }
+              } catch (error) {
+                console.error("Failed to check subscription status", error);
+                navigate("/esg/subscription");
+              }
+            }}>
               <div
                 className={styles.serviceIconWrapper}
                 style={{ backgroundColor: "rgba(34, 197, 94, 0.15)" }}

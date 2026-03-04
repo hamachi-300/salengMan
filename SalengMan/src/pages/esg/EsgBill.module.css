@@ -1,0 +1,98 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1e1e1e);
+    color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+.content {
+    flex: 1;
+    padding: 24px 20px;
+    overflow-y: auto;
+    padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+}
+
+.sectionSubtitle {
+    font-family: var(--font-thai-fun, sans-serif);
+    font-size: 1.5rem;
+    color: var(--color-text, #ffffff);
+    margin: 0 0 16px 4px;
+}
+
+.billCard {
+    background-color: var(--color-bg-2, #2a2a2a);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.infoSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.infoRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 1.25rem;
+}
+
+.infoLabel {
+    color: #ffffff;
+}
+
+.infoValue {
+    font-family: var(--font-eng-fun, sans-serif);
+    color: #ffffff;
+}
+
+.divider {
+    width: 100%;
+    height: 2px;
+    background-color: #444444;
+    border-radius: 1px;
+}
+
+.pricingSection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pricingRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 1.25rem;
+}
+
+.pricingLabel {
+    color: #ffffff;
+}
+
+.pricingValue {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.totalRow {
+    margin-top: 8px;
+    font-size: 1.4rem;
+}
+
+.totalRow .pricingLabel,
+.totalRow .pricingValue {
+    font-weight: 700;
+}

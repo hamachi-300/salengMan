@@ -601,4 +601,43 @@ export const api = {
 
     return res.json();
   },
+
+  // ESG Subscription 
+  esgSubscribe: async (token: string, payload: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to submit ESG subscription';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+    return res.json();
+  },
+
+  // Check ESG Subscription Status
+  checkEsgSubscriptionStatus: async (token: string): Promise<{ hasActiveSubscription: boolean, package?: string, expiresAt?: string }> => {
+    const res = await fetch(`${API_URL}/esg/subscription/status`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to check ESG subscription status');
+    }
+    return res.json();
+  }
 };

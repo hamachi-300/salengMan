@@ -5,7 +5,7 @@ import PageHeader from "../../components/PageHeader";
 function EsgTrash() {
     return (
         <div className={styles.container}>
-            <PageHeader title="ESG Waste" />
+            <PageHeader title="ESG Waste" backTo="/home" />
 
             <div className={styles.content}>
                 {/* Chart Card */}

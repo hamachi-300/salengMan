@@ -7,10 +7,13 @@ import PageFooter from "../../components/PageFooter";
 function SelectEsgDate() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [selectedDates, setSelectedDates] = useState<number[]>([]);
 
+    // Retrieve previous state or default
     const subscriptionPackage = location.state?.subscriptionPackage;
     const selectedAddress = location.state?.address;
+    const previousDates = location.state?.dates || [];
+
+    const [selectedDates, setSelectedDates] = useState<number[]>(previousDates);
 
     // Determine max selections based on package type
     const maxSelections = subscriptionPackage === 'enterprise' ? 8 : 4;
@@ -28,15 +31,14 @@ function SelectEsgDate() {
     };
 
     const handleFooterClick = () => {
-        // Log to console for now, future point for payment flow
-        console.log("Submitting ESG Subscription Data:", {
-            package: subscriptionPackage,
-            address: selectedAddress,
-            dates: selectedDates
+        // Navigate to the final checkout bill passing all aggregated state data
+        navigate('/esg/bill', {
+            state: {
+                subscriptionPackage,
+                address: selectedAddress,
+                dates: selectedDates
+            }
         });
-
-        // Navigate to payment or success later
-        // navigate('/esg/payment'); 
     };
 
     // Render 1-28 for dates of the month (exactly 4 weeks)
@@ -82,7 +84,7 @@ function SelectEsgDate() {
             <PageFooter
                 title="ไปหน้าชำระเงิน"
                 onClick={handleFooterClick}
-                disabled={selectedDates.length === 0}
+                disabled={selectedDates.length !== maxSelections}
                 variant="orange"
             />
         </div>

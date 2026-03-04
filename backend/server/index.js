@@ -2484,3 +2484,93 @@ start().catch(err => {
   console.error('Failed to start server:', err);
   process.exit(1);
 });
+
+// ============================================
+// ESG SUBSCRIPTION
+// ============================================
+app.post('/esg/subscribe', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const user_id = req.user.user_id;
+    const {
+      address_id,
+      package_name,
+      pickup_days,
+      max_weight,
+      time_per_month,
+      cost,
+      total_cost
+    } = req.body;
+
+    await client.query('BEGIN');
+
+    // 1. Generate unique sup_id
+    const sup_id = `ESG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // 2. Set subscription dates
+    const begin_sub = new Date();
+    const end_sub = new Date();
+    end_sub.setFullYear(begin_sub.getFullYear() + 1);
+
+    // 3. Insert into esg_subscriptors
+    const subResult = await client.query(
+      `INSERT INTO esg_subscriptors 
+        (sup_id, user_id, address_id, package_name, pickup_days, is_active, begin_sub, end_sub, max_weight, time_per_month)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [sup_id, user_id, address_id, package_name, pickup_days, true, begin_sub, end_sub, max_weight, time_per_month]
+    );
+
+    // 4. Insert into esg_package_history
+    const historyResult = await client.query(
+      `INSERT INTO esg_package_history 
+        (user_id, package_name, max_weight, max_dates_per_month, cost, total_cost, subscription_datetime)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [user_id, package_name, max_weight, time_per_month, cost, total_cost, begin_sub]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: 'Subscription successful',
+      subscription: subResult.rows[0],
+      history: historyResult.rows[0]
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in /esg/subscribe:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/esg/subscription/status', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    // Check if the user has an active subscription that hasn't expired
+    const result = await pool.query(
+      `SELECT sup_id, package_name, end_sub 
+       FROM esg_subscriptors 
+       WHERE user_id = $1 AND is_active = true AND end_sub > CURRENT_TIMESTAMP 
+       ORDER BY end_sub DESC 
+       LIMIT 1`,
+      [user_id]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({
+        hasActiveSubscription: true,
+        package: result.rows[0].package_name,
+        expiresAt: result.rows[0].end_sub
+      });
+    } else {
+      res.json({ hasActiveSubscription: false });
+    }
+  } catch (error) {
+    console.error('Error checking ESG subscription status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
