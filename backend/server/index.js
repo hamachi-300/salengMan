@@ -2518,7 +2518,7 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
         (sup_id, user_id, address_id, package_name, pickup_days, is_active, begin_sub, end_sub, max_weight, time_per_month)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [sup_id, user_id, address_id, package_name, pickup_days, true, begin_sub, end_sub, max_weight, time_per_month]
+      [sup_id, user_id, address_id, package_name, JSON.stringify(pickup_days), true, begin_sub, end_sub, max_weight, time_per_month]
     );
 
     // 4. Insert into esg_package_history
@@ -2552,7 +2552,7 @@ app.get('/esg/subscription/status', authMiddleware, async (req, res) => {
 
     // Check if the user has an active subscription that hasn't expired
     const result = await pool.query(
-      `SELECT sup_id, package_name, end_sub 
+      `SELECT sup_id, package_name, end_sub, pickup_days 
        FROM esg_subscriptors 
        WHERE user_id = $1 AND is_active = true AND end_sub > CURRENT_TIMESTAMP 
        ORDER BY end_sub DESC 
@@ -2563,14 +2563,103 @@ app.get('/esg/subscription/status', authMiddleware, async (req, res) => {
     if (result.rows.length > 0) {
       res.json({
         hasActiveSubscription: true,
+        sup_id: result.rows[0].sup_id,
         package: result.rows[0].package_name,
-        expiresAt: result.rows[0].end_sub
+        expiresAt: result.rows[0].end_sub,
+        pickup_days: result.rows[0].pickup_days
       });
     } else {
       res.json({ hasActiveSubscription: false });
     }
   } catch (error) {
-    console.error('Error checking ESG subscription status:', error);
+    console.error('Error in /esg/subscription/status:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
+app.get('/esg/interested-drivers/:sup_id/:date', authMiddleware, async (req, res) => {
+  try {
+    const { sup_id, date } = req.params;
+    const user_id = req.user.user_id;
+
+    const result = await pool.query(
+      'SELECT pickup_days FROM esg_subscriptors WHERE sup_id = $1 AND user_id = $2',
+      [sup_id, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const pickup_days = result.rows[0].pickup_days;
+    // pickup_days is expected to be an array of objects
+    const dayEntry = pickup_days.find(d => d.date === parseInt(date));
+
+    if (!dayEntry) {
+      return res.status(404).json({ error: 'Date not found in subscription' });
+    }
+
+    const driverIds = dayEntry.driver || [];
+    if (driverIds.length === 0) {
+      return res.json([]);
+    }
+
+    // Fetch public profiles for these drivers
+    const profilesResult = await pool.query(
+      'SELECT id, full_name, avatar_url, created_at FROM users WHERE id = ANY($1)',
+      [driverIds]
+    );
+
+    res.json(profilesResult.rows);
+  } catch (error) {
+    console.error('Error in /esg/interested-drivers:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { sup_id, date, driver_id } = req.body;
+    const user_id = req.user.user_id;
+
+    await client.query('BEGIN');
+
+    const result = await client.query(
+      'SELECT pickup_days FROM esg_subscriptors WHERE sup_id = $1 AND user_id = $2 FOR UPDATE',
+      [sup_id, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const pickup_days = result.rows[0].pickup_days;
+    const dayIndex = pickup_days.findIndex(d => d.date === parseInt(date));
+
+    if (dayIndex === -1) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Date not found in subscription' });
+    }
+
+    // Update the specific day entry
+    pickup_days[dayIndex].have_driver = true;
+    pickup_days[dayIndex].confirmed_driver_id = driver_id;
+
+    await client.query(
+      'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
+      [JSON.stringify(pickup_days), sup_id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true, pickup_days });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in /esg/confirm-driver:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+

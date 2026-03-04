@@ -1,0 +1,96 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1e1e1e);
+    color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+.content {
+    flex: 1;
+    padding: 24px 20px;
+    overflow-y: auto;
+    padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 24px 0;
+    text-align: left;
+}
+
+.datesList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 4px;
+}
+
+.dateRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 12px 16px;
+    transition: all 0.2s ease;
+}
+
+.dateRow:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.dateBox {
+    flex: 1;
+    background-color: rgba(126, 206, 206, 0.08);
+    border: 1px solid rgba(126, 206, 206, 0.3);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    color: #7ecece;
+}
+
+.statusIcon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    /* Square with rounded corners */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.statusIcon svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 3.5;
+}
+
+.statusNot {
+    background-color: #ff7a30;
+    color: #ffffff;
+}
+
+.statusHave {
+    background-color: #7ecece;
+    color: #1a1c20;
+}
+
+.loadingText {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
+    margin-top: 40px;
+    font-style: italic;
+}

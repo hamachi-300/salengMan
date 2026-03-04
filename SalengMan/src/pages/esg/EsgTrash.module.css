@@ -28,6 +28,33 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    position: relative;
+}
+
+.infoButton {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-family: inherit;
+}
+
+.infoButton:hover {
+    color: #fff;
+    border-color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .chartArea {
@@ -108,6 +135,31 @@
 .statSecondary {
     font-size: 1rem;
     margin: 0;
+}
+
+.showMoreButton {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text, #ffffff);
+    padding: 12px;
+    border-radius: 12px;
+    font-family: var(--font-thai-fun, sans-serif);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 4px;
+}
+
+.showMoreButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.showMoreButton:active {
+    transform: translateY(0);
 }
 
 /* Action Buttons Grid */

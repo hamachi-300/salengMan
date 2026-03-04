@@ -627,7 +627,13 @@ export const api = {
   },
 
   // Check ESG Subscription Status
-  checkEsgSubscriptionStatus: async (token: string): Promise<{ hasActiveSubscription: boolean, package?: string, expiresAt?: string }> => {
+  checkEsgSubscriptionStatus: async (token: string): Promise<{
+    hasActiveSubscription: boolean,
+    sup_id?: string,
+    package?: string,
+    expiresAt?: string,
+    pickup_days?: { date: number, have_driver: boolean, driver: string[] }[]
+  }> => {
     const res = await fetch(`${API_URL}/esg/subscription/status`, {
       method: 'GET',
       headers: {
@@ -637,6 +643,39 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to check ESG subscription status');
+    }
+    return res.json();
+  },
+
+  // Get interested drivers for an ESG pickup date
+  getEsgInterestedDrivers: async (token: string, supId: string, date: number): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/esg/interested-drivers/${supId}/${date}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch interested drivers');
+    }
+    return res.json();
+  },
+
+  // Confirm a driver for an ESG pickup date
+  confirmEsgDriver: async (token: string, supId: string, date: number, driverId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/confirm-driver`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ sup_id: supId, date, driver_id: driverId }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to confirm driver');
     }
     return res.json();
   }

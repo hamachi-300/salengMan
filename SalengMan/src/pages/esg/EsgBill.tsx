@@ -47,10 +47,16 @@ function EsgBill() {
 
         setLoading(true);
 
+        const pickup_days_json = selectedDates.map((date: number) => ({
+            date: date,
+            have_driver: false,
+            driver: []
+        }));
+
         const payload = {
             address_id: selectedAddress?.id,
             package_name: subscriptionPackage,
-            pickup_days: selectedDates,
+            pickup_days: pickup_days_json,
             max_weight: maxWeight,
             time_per_month: monthlyLimit,
             cost: yearlySubscriptionCost,

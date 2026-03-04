@@ -1,8 +1,14 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./EsgTrash.module.css";
 import PageFooter from "../../components/PageFooter";
 import PageHeader from "../../components/PageHeader";
+import AlertPopup from "../../components/AlertPopup";
 
 function EsgTrash() {
+    const navigate = useNavigate();
+    const [showInfo, setShowInfo] = useState(false);
+
     return (
         <div className={styles.container}>
             <PageHeader title="ESG Waste" backTo="/home" />
@@ -10,6 +16,14 @@ function EsgTrash() {
             <div className={styles.content}>
                 {/* Chart Card */}
                 <div className={styles.chartCard}>
+                    <button
+                        className={styles.infoButton}
+                        aria-label="Information"
+                        onClick={() => setShowInfo(true)}
+                    >
+                        ?
+                    </button>
+
                     <div className={styles.chartArea}>
                         <span className={styles.yAxisLabel}>carbon</span>
                         <div className={styles.chartMockup}>
@@ -34,6 +48,10 @@ function EsgTrash() {
                         <p className={styles.statPrimary}>carbon reduce: <span className={styles.statValue}>0</span></p>
                         <p className={styles.statSecondary}>เทียบเท่ากับการปลูกต้นไม้ 0 ต้น</p>
                     </div>
+
+                    <button className={styles.showMoreButton}>
+                        ดูข้อมูลเพิ่มเติม
+                    </button>
                 </div>
 
                 {/* Action Buttons Grid */}
@@ -66,9 +84,16 @@ function EsgTrash() {
             {/* Bottom Button */}
             <PageFooter
                 title="เลือกคนทิ้งขยะ"
-                onClick={() => { }}
+                onClick={() => navigate('/esg/choose-date-driver')}
                 variant="orange"
                 showArrow={false}
+            />
+
+            <AlertPopup
+                isOpen={showInfo}
+                title="ESG คืออะไร"
+                message={"ESG (Environmental, Social, and Governance) คือ หลักการบริหารจัดการองค์กรที่คำนึงถึงผลกระทบต่อสิ่งแวดล้อม สังคม และการกำกับดูแลกิจการที่ดี\n\nประโยชน์ของ ESG:\nการลงทุนใน ESG ช่วยลดความเสี่ยงด้านสิ่งแวดล้อมและสังคม เพิ่มโอกาสในการเติบโตในระยะยาว และสร้างฐานะทางการเงินที่ยั่งยืนผ่านการบริหารจัดการที่โปร่งใสและตรวจสอบได้"}
+                onClose={() => setShowInfo(false)}
             />
         </div>
     );

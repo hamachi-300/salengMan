@@ -36,6 +36,9 @@ import Subscription from "./pages/esg/Subscription";
 import SelectEsgAddress from "./pages/esg/SelectEsgAddress";
 import SelectEsgDate from "./pages/esg/SelectEsgDate";
 import EsgBill from "./pages/esg/EsgBill";
+import ChooseDateDriver from "./pages/esg/ChooseDateDriver";
+import EsgDriverList from "./pages/esg/EsgDriverList";
+import EsgDriverConfirm from "./pages/esg/EsgDriverConfirm";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -70,6 +73,9 @@ function AppRoutes() {
         <Route path="/esg/select-address" element={<SelectEsgAddress />} />
         <Route path="/esg/select-date" element={<SelectEsgDate />} />
         <Route path="/esg/bill" element={<EsgBill />} />
+        <Route path="/esg/choose-date-driver" element={<ChooseDateDriver />} />
+        <Route path="/esg/drivers/:supId/:date" element={<EsgDriverList />} />
+        <Route path="/esg/driver-confirm/:supId/:date/:driverId" element={<EsgDriverConfirm />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />

@@ -41,6 +41,7 @@
     font-family: var(--font-thai-polite), sans-serif;
     font-size: 1rem;
     line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 .modalActions {
