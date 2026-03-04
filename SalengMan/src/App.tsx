@@ -34,6 +34,7 @@ import ConfirmBuyCoin from "./pages/trash/coin/ConfirmBuyCoin";
 import EsgTrash from "./pages/esg/EsgTrash";
 import Subscription from "./pages/esg/Subscription";
 import SelectEsgAddress from "./pages/esg/SelectEsgAddress";
+import SelectEsgDate from "./pages/esg/SelectEsgDate";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -66,6 +67,7 @@ function AppRoutes() {
         <Route path="/esg/trash" element={<EsgTrash />} />
         <Route path="/esg/subscription" element={<Subscription />} />
         <Route path="/esg/select-address" element={<SelectEsgAddress />} />
+        <Route path="/esg/select-date" element={<SelectEsgDate />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />

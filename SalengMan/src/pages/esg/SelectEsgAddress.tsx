@@ -62,9 +62,12 @@ function SelectEsgAddress() {
         }
         const selectedAddress = addresses.find(addr => addr.id === selectedId);
         if (selectedAddress) {
-            // Proceed with selection - route unlinked for now
-            console.log("Submitting ESG Subscription", { package: subscriptionPackage, address: selectedAddress });
-            setAlertMessage('Address Selected! Checkout flow not implemented yet.');
+            navigate('/esg/select-date', {
+                state: {
+                    subscriptionPackage,
+                    address: selectedAddress
+                }
+            });
         }
     };
 

@@ -1,0 +1,97 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1e1e1e);
+    color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+.content {
+    flex: 1;
+    padding: 24px 20px;
+    overflow-y: auto;
+    padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.headerSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.footerSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    text-align: center;
+    margin-top: 8px;
+}
+
+.subtitle {
+    font-family: var(--font-thai-fun, sans-serif);
+    font-size: 1.5rem;
+    color: var(--color-text, #ffffff);
+    margin: 0;
+}
+
+.limitText {
+    font-size: 1.1rem;
+    color: #aaaaaa;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.highlight {
+    color: var(--orange-button, #ff7a30);
+    font-weight: 700;
+}
+
+.calendarGrid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin: 0 auto;
+    background-color: var(--color-bg-2, #2a2a2a);
+    padding: 20px;
+    border-radius: 16px;
+}
+
+.dateCell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background-color: #333333;
+    color: #ffffff;
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+
+
+.dateCell.selected {
+    background-color: var(--orange-button, #ff7a30);
+    color: #ffffff;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.4);
+}
+
+.dateCell.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
