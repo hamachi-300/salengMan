@@ -135,7 +135,24 @@ BEGIN
     END IF;
 END $$;
 
+-- ESG Subscriptions table
+CREATE TABLE IF NOT EXISTS esg_subscriptors (
+    sup_id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    address_id INTEGER REFERENCES addresses(id) ON DELETE CASCADE,
+    package_name TEXT,
+    pickup_days INTEGER[],
+    is_active BOOLEAN DEFAULT true,
+    begin_sub TIMESTAMP,
+    end_sub TIMESTAMP,
+    max_weight DECIMAL(10, 2),
+    time_per_month INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for common queries
+CREATE INDEX IF NOT EXISTS idx_esg_subscriptors_user_id ON esg_subscriptors(user_id);
 CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
 CREATE INDEX IF NOT EXISTS idx_old_item_posts_user_id ON old_item_posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_old_item_posts_status ON old_item_posts(status);

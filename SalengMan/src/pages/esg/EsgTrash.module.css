@@ -1,0 +1,181 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1e1e1e);
+    color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+
+.content {
+    flex: 1;
+    padding: 24px 20px;
+    overflow-y: auto;
+    padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* Chart Card */
+.chartCard {
+    background-color: var(--color-bg-2, #2a2a2a);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chartArea {
+    position: relative;
+    height: 140px;
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.yAxisLabel {
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 0.9rem;
+}
+
+.xAxisLabel {
+    position: absolute;
+    bottom: 0px;
+    right: -10px;
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 0.9rem;
+}
+
+.chartMockup {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    right: 15px;
+    bottom: 25px;
+}
+
+.yAxisLine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.xAxisLine {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    height: 2px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.svgChart {
+    position: absolute;
+    left: 2px;
+    bottom: 2px;
+    width: 100%;
+    height: 100%;
+}
+
+.chartStats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.statPrimary {
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.statValue {
+    margin-left: 8px;
+}
+
+.statSecondary {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Action Buttons Grid */
+.actionGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.gridButton {
+    background-color: var(--color-bg-2, #2a2a2a);
+    border-radius: 16px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.gridButton:hover {
+    transform: translateY(-2px);
+    background-color: #444;
+}
+
+.gridButton:active {
+    transform: scale(0.98);
+}
+
+.serviceIconWrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(255, 122, 48, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.serviceIconWrapper.esgColor {
+    background-color: rgba(34, 197, 94, 0.15);
+}
+
+.serviceIcon {
+    width: 32px;
+    height: 32px;
+    color: var(--orange-button, #ff7a30);
+}
+
+.serviceIcon.esgColor {
+    color: #22c55e;
+}
+
+.serviceTitle {
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text, #ffffff);
+    margin: 0;
+    text-align: center;
+}
+
+.serviceSubtitle {
+    font-family: var(--font-thai-fun, sans-serif);
+    font-size: 0.9rem;
+    color: var(--color-text, #ffffff);
+    opacity: 0.6;
+    margin: 0;
+}

@@ -78,6 +78,23 @@ function Home() {
             </div>
           </div>
         </div>
+
+        {/* Recycle Service Section */}
+        <div className={styles.servicesSection}>
+          <h2 className={styles.sectionTitle}>Recycle Service</h2>
+          <div className={styles.servicesGrid}>
+            <div className={styles.serviceCard} onClick={() => navigate("/esg/trash")}>
+              <div
+                className={styles.serviceIconWrapper}
+                style={{ backgroundColor: "rgba(34, 197, 94, 0.15)" }}
+              >
+                <span style={{ fontSize: "2rem", lineHeight: 1, color: "#22c55e" }}>&#x267B;&#xFE0E;</span>
+              </div>
+              <h3 className={styles.serviceTitle}>ESG Waste</h3>
+              <p className={styles.serviceSubtitle}>ทิ้งขยะรีไซเคิล</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Navigation */}

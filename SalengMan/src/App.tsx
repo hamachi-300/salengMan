@@ -30,8 +30,10 @@ import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import Coin from "./pages/trash/coin/Coin";
-
 import ConfirmBuyCoin from "./pages/trash/coin/ConfirmBuyCoin";
+import EsgTrash from "./pages/esg/EsgTrash";
+import Subscription from "./pages/esg/Subscription";
+import SelectEsgAddress from "./pages/esg/SelectEsgAddress";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -61,6 +63,9 @@ function AppRoutes() {
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
         <Route path="/trash" element={<PostTrash />} />
+        <Route path="/esg/trash" element={<EsgTrash />} />
+        <Route path="/esg/subscription" element={<Subscription />} />
+        <Route path="/esg/select-address" element={<SelectEsgAddress />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />
