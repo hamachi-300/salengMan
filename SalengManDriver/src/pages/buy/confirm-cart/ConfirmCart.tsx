@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./ConfirmCart.module.css";
-import { api } from "../../../config/api";
-import { getToken } from "../../../services/auth";
-import PageHeader from "../../../components/PageHeader";
-import PageFooter from "../../../components/PageFooter";
-import SuccessPopup from "../../../components/SuccessPopup";
-import ConfirmPopup from "../../../components/ConfirmPopup";
 import AlertPopup from "../../../components/AlertPopup";
+import ConfirmPopup from "../../../components/ConfirmPopup";
+import PageFooter from "../../../components/PageFooter";
+import PageHeader from "../../../components/PageHeader";
+import SuccessPopup from "../../../components/SuccessPopup";
+import { api } from "../../../config/api";
 import { useUser } from "../../../context/UserContext";
+import { getToken } from "../../../services/auth";
+import styles from "./ConfirmCart.module.css";
 
 interface Post {
   id: number;
@@ -147,7 +147,7 @@ function ConfirmCart() {
 
   const handleSuccessConfirm = () => {
     setShowSuccess(false);
-    navigate("/history");
+    navigate("/confirm-job");
   };
 
   const getItemTitle = (post: Post) => {
@@ -172,10 +172,10 @@ function ConfirmCart() {
       <PageHeader title="Select Pickups" backTo="/buy-old-item" />
 
       <div className={styles.content}>
-        <p className={styles.subtitle}>Confirm items on your cart before take next step.</p>
+        <p className={styles.subtitle}>ยืนยันรายการในตะกร้าก่อนดำเนินการขั้นตอนถัดไป</p>
 
         {loading ? (
-          <div className={styles.loadingState}>Loading cart...</div>
+          <div className={styles.loadingState}>กำลังโหลดรายการในตะกร้า...</div>
         ) : cartItems.length > 0 ? (
           <div className={styles.itemsList}>
             {cartItems.map((item) => (
@@ -221,9 +221,9 @@ function ConfirmCart() {
           </div>
         ) : (
           <div className={styles.emptyState}>
-            <p>Your cart is empty</p>
+            <p>ไม่มีรายการในตะกร้า</p>
             <button className={styles.browseButton} onClick={() => navigate('/buy-old-item')}>
-              Browse Items
+              ดูรายการของเก่า
             </button>
           </div>
         )}
@@ -231,7 +231,7 @@ function ConfirmCart() {
 
       {cartItems.length > 0 && (
         <PageFooter
-          title={submitting ? "Creating Contact..." : "Make Contact"}
+          title={submitting ? "กำลังส่งการติดต่อ..." : "ติดต่อผู้ขาย"}
           onClick={handleMakeContact}
           disabled={cartItems.length === 0 || submitting}
         />
@@ -239,29 +239,29 @@ function ConfirmCart() {
 
       <SuccessPopup
         isOpen={showSuccess}
-        title="Contact Created!"
-        message="Your contact request has been sent to the seller. You can view the status in your history."
+        title="ส่งคำขอติดต่อสำเร็จ"
+        message="ระบบได้ส่งคำขอติดต่อแล้ว กรุณารอการยืนยันเพื่อรับงานในขั้นตอนถัดไป"
         onConfirm={handleSuccessConfirm}
-        confirmText="View History"
+        confirmText="ยืนยันงาน"
       />
 
       <ConfirmPopup
         isOpen={showAddressPrompt}
-        title="Address Required"
-        message="You must add a delivery address before you can buy items. Would you like to add one now?"
+        title="จำเป็นต้องเพิ่มที่อยู่"
+        message="คุณต้องเพิ่มที่อยู่ก่อนจึงจะสามารถติดต่อรับงานได้ ต้องการเพิ่มที่อยู่ตอนนี้หรือไม่"
         onConfirm={() => {
           setShowAddressPrompt(false);
           navigate('/add-address');
         }}
         onCancel={() => setShowAddressPrompt(false)}
-        confirmText="Add Address"
-        cancelText="Cancel"
+        confirmText="เพิ่มที่อยู่"
+        cancelText="ยกเลิก"
         confirmColor="#4CAF50"
       />
 
       <AlertPopup
         isOpen={alertMessage !== null}
-        title="Error"
+        title="เกิดข้อผิดพลาด"
         message={alertMessage || ""}
         onClose={() => setAlertMessage(null)}
       />
