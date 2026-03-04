@@ -48,7 +48,7 @@ function ChooseDateDriver() {
                     <p className={styles.loadingText}>กำลังโหลดข้อมูล...</p>
                 ) : (
                     <div className={styles.datesList}>
-                        {pickupDays.sort((a, b) => a.date - b.date).map((day, index) => (
+                        {pickupDays.filter(d => d !== null).sort((a, b) => a.date - b.date).map((day, index) => (
                             <div
                                 key={index}
                                 className={styles.dateRow}

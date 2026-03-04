@@ -38,6 +38,27 @@ function Home() {
     }
   };
 
+  const handleEsgDriverClick = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate('/signin');
+      return;
+    }
+
+    try {
+      const { isRegistered } = await api.checkEsgDriverStatus(token);
+      if (isRegistered) {
+        navigate('/esg/driver');
+      } else {
+        navigate('/esg/register');
+      }
+    } catch (error) {
+      console.error("Failed to check ESG driver status:", error);
+      // Fallback to register if status check fails (likely not found)
+      navigate('/esg/register');
+    }
+  };
+
   return (
     <div className={styles.home}>
       <div className={styles.homeContent}>
@@ -104,7 +125,7 @@ function Home() {
         <div className={styles.servicesSection}>
           <h2 className={styles.sectionTitle}>Recycle Services</h2>
           <div className={styles.servicesGrid}>
-            <div className={styles.serviceCard} onClick={() => { }}>
+            <div className={styles.serviceCard} onClick={handleEsgDriverClick}>
               <div className={styles.serviceIconWrapper} style={{ backgroundColor: "rgba(34, 197, 94, 0.15)" }}>
                 <span style={{ fontSize: "2rem", lineHeight: 1, color: "#22c55e" }}>&#x267B;&#xFE0E;</span>
               </div>

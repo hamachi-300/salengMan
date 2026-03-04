@@ -2396,6 +2396,20 @@ async function start() {
     );
   `);
 
+  // Create esg_driver table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS esg_driver (
+      driver_id TEXT PRIMARY KEY,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      coin NUMERIC DEFAULT 0,
+      weight_accumulate NUMERIC DEFAULT 0,
+      pickup_days JSONB DEFAULT '[]'::jsonb,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id)
+    );
+  `).catch(err => console.error('Migration error (esg_driver):', err.message));
+
   console.log('Database tables initialized');
 
   // Ensure notifies table exists
@@ -2512,13 +2526,54 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
     const end_sub = new Date();
     end_sub.setFullYear(begin_sub.getFullYear() + 1);
 
+    // Mark selected dates
+    if (Array.isArray(pickup_days)) {
+      pickup_days.forEach(d => {
+        const dIdx = typeof d === 'object' ? d.date : d;
+        if (dIdx >= 1 && dIdx <= 28) {
+          // If the user selected this date, we keep it as is (have_driver: false)
+          // Actually, we should only store the selected dates in a way that the driver can see them.
+          // The current logic seems to be: if it's in the list, it's available.
+        } else {
+          // Nullify or handle invalid dates
+        }
+      });
+      // Filter out dates NOT in the user's selection to save space? 
+      // User said "อางอิงด้วย index... 1-28" so better to keep all 28 or at least the selection in correct slots.
+      // Let's stick to: full 29-length array, but maybe with a flag `is_selected`?
+      // No, the user request says: "pickup_days : [{date : 1, have_driver: false, driver: []}, ...]"
+      // And for driver: "{date : 1, contract user : [{id : text, is_accept : false}, …]}"
+
+      // Actually, if a user ONLY has certain dates, we should only have those dates in the array?
+      // "index เว้น 0 ไว้ แล้วเริ่มจาก 1 - 28" implies a fixed size array where index == date.
+
+      // Let's refine: Only selected dates have the object, others are null? Or all have objects?
+      // Fixed 29 length is safer for "refer by index".
+    }
+
+    // Actually, let's just use what the user provided but ensure it's JSON.
+    // The previous error was purely DB type. 
+    // But to follow the "index 1-28" request:
+    const final_pickup_days = Array.from({ length: 29 }, (_, i) => {
+      if (i === 0) return null;
+      const selected = pickup_days.find(d => (typeof d === 'object' ? d.date : d) === i);
+      if (selected) {
+        return {
+          date: i,
+          have_driver: false,
+          driver: []
+        };
+      }
+      return null; // Not a selected pickup day
+    });
+
     // 3. Insert into esg_subscriptors
     const subResult = await client.query(
       `INSERT INTO esg_subscriptors 
         (sup_id, user_id, address_id, package_name, pickup_days, is_active, begin_sub, end_sub, max_weight, time_per_month)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [sup_id, user_id, address_id, package_name, JSON.stringify(pickup_days), true, begin_sub, end_sub, max_weight, time_per_month]
+      [sup_id, user_id, address_id, package_name, JSON.stringify(final_pickup_days), true, begin_sub, end_sub, max_weight, time_per_month]
     );
 
     // 4. Insert into esg_package_history
@@ -2593,7 +2648,7 @@ app.get('/esg/interested-drivers/:sup_id/:date', authMiddleware, async (req, res
 
     const pickup_days = result.rows[0].pickup_days;
     // pickup_days is expected to be an array of objects
-    const dayEntry = pickup_days.find(d => d.date === parseInt(date));
+    const dayEntry = pickup_days.find(d => d && d.date === parseInt(date));
 
     if (!dayEntry) {
       return res.status(404).json({ error: 'Date not found in subscription' });
@@ -2617,6 +2672,187 @@ app.get('/esg/interested-drivers/:sup_id/:date', authMiddleware, async (req, res
   }
 });
 
+app.get('/esg/driver/status', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const result = await pool.query(
+      'SELECT * FROM esg_driver WHERE user_id = $1',
+      [user_id]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({ isRegistered: true, driver: result.rows[0] });
+    } else {
+      res.json({ isRegistered: false });
+    }
+  } catch (error) {
+    console.error('Error in /esg/driver/status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/esg/driver/register', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const driver_id = `DRV-ESG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Initialize pickup_days with empty arrays for 28 days (index 1-28)
+    const pickup_days = Array.from({ length: 29 }, (_, i) => i === 0 ? null : ({
+      date: i,
+      contract_user: []
+    }));
+
+    const result = await pool.query(
+      `INSERT INTO esg_driver (driver_id, user_id, pickup_days)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [driver_id, user_id, JSON.stringify(pickup_days)]
+    );
+
+    res.json({ success: true, driver: result.rows[0] });
+  } catch (error) {
+    console.error('Error in /esg/driver/register:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    const result = await pool.query(
+      'SELECT * FROM esg_driver WHERE user_id = $1',
+      [user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+
+    const driver = result.rows[0];
+    const pickup_days = driver.pickup_days || [];
+
+    // Get tomorrow's date index (1-28)
+    // For Thai context, could be simple Date logic or just showing list
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowDate = tomorrow.getDate(); // Simplistic: just day of month (capped at 28 for mockup logic)
+    const dayIndex = tomorrowDate > 28 ? 28 : tomorrowDate;
+
+    const tomorrowJobs = (pickup_days.find(d => d && d.date === dayIndex)?.contract_user || []);
+
+    res.json({
+      ...driver,
+      tomorrowJobsCount: tomorrowJobs.length
+    });
+  } catch (error) {
+    console.error('Error in /esg/driver/profile:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
+  try {
+    const { date } = req.query; // date index 1-28
+
+    let query = `
+      SELECT s.*, u.full_name, u.phone, a.house_no, a.moo, a.soi, a.road, a.sub-district as sub_district, a.district, a.province 
+      FROM esg_subscriptors s
+      JOIN users u ON s.user_id = u.id
+      JOIN addresses a ON s.address_id = a.id
+      WHERE s.is_active = true
+    `;
+    const params = [];
+
+    const result = await pool.query(query, params);
+
+    // Filter by date in JavaScript due to JSONB structure
+    let filtered = result.rows;
+    if (date) {
+      const dateIdx = parseInt(date);
+      filtered = result.rows.filter(row => {
+        const days = row.pickup_days || [];
+        return days.some(d => d.date === dateIdx && !d.have_driver);
+      });
+    }
+
+    res.json(filtered);
+  } catch (error) {
+    console.error('Error in /esg/available-subscriptions:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/esg/driver/contract', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { sup_id, date_index } = req.body;
+    const user_id = req.user.user_id;
+
+    await client.query('BEGIN');
+
+    // 1. Get Driver Info
+    const driverRes = await client.query('SELECT driver_id, pickup_days FROM esg_driver WHERE user_id = $1 FOR UPDATE', [user_id]);
+    if (driverRes.rows.length === 0) throw new Error('Driver not registered');
+    const driver = driverRes.rows[0];
+    const driver_id = driver.driver_id;
+
+    // 2. Get Subscriber Info
+    const subRes = await client.query('SELECT pickup_days FROM esg_subscriptors WHERE sup_id = $1 FOR UPDATE', [sup_id]);
+    if (subRes.rows.length === 0) throw new Error('Subscription not found');
+    const sub_pickup_days = subRes.rows[0].pickup_days;
+
+    // 3. Update Subscriber pickup_days
+    const subDayIdx = sub_pickup_days.findIndex(d => d && d.date === parseInt(date_index));
+    if (subDayIdx === -1) throw new Error('Date not found in subscription');
+
+    // Initialize driver list if not exists
+    if (!sub_pickup_days[subDayIdx].driver) sub_pickup_days[subDayIdx].driver = [];
+    if (!sub_pickup_days[subDayIdx].driver.includes(driver_id)) {
+      sub_pickup_days[subDayIdx].driver.push(driver_id);
+    }
+    sub_pickup_days[subDayIdx].have_driver = true;
+
+    // 4. Update Driver pickup_days
+    const driver_pickup_days = driver.pickup_days;
+    const driverDayIdx = parseInt(date_index);
+    if (!driver_pickup_days[driverDayIdx]) throw new Error('Date index invalid for driver');
+
+    if (!driver_pickup_days[driverDayIdx].contract_user) driver_pickup_days[driverDayIdx].contract_user = [];
+    if (!driver_pickup_days[driverDayIdx].contract_user.find(u => u.id === sup_id)) {
+      driver_pickup_days[driverDayIdx].contract_user.push({ id: sup_id, is_accept: false });
+    }
+
+    // Check limit warning (UI will handle, but good to know count)
+    const currentJobs = driver_pickup_days[driverDayIdx].contract_user.length;
+
+    // 5. Commit updates
+    await client.query(
+      'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
+      [JSON.stringify(sub_pickup_days), sup_id]
+    );
+
+    await client.query(
+      'UPDATE esg_driver SET pickup_days = $1 WHERE driver_id = $2',
+      [JSON.stringify(driver_pickup_days), driver_id]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      warning: currentJobs > 4 ? 'You have exceeded the recommended number of jobs for this day (4 jobs).' : null
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in /esg/driver/contract:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
@@ -2636,7 +2872,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     }
 
     const pickup_days = result.rows[0].pickup_days;
-    const dayIndex = pickup_days.findIndex(d => d.date === parseInt(date));
+    const dayIndex = pickup_days.findIndex(d => d && d.date === parseInt(date));
 
     if (dayIndex === -1) {
       await client.query('ROLLBACK');

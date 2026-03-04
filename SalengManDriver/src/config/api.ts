@@ -518,4 +518,61 @@ export const api = {
 
     return res.json();
   },
+
+  // Check ESG Driver status
+  checkEsgDriverStatus: async (token: string): Promise<{ isRegistered: boolean; driver?: any }> => {
+    const res = await fetch(`${API_URL}/esg/driver/status`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to check ESG driver status');
+    return res.json();
+  },
+
+  // Register as ESG Driver
+  registerEsgDriver: async (token: string): Promise<{ success: boolean; driver: any }> => {
+    const res = await fetch(`${API_URL}/esg/driver/register`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to register as ESG driver');
+    return res.json();
+  },
+
+  // Get ESG Driver profile/dashboard stats
+  getEsgDriverProfile: async (token: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/driver/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch ESG driver profile');
+    return res.json();
+  },
+
+  // Get available ESG subscriptions for contracts
+  getAvailableEsgSubscriptions: async (token: string, date?: number): Promise<any[]> => {
+    const url = new URL(`${API_URL}/esg/available-subscriptions`);
+    if (date) url.searchParams.append('date', date.toString());
+
+    const res = await fetch(url.toString(), {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch available subscriptions');
+    return res.json();
+  },
+
+  // Sign ESG Contract with a subscriber
+  signEsgContract: async (token: string, sup_id: string, date_index: number): Promise<{ success: boolean; warning?: string }> => {
+    const res = await fetch(`${API_URL}/esg/driver/contract`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ sup_id, date_index }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to sign ESG contract');
+    }
+    return res.json();
+  },
 };

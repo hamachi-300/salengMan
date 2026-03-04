@@ -24,6 +24,10 @@ import HelpSupport from "./pages/settings/HelpSupport";
 import UserReport from "./pages/account/UserReport";
 import ContactList from "./pages/jobs/contact_list/ContactList";
 import ExploreMap from "./pages/jobs/ExploreMap";
+import EsgRegister from "./pages/esg/EsgRegister";
+import EsgDriverHome from "./pages/esg/EsgDriverHome";
+import EsgSearchSub from "./pages/esg/EsgSearchSub";
+import EsgSubscriptorList from "./pages/esg/EsgSubscriptorList";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -67,6 +71,12 @@ function AppRoutes() {
         <Route path="/user-report" element={<UserReport />} />
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
+
+        {/* ESG Driver Routes */}
+        <Route path="/esg/register" element={<EsgRegister />} />
+        <Route path="/esg/driver" element={<EsgDriverHome />} />
+        <Route path="/esg/search_sub" element={<EsgSearchSub />} />
+        <Route path="/esg/subscriptors" element={<EsgSubscriptorList />} />
       </Route>
     </Routes>
   );
