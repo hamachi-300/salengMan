@@ -22,6 +22,7 @@ const EsgRegister: React.FC = () => {
                 navigate('/signin');
                 return;
             }
+
             await api.registerEsgDriver(token);
             setShowSuccess(true);
         } catch (error) {

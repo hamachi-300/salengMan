@@ -46,6 +46,13 @@ function Home() {
     }
 
     try {
+      // Check for addresses first
+      const addresses = await api.getAddresses(token);
+      if (!addresses || addresses.length === 0) {
+        setShowAddressPrompt(true);
+        return;
+      }
+
       const { isRegistered } = await api.checkEsgDriverStatus(token);
       if (isRegistered) {
         navigate('/esg/driver');
@@ -54,7 +61,7 @@ function Home() {
       }
     } catch (error) {
       console.error("Failed to check ESG driver status:", error);
-      // Fallback to register if status check fails (likely not found)
+      // If address check succeeded but status check failed, assume not registered
       navigate('/esg/register');
     }
   };
@@ -142,7 +149,7 @@ function Home() {
       <ConfirmPopup
         isOpen={showAddressPrompt}
         title="Address Required"
-        message="You must add a delivery address before you can buy items. Would you like to add one now?"
+        message="You must add an address before using this service. Would you like to add one now?"
         onConfirm={() => {
           setShowAddressPrompt(false);
           navigate('/add-address');

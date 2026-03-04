@@ -2903,24 +2903,40 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       [JSON.stringify(pickup_days), sup_id]
     );
 
-    // 3. Update Driver Table (Mark is_accept = true)
+    // 2. Get Driver Info to get their ESG ID
     const driverRes = await client.query(
-      'SELECT pickup_days FROM esg_driver WHERE user_id = $1 FOR UPDATE',
+      'SELECT driver_id, pickup_days FROM esg_driver WHERE user_id = $1 FOR UPDATE',
       [driver_id]
     );
 
-    if (driverRes.rows.length > 0) {
-      const dPickupDays = driverRes.rows[0].pickup_days;
-      const dDayIdx = dPickupDays.findIndex(d => d && d.date === parseInt(date));
-      if (dDayIdx !== -1) {
-        const contractIdx = dPickupDays[dDayIdx].contract_user.findIndex(c => c.id == sup_id);
-        if (contractIdx !== -1) {
-          dPickupDays[dDayIdx].contract_user[contractIdx].is_accept = true;
-          await client.query(
-            'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE driver_id = $2',
-            [JSON.stringify(dPickupDays), driver_id]
-          );
-        }
+    if (driverRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+
+    const esg_driver_id = driverRes.rows[0].driver_id;
+
+    // 3. Update Subscriber Table
+    pickup_days[dayIndex].have_driver = true;
+    pickup_days[dayIndex].confirmed_driver_id = esg_driver_id;
+    pickup_days[dayIndex].driver = [esg_driver_id]; // Delete other drivers for this date
+
+    await client.query(
+      'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
+      [JSON.stringify(pickup_days), sup_id]
+    );
+
+    // 4. Update Driver Table (Mark is_accept = true)
+    const dPickupDays = driverRes.rows[0].pickup_days;
+    const dDayIdx = dPickupDays.findIndex(d => d && d.date === parseInt(date));
+    if (dDayIdx !== -1) {
+      const contractIdx = dPickupDays[dDayIdx].contract_user.findIndex(c => c.id == sup_id);
+      if (contractIdx !== -1) {
+        dPickupDays[dDayIdx].contract_user[contractIdx].is_accept = true;
+        await client.query(
+          'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1',
+          [JSON.stringify(dPickupDays), driver_id]
+        );
       }
     }
 

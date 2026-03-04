@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS esg_subscriptors (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     address_id INTEGER REFERENCES addresses(id) ON DELETE CASCADE,
     package_name TEXT,
-    pickup_days INTEGER[],
+    pickup_days JSONB DEFAULT '[]'::jsonb,
     is_active BOOLEAN DEFAULT true,
     begin_sub TIMESTAMP,
     end_sub TIMESTAMP,
@@ -149,6 +149,18 @@ CREATE TABLE IF NOT EXISTS esg_subscriptors (
     time_per_month INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ESG Driver table
+CREATE TABLE IF NOT EXISTS esg_driver (
+    driver_id TEXT PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    coin NUMERIC DEFAULT 0,
+    weight_accumulate NUMERIC DEFAULT 0,
+    pickup_days JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
 );
 
 -- Create indexes for common queries

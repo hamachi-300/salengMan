@@ -79,7 +79,7 @@ function SelectEsgAddress() {
         <div className={styles['page']}>
             <PageHeader
                 title="Select ESG Location"
-                onBack={() => navigate('/esg/subscription', { state: { subscriptionPackage } })}
+                backTo="/esg/subscription"
             />
 
             <div className={styles['content']}>

@@ -24,7 +24,7 @@ function Subscription() {
 
     return (
         <div className={styles.container}>
-            <PageHeader title="ESG Subscription" />
+            <PageHeader title="ESG Subscription" backTo="/home"/>
 
             <div className={styles.content}>
                 <p className={styles.selectionSubtitle}>เลือก package ที่คุณต้องการสมัคร</p>
