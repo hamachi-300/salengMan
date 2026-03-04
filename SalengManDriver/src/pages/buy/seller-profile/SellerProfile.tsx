@@ -22,6 +22,7 @@ function SellerProfile() {
     const [seller, setSeller] = useState<Seller | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [userScore, setUserScore] = useState<any>(null);
 
     useEffect(() => {
         fetchSellerProfile();
@@ -50,6 +51,14 @@ function SellerProfile() {
             }
 
             setSeller(data as any); // Type assertion if needed based on API response
+
+            // Fetch seller score
+            try {
+                const scoreData = await api.getUserScore(token, id);
+                setUserScore(scoreData);
+            } catch (scoreErr) {
+                console.error("Failed to fetch seller score:", scoreErr);
+            }
         } catch (err) {
             console.error("Failed to fetch seller profile:", err);
             setError("Failed to load seller profile");
@@ -153,6 +162,28 @@ function SellerProfile() {
                         </div>
                     </div>
                 </div>
+
+                {/* Score (New) */}
+                {userScore && (
+                    <div className={styles.infoCard}>
+                        <div className={styles.cardLeft}>
+                            <div className={styles.iconWrapper}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                            </div>
+                            <div className={styles.infoContent}>
+                                <span className={styles.label}>Score</span>
+                                <span className={styles.value}>
+                                    {Number(userScore.score).toFixed(1)} / 5.0
+                                    <span style={{ fontSize: '0.75rem', color: '#888', marginLeft: '6px', fontWeight: 'normal' }}>
+                                        ({userScore.reviewed_user_id?.length || 0} reviews)
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className={styles.reportSection}>
                     <button

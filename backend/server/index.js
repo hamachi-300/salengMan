@@ -2667,7 +2667,10 @@ app.get('/esg/interested-drivers/:sup_id/:date', authMiddleware, async (req, res
 
     // Fetch public profiles for these drivers
     const profilesResult = await pool.query(
-      'SELECT id, full_name, avatar_url, created_at FROM users WHERE id = ANY($1)',
+      `SELECT u.id, u.full_name, u.avatar_url, u.created_at, ed.driver_id 
+       FROM users u 
+       JOIN esg_driver ed ON u.id = ed.user_id 
+       WHERE ed.driver_id = ANY($1)`,
       [driverIds]
     );
 
@@ -2772,11 +2775,11 @@ app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    // List available subscriptions
+    // List available subscriptions (filter out any days that already have a confirmed driver)
     let filtered = result.rows.map(row => {
-      const days = row.pickup_days || [];
-      // Filter out days that already have a driver
-      const availableDays = days.filter(d => d && !d.have_driver);
+      const days = Array.isArray(row.pickup_days) ? row.pickup_days : [];
+      // Strictly filter out days where have_driver is true
+      const availableDays = days.filter(d => d && d.have_driver !== true);
       return { ...row, pickup_days: availableDays };
     }).filter(row => row.pickup_days.length > 0);
 
@@ -2823,7 +2826,7 @@ app.post('/esg/driver/contract', authMiddleware, async (req, res) => {
     if (!sub_pickup_days[subDayIdx].driver.includes(driver_id)) {
       sub_pickup_days[subDayIdx].driver.push(driver_id);
     }
-    sub_pickup_days[subDayIdx].have_driver = true;
+    // sub_pickup_days[subDayIdx].have_driver = true; // DO NOT set to true here, wait for subscriber confirmation
 
     // 4. Update Driver pickup_days
     const driver_pickup_days = driver.pickup_days;
@@ -2902,7 +2905,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
 
     // 3. Update Driver Table (Mark is_accept = true)
     const driverRes = await client.query(
-      'SELECT pickup_days FROM esg_driver WHERE driver_id = $1 FOR UPDATE',
+      'SELECT pickup_days FROM esg_driver WHERE user_id = $1 FOR UPDATE',
       [driver_id]
     );
 

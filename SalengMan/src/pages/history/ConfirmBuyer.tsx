@@ -30,6 +30,7 @@ function ConfirmBuyer() {
     const [confirming, setConfirming] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [userScore, setUserScore] = useState<any>(null);
 
     useEffect(() => {
         fetchData();
@@ -49,6 +50,14 @@ function ConfirmBuyer() {
             if (contactData.buyer_id) {
                 const buyerData = await api.getPublicProfile(token, contactData.buyer_id);
                 setBuyer(buyerData);
+
+                // Fetch buyer score
+                try {
+                    const scoreData = await api.getUserScore(token, contactData.buyer_id);
+                    setUserScore(scoreData);
+                } catch (scoreErr) {
+                    console.error("Failed to fetch buyer score:", scoreErr);
+                }
             }
         } catch (err: any) {
             console.error("Failed to load data:", err);
@@ -226,6 +235,26 @@ function ConfirmBuyer() {
                             <span className={styles['value']}>{new Date(buyer.created_at).toLocaleDateString('en-GB')}</span>
                         </div>
                     </div>
+
+                    {/* Score (New) */}
+                    {userScore && (
+                        <div className={styles['info-card']}>
+                            <div className={styles['icon-wrapper']}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                </svg>
+                            </div>
+                            <div className={styles['info-content']}>
+                                <span className={styles['label']}>Score</span>
+                                <span className={styles['value']}>
+                                    {Number(userScore.score).toFixed(1)} / 5.0
+                                    <span style={{ fontSize: '0.75rem', color: '#888', marginLeft: '6px', fontWeight: 'normal' }}>
+                                        ({userScore.reviewed_user_id?.length || 0} reviews)
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
