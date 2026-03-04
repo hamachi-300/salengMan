@@ -1341,49 +1341,10 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// ============================================
-// DRIVER LOCATION ENDPOINTS
-// ============================================
+// (Obsolete endpoints removed during refactor)
 
-app.post('/driver/location', authMiddleware, async (req, res) => {
-  try {
-    if (req.user.role !== 'driver') {
-      return res.status(403).json({ error: 'Only drivers can update location' });
-    }
+// Get nearby drivers (using PostGIS)
 
-    const { lat, lng, heading, speed } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO driver_locations (driver_id, lat, lng, heading, speed, updated_at)
-       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
-       ON CONFLICT (driver_id)
-       DO UPDATE SET lat = $2, lng = $3, heading = $4, speed = $5, updated_at = CURRENT_TIMESTAMP
-       RETURNING *`,
-      [req.user.user_id, lat, lng, heading, speed]
-    );
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.get('/driver/location/:driverId', async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM driver_locations WHERE driver_id = $1',
-      [req.params.driverId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Driver location not found' });
-    }
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
 
 // Get nearby drivers (using PostGIS)
 app.get('/drivers/nearby', async (req, res) => {
@@ -2242,27 +2203,6 @@ app.get('/notifications', authMiddleware, async (req, res) => {
   }
 });
 
-// Initialize buckets and database tables
-async function init() {
-  await initBucket();
-
-  // Create driver_locations with all columns and unique constraint
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS driver_locations (
-      id SERIAL PRIMARY KEY,
-      driver_id TEXT UNIQUE NOT NULL,
-      lat DECIMAL NOT NULL,
-      lng DECIMAL NOT NULL,
-      heading DECIMAL,
-      speed DECIMAL,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-
-  console.log('Database tables initialized');
-}
-
-init();
 
 // ============================================
 // DRIVER LOCATION
@@ -2291,8 +2231,8 @@ app.post('/driver-location', authMiddleware, async (req, res) => {
 
     res.json({ status: 'success' });
   } catch (error) {
-    console.error('Error updating driver location:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Database Error in /driver-location:', error);
+    res.status(500).json({ error: error.message, detail: 'Check server logs for details' });
   }
 });
 
@@ -2396,6 +2336,15 @@ async function start() {
     );
   `);
 
+  // Migration for driver_locations: Ensure driver_id is TEXT
+  try {
+    await pool.query(`
+      ALTER TABLE driver_locations ALTER COLUMN driver_id TYPE TEXT;
+    `);
+  } catch (err) {
+    // Already text or other compatibility issue
+  }
+
   // Create esg_driver table
   await pool.query(`
     CREATE TABLE IF NOT EXISTS esg_driver (
@@ -2410,30 +2359,95 @@ async function start() {
     );
   `).catch(err => console.error('Migration error (esg_driver):', err.message));
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS esg_subscriptors (
+      sup_id TEXT PRIMARY KEY,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      address_id INTEGER,
+      package_name TEXT,
+      pickup_days JSONB DEFAULT '[]'::jsonb,
+      is_active BOOLEAN DEFAULT TRUE,
+      begin_sub TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      end_sub TIMESTAMP,
+      max_weight NUMERIC,
+      time_per_month INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `).catch(err => console.error('Migration error (esg_subscriptors):', err.message));
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS esg_package_history (
+      id SERIAL PRIMARY KEY,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      package_name TEXT,
+      max_weight NUMERIC,
+      max_dates_per_month INTEGER,
+      cost NUMERIC,
+      total_cost NUMERIC,
+      subscription_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `).catch(err => console.error('Migration error (esg_package_history):', err.message));
+
+  // --- MIGRATIONS FOR ESG TABLES ---
+  try {
+    // esg_subscriptors migrations
+    await pool.query(`
+      ALTER TABLE esg_subscriptors ADD COLUMN IF NOT EXISTS address_id INTEGER;
+      ALTER TABLE esg_subscriptors ADD COLUMN IF NOT EXISTS max_weight NUMERIC;
+      ALTER TABLE esg_subscriptors ADD COLUMN IF NOT EXISTS time_per_month INTEGER;
+      ALTER TABLE esg_subscriptors ALTER COLUMN pickup_days SET DEFAULT '[]'::jsonb;
+    `);
+
+    // Ensure pickup_days is JSONB
+    await pool.query(`
+      DO $$
+      BEGIN
+        -- If pickup_days is not jsonb (could be text or text[]), convert it
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'esg_subscriptors' AND column_name = 'pickup_days' 
+          AND udt_name != 'jsonb'
+        ) THEN
+          -- Drop and recreate is safest if the data is malformed for jsonb
+          -- But we'll try to cast first
+          BEGIN
+            ALTER TABLE esg_subscriptors ALTER COLUMN pickup_days TYPE JSONB USING (pickup_days::text)::jsonb;
+          EXCEPTION WHEN OTHERS THEN
+            ALTER TABLE esg_subscriptors DROP COLUMN pickup_days;
+            ALTER TABLE esg_subscriptors ADD COLUMN pickup_days JSONB DEFAULT '[]'::jsonb;
+          END;
+        END IF;
+      END $$;
+    `);
+  } catch (err) {
+    console.log('ESG Migration check (non-critical):', err.message);
+  }
+
   console.log('Database tables initialized');
 
   // Ensure notifies table exists
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS notifies (
-        notify_id SERIAL PRIMARY KEY,
-        notify_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        notify_header TEXT NOT NULL,
-        notify_content TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        type VARCHAR(50),
-        refer_id VARCHAR(255),
-        contact_type VARCHAR(50)
-    );
+    CREATE TABLE IF NOT EXISTS notifies(
+    notify_id SERIAL PRIMARY KEY,
+    notify_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    notify_header TEXT NOT NULL,
+    notify_content TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    type VARCHAR(50),
+    refer_id VARCHAR(255),
+    contact_type VARCHAR(50)
+  );
   `).catch(err => console.error('Migration error (notifies):', err.message));
 
   // Migration for existing tables
   await pool.query(`
     DO $$
-    BEGIN
-        IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns
+  BEGIN
+        IF NOT EXISTS(
+    SELECT 1 FROM information_schema.columns
             WHERE table_name = 'notifies' AND column_name = 'contact_type'
-        ) THEN
+  ) THEN
             ALTER TABLE notifies ADD COLUMN contact_type VARCHAR(50);
         END IF;
     END $$;
@@ -2446,50 +2460,50 @@ async function start() {
 
   // Migration for problem_reports and user_reports
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS problem_reports (
-        id SERIAL PRIMARY KEY,
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        header TEXT NOT NULL,
-        content TEXT NOT NULL,
-        image_url TEXT,
-        is_read BOOLEAN DEFAULT FALSE,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS user_reports (
-        id SERIAL PRIMARY KEY,
-        reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        reported_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        header TEXT NOT NULL,
-        content TEXT NOT NULL,
-        image_url TEXT,
-        is_read BOOLEAN DEFAULT FALSE,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+    CREATE TABLE IF NOT EXISTS problem_reports(
+    id SERIAL PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    header TEXT NOT NULL,
+    content TEXT NOT NULL,
+    image_url TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+    CREATE TABLE IF NOT EXISTS user_reports(
+    id SERIAL PRIMARY KEY,
+    reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    reported_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    header TEXT NOT NULL,
+    content TEXT NOT NULL,
+    image_url TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
 
-    -- Ensure is_read column exists if tables were already created
+  --Ensure is_read column exists if tables were already created
     DO $$
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'problem_reports' AND column_name = 'is_read') THEN
+  BEGIN
+        IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'problem_reports' AND column_name = 'is_read') THEN
             ALTER TABLE problem_reports ADD COLUMN is_read BOOLEAN DEFAULT FALSE;
         END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_reports' AND column_name = 'is_read') THEN
+        IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name = 'user_reports' AND column_name = 'is_read') THEN
             ALTER TABLE user_reports ADD COLUMN is_read BOOLEAN DEFAULT FALSE;
         END IF;
     END $$;
 
-    -- Banned emails table
-    CREATE TABLE IF NOT EXISTS banned_emails (
-        email VARCHAR(255) PRIMARY KEY,
-        reason TEXT,
-        banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+  --Banned emails table
+    CREATE TABLE IF NOT EXISTS banned_emails(
+    email VARCHAR(255) PRIMARY KEY,
+    reason TEXT,
+    banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
   `).catch(err => console.error('Migration error (reports/banned tables):', err.message));
 
   // Start background jobs
   setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT} `);
     console.log(`Health check: http://localhost:${PORT}/health`);
   });
 }
@@ -2526,37 +2540,17 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
     const end_sub = new Date();
     end_sub.setFullYear(begin_sub.getFullYear() + 1);
 
-    // Mark selected dates
-    if (Array.isArray(pickup_days)) {
-      pickup_days.forEach(d => {
-        const dIdx = typeof d === 'object' ? d.date : d;
-        if (dIdx >= 1 && dIdx <= 28) {
-          // If the user selected this date, we keep it as is (have_driver: false)
-          // Actually, we should only store the selected dates in a way that the driver can see them.
-          // The current logic seems to be: if it's in the list, it's available.
-        } else {
-          // Nullify or handle invalid dates
-        }
-      });
-      // Filter out dates NOT in the user's selection to save space? 
-      // User said "อางอิงด้วย index... 1-28" so better to keep all 28 or at least the selection in correct slots.
-      // Let's stick to: full 29-length array, but maybe with a flag `is_selected`?
-      // No, the user request says: "pickup_days : [{date : 1, have_driver: false, driver: []}, ...]"
-      // And for driver: "{date : 1, contract user : [{id : text, is_accept : false}, …]}"
+    // Safety check for pickup_days
+    const safe_pickup_days = Array.isArray(pickup_days) ? pickup_days : [];
 
-      // Actually, if a user ONLY has certain dates, we should only have those dates in the array?
-      // "index เว้น 0 ไว้ แล้วเริ่มจาก 1 - 28" implies a fixed size array where index == date.
-
-      // Let's refine: Only selected dates have the object, others are null? Or all have objects?
-      // Fixed 29 length is safer for "refer by index".
-    }
-
-    // Actually, let's just use what the user provided but ensure it's JSON.
-    // The previous error was purely DB type. 
-    // But to follow the "index 1-28" request:
+    // Mark selected dates 1-28
     const final_pickup_days = Array.from({ length: 29 }, (_, i) => {
       if (i === 0) return null;
-      const selected = pickup_days.find(d => (typeof d === 'object' ? d.date : d) === i);
+      const selected = safe_pickup_days.find(d => {
+        const dIdx = (d && typeof d === 'object') ? d.date : d;
+        return dIdx === i;
+      });
+
       if (selected) {
         return {
           date: i,
@@ -2564,26 +2558,38 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
           driver: []
         };
       }
-      return null; // Not a selected pickup day
+      return null;
     });
 
     // 3. Insert into esg_subscriptors
-    const subResult = await client.query(
-      `INSERT INTO esg_subscriptors 
-        (sup_id, user_id, address_id, package_name, pickup_days, is_active, begin_sub, end_sub, max_weight, time_per_month)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING *`,
-      [sup_id, user_id, address_id, package_name, JSON.stringify(final_pickup_days), true, begin_sub, end_sub, max_weight, time_per_month]
-    );
+    let subResult;
+    try {
+      subResult = await client.query(
+        `INSERT INTO esg_subscriptors 
+          (sup_id, user_id, address_id, package_name, pickup_days, is_active, begin_sub, end_sub, max_weight, time_per_month)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING *`,
+        [sup_id, user_id, address_id, package_name, JSON.stringify(final_pickup_days), true, begin_sub, end_sub, max_weight, time_per_month]
+      );
+    } catch (insertError) {
+      console.error('Database Error in /esg/subscribe (subscriptors):', insertError);
+      throw new Error(`Failed to save subscription: ${insertError.message}`);
+    }
 
     // 4. Insert into esg_package_history
-    const historyResult = await client.query(
-      `INSERT INTO esg_package_history 
-        (user_id, package_name, max_weight, max_dates_per_month, cost, total_cost, subscription_datetime)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [user_id, package_name, max_weight, time_per_month, cost, total_cost, begin_sub]
-    );
+    let historyResult;
+    try {
+      historyResult = await client.query(
+        `INSERT INTO esg_package_history 
+          (user_id, package_name, max_weight, max_dates_per_month, cost, total_cost, subscription_datetime)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [user_id, package_name, max_weight, time_per_month, cost, total_cost, begin_sub]
+      );
+    } catch (historyError) {
+      console.error('Database Error in /esg/subscribe (history):', historyError);
+      throw new Error(`Failed to save package history: ${historyError.message}`);
+    }
 
     await client.query('COMMIT');
 
@@ -2756,7 +2762,7 @@ app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
     const { date } = req.query; // date index 1-28
 
     let query = `
-      SELECT s.*, u.full_name, u.phone, a.house_no, a.moo, a.soi, a.road, a.sub-district as sub_district, a.district, a.province 
+      SELECT s.*, u.full_name, u.avatar_url, u.phone as user_phone, a.address, a.sub_district, a.district, a.province, a.phone as address_phone
       FROM esg_subscriptors s
       JOIN users u ON s.user_id = u.id
       JOIN addresses a ON s.address_id = a.id
@@ -2766,13 +2772,19 @@ app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    // Filter by date in JavaScript due to JSONB structure
-    let filtered = result.rows;
+    // List available subscriptions
+    let filtered = result.rows.map(row => {
+      const days = row.pickup_days || [];
+      // Filter out days that already have a driver
+      const availableDays = days.filter(d => d && !d.have_driver);
+      return { ...row, pickup_days: availableDays };
+    }).filter(row => row.pickup_days.length > 0);
+
+    // If specific date is requested, filter further
     if (date) {
       const dateIdx = parseInt(date);
-      filtered = result.rows.filter(row => {
-        const days = row.pickup_days || [];
-        return days.some(d => d.date === dateIdx && !d.have_driver);
+      filtered = filtered.filter(row => {
+        return row.pickup_days.some(d => d.date === dateIdx);
       });
     }
 
@@ -2879,7 +2891,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Date not found in subscription' });
     }
 
-    // Update the specific day entry
+    // 2. Update Subscriber Table
     pickup_days[dayIndex].have_driver = true;
     pickup_days[dayIndex].confirmed_driver_id = driver_id;
 
@@ -2887,6 +2899,27 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
       [JSON.stringify(pickup_days), sup_id]
     );
+
+    // 3. Update Driver Table (Mark is_accept = true)
+    const driverRes = await client.query(
+      'SELECT pickup_days FROM esg_driver WHERE driver_id = $1 FOR UPDATE',
+      [driver_id]
+    );
+
+    if (driverRes.rows.length > 0) {
+      const dPickupDays = driverRes.rows[0].pickup_days;
+      const dDayIdx = dPickupDays.findIndex(d => d && d.date === parseInt(date));
+      if (dDayIdx !== -1) {
+        const contractIdx = dPickupDays[dDayIdx].contract_user.findIndex(c => c.id == sup_id);
+        if (contractIdx !== -1) {
+          dPickupDays[dDayIdx].contract_user[contractIdx].is_accept = true;
+          await client.query(
+            'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE driver_id = $2',
+            [JSON.stringify(dPickupDays), driver_id]
+          );
+        }
+      }
+    }
 
     await client.query('COMMIT');
     res.json({ success: true, pickup_days });

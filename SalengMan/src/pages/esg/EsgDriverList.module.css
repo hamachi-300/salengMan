@@ -86,10 +86,11 @@
     margin: 0;
 }
 
-.member-since {
+.driver-status {
     font-family: var(--font-eng-fun);
     font-size: 13px;
-    color: #888;
+    color: #4CAF50;
+    font-weight: 600;
 }
 
 .chevron-icon {
@@ -139,16 +140,4 @@
     color: #ff5252;
     text-align: center;
     font-family: var(--font-th);
-}
-
-.footer-wrapper {
-    padding: 16px;
-    background-color: var(--color-bg);
-}
-
-.footer-text {
-    text-align: center;
-    color: #888;
-    font-family: var(--font-th);
-    font-size: 14px;
 }

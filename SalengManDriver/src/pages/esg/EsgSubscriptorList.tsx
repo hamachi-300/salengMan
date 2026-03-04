@@ -81,26 +81,36 @@ const EsgSubscriptorList: React.FC = () => {
                     <div className={styles.empty}>ไม่พบผู้จองในวันที่เลือก</div>
                 ) : (
                     <div className={styles.list}>
-                        {subscriptors.map((sub) => (
-                            <div key={sub.sup_id} className={styles.subCard}>
-                                <div className={styles.subInfo} onClick={() => setSelectedUser(sub)}>
-                                    <img src={sub.avatar_url || profileLogo} className={styles.avatar} alt="Avatar" />
-                                    <div className={styles.details}>
-                                        <h3 className={styles.name}>{sub.full_name}</h3>
-                                        <p className={styles.address}>{sub.sub_district}, {sub.district}</p>
-                                        <div className={styles.tags}>
-                                            <span className={styles.tag}>{sub.package_name}</span>
+                        {subscriptors.flatMap(sub =>
+                            sub.pickup_days
+                                .filter((d: any) => !filterDate || d.date === Number(filterDate))
+                                .map((day: any) => (
+                                    <div key={`${sub.sup_id}-${day.date}`} className={styles.subCard}>
+                                        <div className={styles.subInfo} onClick={() => setSelectedUser(sub)}>
+                                            <div className={styles.avatarContainer}>
+                                                <img src={sub.avatar_url || profileLogo} className={styles.avatar} alt="Avatar" />
+                                                <div className={styles.onlineIndicator} />
+                                            </div>
+                                            <div className={styles.details}>
+                                                <h3 className={styles.name}>{sub.full_name}</h3>
+                                                <p className={styles.address}>
+                                                    <span className={styles.supIdDisplay}>{sub.sup_id}</span> : <span className={styles.dateDisplay}>{day.date}</span>
+                                                </p>
+                                                <p className={styles.subAddress}>{sub.sub_district}, {sub.district}</p>
+                                                <div className={styles.tags}>
+                                                    <span className={styles.packageTag}>{sub.package_name}</span>
+                                                </div>
+                                            </div>
                                         </div>
+                                        <button
+                                            className={styles.contractButton}
+                                            onClick={() => handleSignContract(sub.sup_id, day.date)}
+                                        >
+                                            ทำสัญญา
+                                        </button>
                                     </div>
-                                </div>
-                                <button
-                                    className={styles.contractButton}
-                                    onClick={() => handleSignContract(sub.sup_id, filterDate || sub.pickup_days[0]?.date)}
-                                >
-                                    ทำสัญญา
-                                </button>
-                            </div>
-                        ))}
+                                ))
+                        )}
                     </div>
                 )}
             </div>
@@ -127,6 +137,19 @@ const EsgSubscriptorList: React.FC = () => {
                             <div className={styles.infoRow}>
                                 <span className={styles.label}>แพ็กเกจ:</span>
                                 <span className={styles.value}>{selectedUser.package_name}</span>
+                            </div>
+                            <div className={styles.infoRow}>
+                                <span className={styles.label}>วันที่ว่าง:</span>
+                                <div className={styles.tags}>
+                                    {selectedUser.pickup_days.map((d: any) => (
+                                        <span
+                                            key={d.date}
+                                            className={`${styles.dateTag} ${filterDate == d.date ? styles.highlightDate : ''}`}
+                                        >
+                                            วันที่ {d.date}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <button
