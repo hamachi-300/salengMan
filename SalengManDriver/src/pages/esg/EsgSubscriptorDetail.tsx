@@ -132,6 +132,23 @@ function EsgSubscriptorDetail() {
 
         setSigning(true);
         try {
+            // Check task limit before signing
+            const driverProfile = await api.getEsgDriverProfile(token);
+            if (driverProfile && driverProfile.pickup_days) {
+                const dayData = driverProfile.pickup_days.find((d: any) => d && d.date === parseInt(date));
+                const acceptedCount = dayData?.contract_user?.filter((c: any) => c.is_accept === true).length || 0;
+
+                if (acceptedCount >= 4) {
+                    setAlertConfig({
+                        isOpen: true,
+                        title: "ขีดจํากัดการรับงาน",
+                        message: "คุณรับงานครบ 4 รายการสำหรับวันนี้แล้ว เพื่อคุณภาพการบริการ โปรดรับงานในวันอื่นแทน"
+                    });
+                    setSigning(false);
+                    return;
+                }
+            }
+
             await api.signEsgContract(token, supId, parseInt(date));
             setShowSuccess(true);
         } catch (err: any) {

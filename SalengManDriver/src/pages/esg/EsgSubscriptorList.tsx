@@ -6,6 +6,7 @@ import { api } from '../../config/api';
 import { getToken } from '../../services/auth';
 import profileLogo from '../../assets/icon/profile.svg';
 import { useUser } from '../../context/UserContext';
+import AlertPopup from '../../components/AlertPopup';
 
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radius of the earth in km
@@ -29,6 +30,7 @@ const EsgSubscriptorList: React.FC = () => {
     const [filterDate, setFilterDate] = useState<string>("");
     const [activeTab, setActiveTab] = useState<'accept' | 'waiting' | 'discover'>('discover');
     const [subLocations, setSubLocations] = useState<Record<string, { lat: number, lng: number }>>({});
+    const [showInfo, setShowInfo] = useState(false);
 
     useEffect(() => {
         if (location.state?.filterDate) {
@@ -83,7 +85,17 @@ const EsgSubscriptorList: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <PageHeader title="รายการผู้จองทิ้งขยะ" backTo="/esg/search_sub" />
+            <PageHeader
+                title="รายการผู้จองทิ้งขยะ"
+                backTo="/esg/search_sub"
+                rightElement={
+                    <button className={styles.infoIconButton} onClick={() => setShowInfo(true)}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                        </svg>
+                    </button>
+                }
+            />
 
             <div className={styles.tabs}>
                 <button
@@ -164,6 +176,12 @@ const EsgSubscriptorList: React.FC = () => {
                 )}
             </div>
 
+            <AlertPopup
+                isOpen={showInfo}
+                title="คําแนะนําการรับงาน"
+                message="เพื่อรักษาคุณภาพการบริการ เราแนะนำให้คุณรับงานสัญญา ESG ไม่เกิน 4 รายต่อวัน"
+                onClose={() => setShowInfo(false)}
+            />
         </div>
     );
 };

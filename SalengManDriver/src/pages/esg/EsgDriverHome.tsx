@@ -63,8 +63,8 @@ const EsgDriverHome: React.FC = () => {
                 {/* Secondary Actions */}
                 <span className={styles.sectionLabel}>จัดการงาน</span>
                 <div className={styles.actionGrid}>
-                    <button className={styles.tomorrowJobButton}>
-                        <span>งานพรุ่งนี้</span>
+                    <button className={styles.tomorrowJobButton} onClick={() => navigate('/esg/tomorrow_task')}>
+                        <span>งานวันพรุ่งนี้</span>
                         <span className={styles.countBadge}>{profile?.tomorrowJobsCount || 0}</span>
                     </button>
                     <button className={styles.menuButton} onClick={() => navigate('/esg/search_sub')}>

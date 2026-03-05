@@ -81,3 +81,15 @@
 .searchAllButton:active {
     background-color: #444;
 }
+
+.acceptedCard {
+    background-color: var(--orange-button) !important;
+}
+
+.acceptedNumber {
+    color: #000 !important;
+}
+
+.acceptedLabel {
+    color: rgba(0, 0, 0, 0.6) !important;
+}

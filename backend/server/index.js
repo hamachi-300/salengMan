@@ -2688,17 +2688,23 @@ app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
     const pickup_days = driver.pickup_days || [];
 
     // Get tomorrow's date index (1-28)
-    // For Thai context, could be simple Date logic or just showing list
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowDate = tomorrow.getDate(); // Simplistic: just day of month (capped at 28 for mockup logic)
-    const dayIndex = tomorrowDate > 28 ? 28 : tomorrowDate;
+    const tomorrowDate = tomorrow.getDate();
 
-    const tomorrowJobs = (pickup_days.find(d => d && d.date === dayIndex)?.contract_user || []);
+    let tomorrowJobsCount = 0;
+    // Only count if it's within the 1-28 day range (ESG subscription period)
+    if (tomorrowDate <= 28) {
+      const dayData = pickup_days.find(d => d && d.date === tomorrowDate);
+      if (dayData && dayData.contract_user) {
+        // Only count accepted jobs
+        tomorrowJobsCount = dayData.contract_user.filter(c => c.is_accept === true).length;
+      }
+    }
 
     res.json({
       ...driver,
-      tomorrowJobsCount: tomorrowJobs.length
+      tomorrowJobsCount
     });
   } catch (error) {
     console.error('Error in /esg/driver/profile:', error);
