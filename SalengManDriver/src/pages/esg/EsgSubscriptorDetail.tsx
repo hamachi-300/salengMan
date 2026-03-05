@@ -166,7 +166,8 @@ function EsgSubscriptorDetail() {
     if (!subscriptor) return <div className={styles.error}>Subscriptor not found</div>;
 
     const currentDay = subscriptor.pickup_days.find(d => d.date === parseInt(date || "0"));
-    const isAlreadySigned = currentDay?.category === 'waiting' || currentDay?.category === 'accept';
+    const isWaiting = currentDay?.category === 'waiting';
+    const isAccept = currentDay?.category === 'accept';
     const chatId = currentDay?.chat_id;
 
     const resolvedPhone = subscriptor.address_phone || subscriptor.user_phone || "Not provided";
@@ -210,17 +211,6 @@ function EsgSubscriptorDetail() {
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                         </svg>
                     </div>
-                    {chatId && (
-                        <button
-                            className={styles.chatButton}
-                            onClick={() => navigate(`/chat/${chatId}`)}
-                            title="Chat with subscriptor"
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-5H6V7h12v2z" />
-                            </svg>
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -323,13 +313,27 @@ function EsgSubscriptorDetail() {
             </div>
 
             <div className={styles.footer}>
-                <button
-                    className={`${styles.signButton} ${isAlreadySigned ? styles.disabled : ''}`}
-                    onClick={handleSignContract}
-                    disabled={signing || isAlreadySigned}
-                >
-                    {signing ? "กำลังดำเนินการ..." : isAlreadySigned ? "ทำสัญญาแล้ว" : "ทำสัญญารับทิ้งขยะ"}
-                </button>
+                {isAccept && chatId ? (
+                    <button
+                        className={styles.chatButtonFull}
+                        onClick={() => navigate(`/chat/${chatId}`)}
+                    >
+                        <div className={styles.chatIcon}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-5H6V7h12v2z" />
+                            </svg>
+                        </div>
+                        แชทกับผู้ทิ้งขยะ
+                    </button>
+                ) : (
+                    <button
+                        className={`${styles.signButton} ${isWaiting || isAccept ? styles.disabled : ''}`}
+                        onClick={handleSignContract}
+                        disabled={signing || isWaiting || isAccept}
+                    >
+                        {signing ? "กำลังดำเนินการ..." : (isWaiting || isAccept) ? "ทำสัญญาแล้ว" : "ทำสัญญารับทิ้งขยะ"}
+                    </button>
+                )}
             </div>
 
             <SuccessPopup

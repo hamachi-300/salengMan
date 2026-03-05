@@ -247,3 +247,30 @@
 .reportButton:active {
     transform: scale(0.98);
 }
+
+.chatButtonFull {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--orange-button);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.3);
+    transition: all 0.2s ease;
+}
+
+.chatButtonFull:active {
+    transform: scale(0.98);
+}
+
+.chatIcon {
+    display: flex;
+    align-items: center;
+}

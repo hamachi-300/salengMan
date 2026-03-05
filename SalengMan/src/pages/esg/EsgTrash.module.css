@@ -231,3 +231,34 @@
     opacity: 0.6;
     margin: 0;
 }
+
+.menuButton {
+    background-color: var(--color-bg-2, #2a2a2a);
+    color: #fff;
+    padding: 20px 24px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin-top: 8px;
+}
+
+.menuButton:hover {
+    background-color: #333;
+}
+
+.menuButton:active {
+    transform: scale(0.98);
+}
+
+.menuIcon {
+    opacity: 0.4;
+    font-size: 1.2rem;
+}

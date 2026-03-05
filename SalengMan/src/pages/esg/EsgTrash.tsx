@@ -79,6 +79,11 @@ function EsgTrash() {
                         <p className={styles.serviceSubtitle}>ออกรายงาน ESG</p>
                     </button>
                 </div>
+
+                <button className={styles.menuButton} onClick={() => { }}>
+                    <span>ประวัติการทิ้งขยะ</span>
+                    <span className={styles.menuIcon}>›</span>
+                </button>
             </div>
 
             {/* Bottom Button */}
