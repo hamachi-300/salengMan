@@ -143,7 +143,6 @@ const EsgSubscriptorList: React.FC = () => {
                                                     </div>
                                                     <p className={styles.address}>
                                                         date : <span className={styles.dateDisplay}>{day.date}</span>
-                                                        {distance !== null && <span className={styles.distanceText}> ({distance.toFixed(1)} km)</span>}
                                                     </p>
                                                     <div className={styles.tags}>
                                                         <span className={styles.packageTag}>{sub.package_name}</span>
@@ -151,17 +150,12 @@ const EsgSubscriptorList: React.FC = () => {
                                                 </div>
                                             </div>
 
-                                            {day.category === 'waiting' && (
-                                                <div className={styles.waitingLabel}>รอการยืนยัน</div>
-                                            )}
-                                            {day.category === 'accept' && (
-                                                <div className={styles.acceptedLabel}>
-                                                    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
-                                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                                    </svg>
-                                                    <span>ตกลงแล้ว</span>
-                                                </div>
-                                            )}
+                                            <div className={styles.sideContent}>
+                                                {distance !== null && <span className={styles.distanceText}>{distance.toFixed(1)} km</span>}
+                                                {day.category === 'waiting' && (
+                                                    <div className={styles.waitingLabel}>รอการยืนยัน</div>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })

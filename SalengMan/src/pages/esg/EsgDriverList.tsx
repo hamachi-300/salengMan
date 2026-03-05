@@ -75,7 +75,7 @@ function EsgDriverList() {
                             <div
                                 key={driver.id}
                                 className={styles['driver-card']}
-                                onClick={() => navigate(`/esg/driver-confirm/${supId}/${date}/${driver.id}`)}
+                                onClick={() => navigate(`/esg/driver-confirm/${supId}/${date}/${driver.driver_id}`)}
                             >
                                 <div className={styles['avatar-container']}>
                                     <img

@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './PageFooter.module.css';
 
 interface PageFooterProps {
-    title: string;
+    title: React.ReactNode;
     onClick: () => void;
     disabled?: boolean;
     showArrow?: boolean;

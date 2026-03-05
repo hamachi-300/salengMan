@@ -573,13 +573,17 @@ app.patch('/auth/me', authMiddleware, async (req, res) => {
 // Get user public profile
 app.get('/users/:id/public', authMiddleware, async (req, res) => {
   try {
+    const identifier = req.params.id;
+    const isEsgId = identifier.startsWith('DRV-ESG-');
+
     const result = await pool.query(
       `SELECT u.id, u.full_name, u.email, u.phone as user_phone, u.avatar_url, u.created_at,
-              a.address as default_address, a.phone as address_phone
+              a.address as default_address, a.phone as address_phone, ed.driver_id as esg_driver_id
        FROM users u
        LEFT JOIN addresses a ON u.id = a.user_id AND a.is_default = true
-       WHERE u.id = $1`,
-      [req.params.id]
+       LEFT JOIN esg_driver ed ON u.id = ed.user_id
+       WHERE ${isEsgId ? 'ed.driver_id = $1' : 'u.id = $1'}`,
+      [identifier]
     );
 
     if (result.rows.length === 0) {
@@ -2707,7 +2711,7 @@ app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
     const { date } = req.query; // date index 1-28
 
     let query = `
-      SELECT s.*, u.full_name, u.avatar_url, u.phone as user_phone, a.address, a.sub_district, a.district, a.province, a.phone as address_phone, a.lat, a.lng
+      SELECT s.*, u.full_name, u.avatar_url, u.email, u.created_at, u.phone as user_phone, a.address, a.sub_district, a.district, a.province, a.phone as address_phone, a.lat, a.lng
       FROM esg_subscriptors s
       JOIN users u ON s.user_id = u.id
       JOIN addresses a ON s.address_id = a.id
@@ -2839,14 +2843,18 @@ app.post('/esg/driver/contract', authMiddleware, async (req, res) => {
 app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
-    const { sup_id, date, driver_id } = req.body;
+    const { sup_id, date, driver_id } = req.body; // driver_id can be UUID or ESG ID
     const user_id = req.user.user_id;
 
     await client.query('BEGIN');
 
-    // 1. Get Driver Info to get their ESG ID
+    // 1. Get Driver Info to get their ESG ID and internal User ID
+    const isEsgId = driver_id.startsWith('DRV-ESG-');
     const driverRes = await client.query(
-      'SELECT driver_id, pickup_days FROM esg_driver WHERE user_id = $1 FOR UPDATE',
+      `SELECT user_id, driver_id, pickup_days 
+       FROM esg_driver 
+       WHERE ${isEsgId ? 'driver_id = $1' : 'user_id = $1'} 
+       FOR UPDATE`,
       [driver_id]
     );
 
@@ -2855,6 +2863,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Driver profile not found' });
     }
 
+    const internal_driver_id = driverRes.rows[0].user_id;
     const esg_driver_id = driverRes.rows[0].driver_id;
     const dPickupDays = driverRes.rows[0].pickup_days;
 
@@ -2868,7 +2877,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     await client.query(
       `INSERT INTO contacts (id, post_id, seller_id, buyer_id, chat_id, status, type) 
        VALUES (uuid_generate_v4(), NULL, $1, $2, $3, 'accepted', 'esg')`,
-      [user_id, driver_id, chatId]
+      [user_id, internal_driver_id, chatId]
     );
 
     // 3. Get and Update Subscriber Table
@@ -2908,7 +2917,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
         dPickupDays[dDayIdx].contract_user[contractIdx].is_accept = true;
         await client.query(
           'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
-          [JSON.stringify(dPickupDays), driver_id]
+          [JSON.stringify(dPickupDays), internal_driver_id]
         );
       }
     }

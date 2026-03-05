@@ -16,6 +16,8 @@ interface DriverProfile {
     phone: string;
     avatar_url?: string;
     created_at: string;
+    user_phone?: string;
+    address_phone?: string;
 }
 
 function EsgDriverConfirm() {
@@ -43,6 +45,11 @@ function EsgDriverConfirm() {
 
         try {
             const driverData = await api.getPublicProfile(token, driverId);
+
+            // Resolve phone number: Priority is Default Address Phone > User Account Phone
+            const resolvedPhone = driverData.address_phone || driverData.user_phone || '-';
+            driverData.phone = resolvedPhone;
+
             setDriver(driverData);
 
             // Check if date is already occupied and get chatId
@@ -132,17 +139,6 @@ function EsgDriverConfirm() {
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
                         </svg>
                     </div>
-                    {chatId && (
-                        <button
-                            className={styles['chat-button']}
-                            onClick={() => navigate(`/chat/${chatId}`)}
-                            title="Chat with driver"
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-5H6V7h12v2z" />
-                            </svg>
-                        </button>
-                    )}
                 </div>
 
                 <div className={styles['info-container']}>
@@ -174,6 +170,19 @@ function EsgDriverConfirm() {
                         </div>
                     </div>
 
+                    {/* Email */}
+                    <div className={styles['info-card']}>
+                        <div className={styles['icon-wrapper']}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                            </svg>
+                        </div>
+                        <div className={styles['info-content']}>
+                            <span className={styles['label']}>Email</span>
+                            <span className={styles['value']}>{driver.email || '-'}</span>
+                        </div>
+                    </div>
+
                     {/* Member Since */}
                     <div className={styles['info-card']}>
                         <div className={styles['icon-wrapper']}>
@@ -187,10 +196,36 @@ function EsgDriverConfirm() {
                         </div>
                     </div>
 
+                    {/* Report User */}
+                    <div className={styles['report-section']}>
+                        <button
+                            className={styles['report-button']}
+                            onClick={() => navigate("/user-report", { state: { reportedUser: driver } })}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                            </svg>
+                            Report This User
+                        </button>
+                    </div>
+
                 </div>
             </div>
 
-            {!isDateOccupied && (
+            {chatId ? (
+                <PageFooter
+                    title={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-5H6V7h12v2z" />
+                            </svg>
+                            <span>Chat with driver</span>
+                        </div>
+                    }
+                    onClick={() => navigate(`/chat/${chatId}`)}
+                    showArrow={false}
+                />
+            ) : !isDateOccupied && (
                 <>
                     <div className={styles['footer-wrapper']}>
                         <div className={styles['agreement-text']}>

@@ -27,10 +27,13 @@ interface UserResponse {
   email: string;
   full_name: string;
   phone?: string;
+  user_phone?: string;
+  address_phone?: string;
   role: string;
   avatar_url?: string;
   gender?: string;
   default_address?: string;
+  created_at?: string;
 }
 
 export interface Address {

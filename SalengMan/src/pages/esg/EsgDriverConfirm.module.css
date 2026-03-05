@@ -202,3 +202,33 @@
     border-radius: 50%;
     border: 2px solid var(--color-bg);
 }
+
+.report-section {
+    width: 100%;
+    margin-top: 24px;
+    margin-bottom: 24px;
+}
+
+.report-button {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--color-bg-2);
+    color: #ef4444;
+    border: 2px dotted #ef4444;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font-eng-fun);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.report-button:active {
+    background-color: rgba(239, 68, 68, 0.1);
+    transform: scale(0.98);
+}

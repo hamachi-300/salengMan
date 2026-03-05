@@ -208,3 +208,42 @@
 .mapContent {
     flex: 1;
 }
+
+.reportSection {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.reportTitle {
+    font-size: 0.9rem;
+    color: #888;
+    font-weight: 500;
+}
+
+.reportButton {
+    background-color: rgba(218, 72, 72, 0.1);
+    color: #DA4848;
+    border: 1px solid rgba(218, 72, 72, 0.2);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.reportButton:hover {
+    background-color: rgba(218, 72, 72, 0.2);
+}
+
+.reportButton:active {
+    transform: scale(0.98);
+}
