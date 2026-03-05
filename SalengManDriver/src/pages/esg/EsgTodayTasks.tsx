@@ -58,14 +58,20 @@ const EsgTodayTasks: React.FC = () => {
                                     <div className={styles.details}>
                                         <div className={styles.nameRow}>
                                             <h3 className={styles.name}>{task.user_name}</h3>
-                                            <span className={styles.statusBadge}>นัดหมายแล้ว</span>
+                                            <span
+                                                className={styles.statusBadge}
+                                                style={{
+                                                    backgroundColor: `var(--${task.status}-bg)`,
+                                                    color: `var(--${task.status}-text)`,
+                                                    border: `1px solid var(--${task.status}-border)`
+                                                }}
+                                            >
+                                                {task.status}
+                                            </span>
                                         </div>
-                                        <p className={styles.dateText}>
-                                            เวลานัดหมาย : 08:00 น.
+                                        <p className={styles.packageText}>
+                                            package : {task.package_name}
                                         </p>
-                                        <div className={styles.tags}>
-                                            <span className={styles.packageTag}>{task.package_name}</span>
-                                        </div>
                                     </div>
                                 </div>
                                 <div className={styles.sideContent}>

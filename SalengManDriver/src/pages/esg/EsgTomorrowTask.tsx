@@ -30,6 +30,37 @@ const EsgTomorrowTask: React.FC = () => {
         }
     };
 
+    const groupTasksByDate = (taskList: any[]) => {
+        const groups: { [key: string]: any[] } = {};
+        taskList.forEach(task => {
+            const dateKey = new Date(task.date).toDateString();
+            if (!groups[dateKey]) {
+                groups[dateKey] = [];
+            }
+            groups[dateKey].push(task);
+        });
+        return groups;
+    };
+
+    const getDateHeader = (dateString: string) => {
+        const date = new Date(dateString);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        if (date.toDateString() === tomorrow.toDateString()) {
+            return "พรุ่งนี้";
+        }
+
+        return date.toLocaleDateString('th-TH', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
+
+    const groupedTasks = groupTasksByDate(tasks);
+    const sortedDates = Object.keys(groupedTasks).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
     return (
         <div className={styles.container}>
             <PageHeader title="งานต่อไป" onBack={() => navigate('/esg/driver')} />
@@ -44,36 +75,36 @@ const EsgTomorrowTask: React.FC = () => {
                 ) : tasks.length === 0 ? (
                     <div className={styles.empty}>ไม่มีงานที่คุณรับไว้ในอนาคต</div>
                 ) : (
-                    <div className={styles.subList}>
-                        {tasks.map((task) => (
-                            <div
-                                key={task.tasks_id}
-                                className={`${styles.subCard} ${task.status === 'skipped' ? styles.skippedCard : ''}`}
-                                onClick={() => navigate(`/esg/subscriptor-detail/${task.esg_subscriptor_id}/${new Date(task.date).getDate()}`)}
-                            >
-                                <div className={styles.subInfo}>
-                                    <div className={styles.avatarContainer}>
-                                        <img src={task.user_avatar || profileLogo} className={styles.avatar} alt="Avatar" />
-                                        <div className={styles.onlineIndicator} />
-                                    </div>
-                                    <div className={styles.details}>
-                                        <div className={styles.nameRow}>
-                                            <h3 className={styles.name}>{task.user_name}</h3>
-                                            <span className={`${styles.statusBadge} ${task.status === 'skipped' ? styles.skippedBadge : ''}`}>
-                                                {task.status === 'skipped' ? 'Skipped' : 'นัดหมายแล้ว'}
-                                            </span>
+                    <div className={styles.groupedContainer}>
+                        {sortedDates.map((dateKey) => (
+                            <div key={dateKey} className={styles.dateGroup}>
+                                <div className={styles.groupHeader}>
+                                    <span className={styles.groupHeaderText}>{getDateHeader(dateKey)}</span>
+                                    <div className={styles.divider} />
+                                </div>
+                                <div className={styles.subList}>
+                                    {groupedTasks[dateKey].map((task) => (
+                                        <div
+                                            key={task.tasks_id}
+                                            className={`${styles.subCard} ${task.status === 'skipped' ? styles.skippedCard : ''}`}
+                                            onClick={() => navigate(`/esg/subscriptor-detail/${task.esg_subscriptor_id}/${new Date(task.date).getDate()}`)}
+                                        >
+                                            <div className={styles.subInfo}>
+                                                <div className={styles.avatarContainer}>
+                                                    <img src={task.user_avatar || profileLogo} className={styles.avatar} alt="Avatar" />
+                                                    <div className={styles.onlineIndicator} />
+                                                </div>
+                                                <div className={styles.details}>
+                                                    <div className={styles.nameRow}>
+                                                        <h3 className={styles.name}>{task.user_name}</h3>
+                                                    </div>
+                                                    <p className={styles.packageText}>
+                                                        package : {task.package_name}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className={styles.dateText}>
-                                            วันที่นัดหมาย : {new Date(task.date).toLocaleDateString('th-TH', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
-                                        </p>
-                                        <div className={styles.tags}>
-                                            <span className={styles.packageTag}>{task.package_name}</span>
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         ))}

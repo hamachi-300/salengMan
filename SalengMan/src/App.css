@@ -36,10 +36,10 @@
 
   /* Status */
   --waiting-bg: #562F00;
-  --waiting-border: #FF9644;
+  --waiting-border: #a35a22;
   --waiting-text: #FFCE99;
 
-  --pending-bg: #0C2C55;
+  --pending-bg: #1a4e92;
   --pending-border: #629FAD;
   --pending-text: #EDEDCE;
 
@@ -47,8 +47,8 @@
   --completed-border: #628141;
   --completed-text: #E5D9B6;
 
-  --cancelled-bg: #B31312;
-  --cancelled-border: #EA906C;
+  --cancelled-bg: #821111;
+  --cancelled-border: #e44242;
   --cancelled-text: #EEE2DE;
 
   --expired-bg: #25343F;
@@ -105,27 +105,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-
-  /* Status */
-  --waiting-bg: #FF9644;
-  --waiting-border: #FF9644;
-  --waiting-text: #FFCE99;
-
-  --pending-bg: #629FAD;
-  --pending-border: #629FAD;
-  --pending-text: #EDEDCE;
-
-  --completed-bg: #628141;
-  --completed-border: #628141;
-  --completed-text: #E5D9B6;
-
-  --cancelled-bg: #B31312;
-  --cancelled-border: #B31312;
-  --cancelled-text: #EEE2DE;
-
-  --expired-bg: #BFC9D1;
-  --expired-border: #91a3b0;
-  --expired-text: #EAEFEF;;
 }
 
 /* ===== Loading Screen ===== */
