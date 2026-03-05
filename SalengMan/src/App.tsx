@@ -4,6 +4,7 @@ import Splash from "./pages/splash_signin/Splash";
 import SignIn from "./pages/splash_signin/Signin";
 import Signup from "./pages/splash_signin/Signup";
 import Login from "./pages/splash_signin/Login";
+import VerifyEmail from "./pages/splash_signin/VerifyEmail";
 import Home from "./pages/home/Home";
 import Sell from "./pages/sell/Sell";
 import SelectAddress from "./pages/sell/SelectAddress";
@@ -51,6 +52,7 @@ function AppRoutes() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Route>
 
       {/* Protected pages - redirect to /signin if not logged in */}

@@ -14,6 +14,7 @@ export interface User {
   avatar_url?: string;
   gender?: string;
   default_address?: string;
+  is_verified?: boolean;
 }
 
 // Get stored token

@@ -31,7 +31,8 @@ function Signup() {
 
     try {
       await signUp(email, password, username, gender);
-      navigate("/home");
+      alert("สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลของคุณเพื่อยืนยันตัวตน");
+      navigate("/signin");
     } catch (err: any) {
       setError(err.message || "Failed to create account");
     } finally {

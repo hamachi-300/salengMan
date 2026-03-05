@@ -20,6 +20,12 @@ function Login() {
       // Always use 'driver' role for SalengManDriver app
       const user = await signIn(email, password, 'driver');
 
+      if (user && user.is_verified === false) {
+        setError("อีเมลของคุณยังไม่ได้ยืนยัน กรุณาเช็คใน Inbox ของคุณ");
+        setLoading(false);
+        return; // หยุดการทำงาน ไม่ให้เข้าหน้า Home
+      }
+
       if (user) {
         navigate("/home");
       }

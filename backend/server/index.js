@@ -8,6 +8,8 @@ const fileUpload = require('express-fileupload');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const mailer = require('./mailer');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -413,15 +415,25 @@ app.post('/auth/register', async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
+    const verification_token = crypto.randomBytes(32).toString('hex');
 
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, full_name, phone, role, gender)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (email, password_hash, full_name, phone, role, gender, verification_token)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, email, full_name, role, gender`,
-      [email, password_hash, full_name, phone, userRole, gender]
+      [email, password_hash, full_name, phone, userRole, gender, verification_token]
     );
 
     const user = result.rows[0];
+
+    // Send verification email
+    try {
+      console.log(`Triggering verification email for: ${email}`);
+      await mailer.sendVerifyEmail(email, verification_token);
+    } catch (mailError) {
+      console.error('CRITICAL: Failed to send verification email during registration:', mailError);
+      // We still registered the user, they might need a "resend" button later
+    }
 
     const token = jwt.sign(
       { user_id: user.id, role: user.role },
@@ -429,10 +441,76 @@ app.post('/auth/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.json({ user, token });
+    res.json({
+      user,
+      token,
+      message: 'ลงทะเบียนสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตน'
+    });
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Verify Email Endpoint
+app.get('/auth/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    // 1. Find user with this token
+    const result = await pool.query(
+      'SELECT id FROM users WHERE verification_token = $1',
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'ลิงก์ยืนยันตัวตนไม่ถูกต้องหรือหมดอายุ' });
+    }
+
+    // 2. Update status to verified
+    await pool.query(
+      'UPDATE users SET is_verified = true, verification_token = NULL WHERE verification_token = $1',
+      [token]
+    );
+
+    res.json({ message: 'ยืนยันอีเมลสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว' });
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).json({ error: 'เครื่องเซิร์ฟเวอร์ขัดข้อง' });
+  }
+});
+
+// Verify Email Endpoint
+app.get('/auth/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    const result = await pool.query(
+      'SELECT id FROM users WHERE verification_token = $1',
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'ลิงก์ยืนยันตัวตนไม่ถูกต้องหรือหมดอายุ' });
+    }
+
+    await pool.query(
+      'UPDATE users SET is_verified = true, verification_token = NULL WHERE verification_token = $1',
+      [token]
+    );
+
+    res.json({ message: 'ยืนยันอีเมลสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว' });
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).json({ error: 'เครื่องเซิร์ฟเวอร์ขัดข้อง' });
   }
 });
 
@@ -476,6 +554,14 @@ app.post('/auth/login', async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    // Check if email is verified
+    if (!user.is_verified && user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ',
+        not_verified: true
+      });
+    }
 
     if (user.password_hash) {
       const valid = await bcrypt.compare(password, user.password_hash);

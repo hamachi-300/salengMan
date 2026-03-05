@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     coin INTEGER DEFAULT 0,
+    is_verified BOOLEAN DEFAULT false,
+    verification_token VARCHAR(255),
     UNIQUE(email, role)
 );
 
