@@ -130,7 +130,7 @@ function Chat() {
 
     return (
         <div className={styles.container}>
-            <PageHeader title="Chat" backTo={backPath} />
+            <PageHeader title="Chat" />
 
             <div className={styles.messageList}>
                 {messages.map((msg) => {

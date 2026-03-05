@@ -1,0 +1,53 @@
+.page {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.mapContainer {
+    flex: 1;
+    position: relative;
+}
+
+.loading,
+.empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    background-color: var(--color-bg);
+}
+
+.infoOverlay {
+    position: absolute;
+    bottom: 40px;
+    left: 20px;
+    right: 20px;
+    background-color: rgba(30, 30, 30, 0.9);
+    padding: 12px 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.infoItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}

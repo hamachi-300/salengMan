@@ -133,6 +133,27 @@
     text-align: center;
 }
 
+.disabled {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.wideServiceContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.arrowIcon {
+    margin-top: 12px;
+    font-size: 1.5rem;
+    color: var(--orange-button);
+    opacity: 0.7;
+}
+
 /* Secondary Actions */
 .actionGrid {
     display: flex;

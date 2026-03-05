@@ -50,21 +50,30 @@ const EsgDriverHome: React.FC = () => {
 
                 {/* Primary Action: Start Job Today */}
                 <span className={styles.sectionLabel}>ภารกิจวันนี้</span>
-                <div className={styles.wideServiceCard} onClick={() => { }}>
+                <div
+                    className={`${styles.wideServiceCard} ${!(profile?.todayJobsCount > 0) ? styles.disabled : ''}`}
+                    onClick={() => profile?.todayJobsCount > 0 && navigate('/esg/today_tasks')}
+                >
                     <div className={styles.wideServiceIconWrapper}>
                         <svg className={styles.serviceIcon} viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" />
                         </svg>
                     </div>
-                    <h3 className={styles.wideServiceTitle}>เริ่มงานวันนี้</h3>
-                    <p className={styles.wideServiceSubtitle}>เฉพาะวันที่มีสัญญาเข้ารับขยะ</p>
+                    <div className={styles.wideServiceContent}>
+                        <h3 className={styles.wideServiceTitle}>เริ่มงานวันนี้</h3>
+                        <p className={styles.wideServiceSubtitle}>
+                            {profile?.todayJobsCount > 0
+                                ? `คุณมีงาน ${profile.todayJobsCount} รายการวันนี้`
+                                : 'วันนี้คุณไม่มีงานที่ต้องรับผิดชอบ'}
+                        </p>
+                    </div>
                 </div>
 
                 {/* Secondary Actions */}
                 <span className={styles.sectionLabel}>จัดการงาน</span>
                 <div className={styles.actionGrid}>
                     <button className={styles.tomorrowJobButton} onClick={() => navigate('/esg/tomorrow_task')}>
-                        <span>งานวันพรุ่งนี้</span>
+                        <span>งานต่อไป</span>
                         <span className={styles.countBadge}>{profile?.tomorrowJobsCount || 0}</span>
                     </button>
                     <button className={styles.menuButton} onClick={() => navigate('/esg/search_sub')}>

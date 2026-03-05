@@ -591,4 +591,22 @@ export const api = {
     }
     return res.json();
   },
+
+  // Get next upcoming task for driver
+  getEsgDriverNextTask: async (token: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/tasks/driver/next`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch next task');
+    return res.json();
+  },
+
+  // Get today's tasks for driver
+  getEsgDriverTodayTasks: async (token: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/tasks/driver/today`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch today tasks');
+    return res.json();
+  },
 };

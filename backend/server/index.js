@@ -75,6 +75,29 @@ async function initBucket() {
   }
 }
 
+// Migration: Add chat_id to esg_tasks
+async function runMigrations() {
+  try {
+    await pool.query('ALTER TABLE esg_tasks ADD COLUMN IF NOT EXISTS chat_id UUID REFERENCES chats(id)');
+    // Backfill chat_id from esg_subscriptors if missing
+    await pool.query(`
+      UPDATE esg_tasks t
+      SET chat_id = (
+        SELECT (sub_day->>'chat_id')::UUID
+        FROM esg_subscriptors s, jsonb_array_elements(s.pickup_days) sub_day
+        WHERE s.sup_id = t.esg_subscriptor_id
+          AND (sub_day->>'confirmed_driver_id' = t.esg_driver_id OR sub_day->'driver' @> jsonb_build_array(t.esg_driver_id))
+          AND (sub_day->>'date')::INT = EXTRACT(DAY FROM t.date)::INT
+        LIMIT 1
+      )
+      WHERE chat_id IS NULL
+    `);
+    console.log('Migration: chat_id added and backfilled in esg_tasks');
+  } catch (err) {
+    console.error('Migration error:', err);
+  }
+}
+
 // Wait for database connection
 async function waitForDatabase() {
   let retries = 10;
@@ -82,6 +105,7 @@ async function waitForDatabase() {
     try {
       await pool.query('SELECT 1');
       console.log('Database connected');
+      await runMigrations();
       return true;
     } catch (err) {
       console.log(`Waiting for database... (${retries} retries left)`);
@@ -2335,6 +2359,25 @@ async function start() {
     );
   `).catch(err => console.error('Migration error (esg_package_history):', err.message));
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS esg_tasks (
+      tasks_id SERIAL PRIMARY KEY,
+      esg_subscriptor_id TEXT REFERENCES esg_subscriptors(sup_id) ON DELETE CASCADE,
+      esg_driver_id TEXT REFERENCES esg_driver(driver_id) ON DELETE CASCADE,
+      date TIMESTAMP NOT NULL,
+      weight JSONB DEFAULT '[]'::jsonb,
+      carbon_reduce NUMERIC DEFAULT 0,
+      status TEXT DEFAULT 'waiting',
+      recycling_center_addresss TEXT DEFAULT '',
+      evidences_image TEXT[] DEFAULT '{}',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_esg_tasks_subscriptor_id ON esg_tasks(esg_subscriptor_id);
+    CREATE INDEX IF NOT EXISTS idx_esg_tasks_driver_id ON esg_tasks(esg_driver_id);
+    CREATE INDEX IF NOT EXISTS idx_esg_tasks_date ON esg_tasks(date);
+  `).catch(err => console.error('Migration error (esg_tasks):', err.message));
+
   // --- MIGRATIONS FOR ESG TABLES ---
   try {
     // esg_subscriptors migrations
@@ -2687,24 +2730,33 @@ app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
     const driver = result.rows[0];
     const pickup_days = driver.pickup_days || [];
 
-    // Get tomorrow's date index (1-28)
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowDate = tomorrow.getDate();
+    // Get future jobs count for this driver (excluding today)
+    const tasksRes = await pool.query(
+      `SELECT COUNT(*) FROM esg_tasks 
+       WHERE esg_driver_id = $1 
+         AND (date AT TIME ZONE 'Asia/Bangkok')::date > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date 
+         AND status != 'skipped'`,
+      [driver.driver_id]
+    );
+    const tomorrowJobsCount = parseInt(tasksRes.rows[0].count);
 
-    let tomorrowJobsCount = 0;
-    // Only count if it's within the 1-28 day range (ESG subscription period)
-    if (tomorrowDate <= 28) {
-      const dayData = pickup_days.find(d => d && d.date === tomorrowDate);
-      if (dayData && dayData.contract_user) {
-        // Only count accepted jobs
-        tomorrowJobsCount = dayData.contract_user.filter(c => c.is_accept === true).length;
-      }
-    }
+    // Get today's jobs count for this driver
+    const todayRes = await pool.query(
+      `SELECT COUNT(*) FROM esg_tasks 
+       WHERE esg_driver_id = $1 
+         AND (date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date 
+         AND status != 'skipped'`,
+      [driver.driver_id]
+    );
+    const todayJobsCount = parseInt(todayRes.rows[0].count);
+
+    console.log(`[DriverProfile] user_id: ${user_id}, driver_id: ${driver.driver_id}`);
+    console.log(`[DriverProfile] todayJobsCount: ${todayJobsCount}, tomorrowJobsCount: ${tomorrowJobsCount}`);
 
     res.json({
       ...driver,
-      tomorrowJobsCount
+      tomorrowJobsCount,
+      todayJobsCount
     });
   } catch (error) {
     console.error('Error in /esg/driver/profile:', error);
@@ -2915,7 +2967,20 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       [JSON.stringify(pickup_days), sup_id]
     );
 
-    // 4. Update Driver Table (Mark is_accept = true)
+    // 4. Create ESG Task
+    const now = new Date();
+    let taskDate = new Date(now.getFullYear(), now.getMonth(), parseInt(date), 8, 0, 0);
+    if (taskDate < now) {
+      taskDate = new Date(now.getFullYear(), now.getMonth() + 1, parseInt(date), 8, 0, 0);
+    }
+
+    await client.query(
+      `INSERT INTO esg_tasks (esg_subscriptor_id, esg_driver_id, date, status, chat_id) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [sup_id, esg_driver_id, taskDate, 'waiting', chatId]
+    );
+
+    // 5. Update Driver Table (Mark is_accept = true)
     const dDayIdx = dPickupDays.findIndex(d => d && d.date === parseInt(date));
     if (dDayIdx !== -1) {
       const contractIdx = dPickupDays[dDayIdx].contract_user.findIndex(c => c.id == sup_id);
@@ -2936,6 +3001,148 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   } finally {
     client.release();
+  }
+});
+
+// Get next upcoming task for driver
+app.get('/esg/tasks/driver/next', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    // Get the driver's ESG ID
+    const driverRes = await pool.query('SELECT driver_id FROM esg_driver WHERE user_id = $1', [user_id]);
+    if (driverRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+    const esg_driver_id = driverRes.rows[0].driver_id;
+
+    const result = await pool.query(
+      `SELECT t.*, u.full_name as user_name, u.avatar_url as user_avatar,
+              a.address as pickup_address, a.phone as pickup_phone,
+              s.package_name
+       FROM esg_tasks t
+       JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
+       JOIN users u ON s.user_id = u.id
+       JOIN addresses a ON s.address_id = a.id
+       WHERE t.esg_driver_id = $1 
+         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date
+       ORDER BY t.date ASC`,
+      [esg_driver_id]
+    );
+
+    console.log(`[NextTask] Found ${result.rows.length} tasks for driver ${esg_driver_id}`);
+    result.rows.forEach(r => console.log(` - Task ${r.tasks_id} on ${r.date} (${r.status})`));
+
+    res.json({ tasks: result.rows });
+  } catch (error) {
+    console.error('Error in /esg/tasks/driver/next:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get today's tasks for driver
+app.get('/esg/tasks/driver/today', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+
+    // 1. Get ESG Driver ID
+    const driverRes = await pool.query(
+      'SELECT driver_id FROM esg_driver WHERE user_id = $1',
+      [user_id]
+    );
+
+    if (driverRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+
+    const esg_driver_id = driverRes.rows[0].driver_id;
+
+    const result = await pool.query(
+      `SELECT t.*, u.full_name as user_name, u.avatar_url as user_avatar,
+              a.address as pickup_address, a.phone as pickup_phone,
+              s.package_name
+       FROM esg_tasks t
+       JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
+       JOIN users u ON s.user_id = u.id
+       JOIN addresses a ON s.address_id = a.id
+       WHERE t.esg_driver_id = $1 
+         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date
+         AND t.status != 'skipped'
+       ORDER BY t.date ASC`,
+      [esg_driver_id]
+    );
+
+    res.json({ tasks: result.rows });
+  } catch (error) {
+    console.error('Error in /esg/tasks/driver/today:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/esg/tasks/nearest', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    // 1. Get sup_id for this user
+    const subRes = await pool.query(
+      'SELECT sup_id FROM esg_subscriptors WHERE user_id = $1 AND is_active = true LIMIT 1',
+      [user_id]
+    );
+    if (subRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Active subscription not found' });
+    }
+    const sup_id = subRes.rows[0].sup_id;
+
+    // 2. Find nearest task (exclude skipped, completed, or cancelled/failed if needed, but primarily skip per PR)
+    const taskRes = await pool.query(
+      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id
+       FROM esg_tasks t
+       JOIN esg_driver ed ON t.esg_driver_id = ed.driver_id
+       JOIN users u ON ed.user_id = u.id
+       WHERE t.esg_subscriptor_id = $1 
+         AND t.status NOT IN ('skipped', 'completed')
+         AND t.date >= CURRENT_DATE - INTERVAL '6 hours'
+       ORDER BY t.date ASC LIMIT 1`,
+      [sup_id]
+    );
+
+    if (taskRes.rows.length === 0) {
+      return res.json({ task: null });
+    }
+
+    res.json({ task: taskRes.rows[0] });
+  } catch (error) {
+    console.error('Error fetching nearest ESG task:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/esg/tasks/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const user_id = req.user.user_id;
+
+    // Verify ownership (join through subscriptor)
+    const verifyRes = await pool.query(
+      `SELECT t.tasks_id FROM esg_tasks t
+       JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
+       WHERE t.tasks_id = $1 AND s.user_id = $2`,
+      [id, user_id]
+    );
+
+    if (verifyRes.rows.length === 0) {
+      return res.status(403).json({ error: 'Permission denied or task not found' });
+    }
+
+    await pool.query(
+      'UPDATE esg_tasks SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tasks_id = $2',
+      [status, id]
+    );
+
+    res.json({ success: true, status });
+  } catch (error) {
+    console.error('Error updating ESG task status:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

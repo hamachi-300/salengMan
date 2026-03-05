@@ -30,6 +30,7 @@ import EsgSearchSub from "./pages/esg/EsgSearchSub";
 import EsgSubscriptorList from "./pages/esg/EsgSubscriptorList";
 import EsgSubscriptorDetail from "./pages/esg/EsgSubscriptorDetail";
 import EsgTomorrowTask from "./pages/esg/EsgTomorrowTask";
+import EsgTodayTasks from "./pages/esg/EsgTodayTasks";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -80,6 +81,7 @@ function AppRoutes() {
         <Route path="/esg/search_sub" element={<EsgSearchSub />} />
         <Route path="/esg/subscriptors" element={<EsgSubscriptorList />} />
         <Route path="/esg/tomorrow_task" element={<EsgTomorrowTask />} />
+        <Route path="/esg/today_tasks" element={<EsgTodayTasks />} />
         <Route path="/esg/subscriptor-detail/:supId/:date" element={<EsgSubscriptorDetail />} />
       </Route>
     </Routes>

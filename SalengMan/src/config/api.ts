@@ -678,5 +678,39 @@ export const api = {
       throw new Error(error.error || 'Failed to confirm driver');
     }
     return res.json();
+  },
+
+  // Get nearest ESG task for the user
+  getNearestEsgTask: async (token: string): Promise<{ task: any | null }> => {
+    const res = await fetch(`${API_URL}/esg/tasks/nearest`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) return { task: null };
+      throw new Error('Failed to fetch nearest ESG task');
+    }
+    return res.json();
+  },
+
+  // Update ESG task status
+  updateEsgTaskStatus: async (token: string, taskId: number, status: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/tasks/${taskId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to update task status');
+    }
+    return res.json();
   }
 };

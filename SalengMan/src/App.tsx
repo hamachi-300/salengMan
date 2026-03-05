@@ -39,6 +39,9 @@ import EsgBill from "./pages/esg/EsgBill";
 import ChooseDateDriver from "./pages/esg/ChooseDateDriver";
 import EsgDriverList from "./pages/esg/EsgDriverList";
 import EsgDriverConfirm from "./pages/esg/EsgDriverConfirm";
+import EsgDisposeTrash from "./pages/esg/EsgDisposeTrash";
+import EsgTrackDriver from "./pages/esg/EsgTrackDriver";
+import EsgDriverDetail from "./pages/esg/EsgDriverDetail";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -76,6 +79,9 @@ function AppRoutes() {
         <Route path="/esg/choose-date-driver" element={<ChooseDateDriver />} />
         <Route path="/esg/drivers/:supId/:date" element={<EsgDriverList />} />
         <Route path="/esg/driver-confirm/:supId/:date/:driverId" element={<EsgDriverConfirm />} />
+        <Route path="/esg/dispose-trash" element={<EsgDisposeTrash />} />
+        <Route path="/esg/track-driver/:driverId/:taskId" element={<EsgTrackDriver />} />
+        <Route path="/esg/driver-detail/:driverId" element={<EsgDriverDetail />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />
