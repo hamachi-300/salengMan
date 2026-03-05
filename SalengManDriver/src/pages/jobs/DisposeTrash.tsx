@@ -12,7 +12,7 @@ interface TrashPost {
     id: number;
     images?: string[];
     remarks: string;
-    post_type: 'anytime' | 'fast';
+    // post_type: 'anytime' | 'fast';
     coins_selected: number;
     trash_bag_amount: number;
     status: string;
@@ -108,6 +108,8 @@ function DisposeTrash() {
             // Use the new API method add to config/api.ts earlier
             const data = await api.getAvailableTrashPosts(token);
             setPosts(data);
+            console.log("Trash posts:", data);
+
         } catch (error) {
             console.error("Failed to fetch trash posts:", error);
         } finally {

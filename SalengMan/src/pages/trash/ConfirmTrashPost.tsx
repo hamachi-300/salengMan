@@ -56,14 +56,30 @@ function ConfirmTrashPost() {
 
         try {
             // Data structure to match Backend's /trash-posts expectations
-            const postData = {
-                mode: trashData.mode,      // 'anytime' or 'fixtime'
-                images: trashData.images,  // Array of base64 strings
-                bag_count: trashData.bagCount,
-                coins: trashData.coins,
-                remarks: trashData.remarks,
-                address: trashData.address
-            };
+            let postData;
+            console.log("Trash Data:", trashData);
+            if (trashData.editingPostId) {
+                postData = {
+                    // mode: trashData.mode,      // 'anytime' or 'fixtime'
+                    images: trashData.images,  // Array of base64 strings
+                    bag_count: trashData.bagCount,
+                    coins: trashData.coins,
+                    remarks: trashData.remarks,
+                    address: trashData.address
+                };
+            }
+            else {
+                postData = {
+                    // mode: trashData.mode,      // 'anytime' or 'fixtime'
+                    images: trashData.images,  // Array of base64 strings
+                    bag_count: trashData.bagCount,
+                    coins: trashData.coins,
+                    post_type: 'anytime',
+                    remarks: trashData.remarks,
+                    address: trashData.address
+                };
+            }
+            // console.log("Post Data:", postData);
 
             if (trashData.editingPostId) {
                 await api.updateTrashPost(token, trashData.editingPostId, postData);

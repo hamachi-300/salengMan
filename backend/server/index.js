@@ -1194,6 +1194,30 @@ app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
 });
 
 
+
+// Get all available trash posts (for drivers)
+app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'driver') {
+      return res.status(403).json({ error: 'Only drivers can view available trash posts' });
+    }
+
+    const result = await pool.query(
+      `SELECT tp.*, u.id as user_uuid, u.full_name as user_name, u.phone as user_phone, u.avatar_url as user_avatar
+       FROM trash_posts tp
+       JOIN users u ON tp.user_id = u.id
+       WHERE tp.status = 'waiting'
+       ORDER BY tp.created_at DESC`,
+      []
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+
 // Delete all notifications for a user
 app.delete('/notifications', authMiddleware, async (req, res) => {
   try {
@@ -1894,55 +1918,89 @@ app.post('/contacts', authMiddleware, async (req, res) => {
       END $$;
     `).catch(err => console.error('Migration error:', err.message));
 
-    for (const postId of post_ids) {
-      // Get post details to find seller
-      const postResult = await pool.query(
-        'SELECT * FROM old_item_posts WHERE id = $1',
+    for (const item of post_ids) {
+      let postId, type;
+      if (typeof item === 'object') {
+        postId = item.id;
+        type = item.type || 'old_item_posts';
+      } else {
+        // Fallback for safety, though frontend should now always send objects
+        postId = item;
+        type = 'old_item_posts';
+      }
+
+      if (!postId) continue;
+
+      // 1. Get post details and seller ID based on type
+      let postResult;
+      let tableName = type === 'anytime' ? 'trash_posts' : 'old_item_posts';
+
+      type = tableName;
+
+      postResult = await pool.query(
+        `SELECT * FROM ${tableName} WHERE id = $1`,
         [postId]
       );
 
-      if (postResult.rows.length === 0) {
-        continue; // Skip if post not found
-      }
-
+      if (postResult.rows.length === 0) continue;
       const post = postResult.rows[0];
       const sellerId = post.user_id;
 
-      // Check if contact already exists for this post and buyer
+      // 2. Check if contact already exists
       const existingContact = await pool.query(
-        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2',
-        [postId, req.user.user_id]
+        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2 AND type = $3',
+        [postId, req.user.user_id, type]
       );
+
 
       if (existingContact.rows.length > 0) {
         createdContacts.push(existingContact.rows[0]);
-        continue; // Skip if contact already exists
+        continue;
       }
 
-      // Create chat first
+      // 3. Create chat and contact
       const chatResult = await pool.query(
-        `INSERT INTO chats (messages) VALUES ('[]'::JSONB) RETURNING *`
+        `INSERT INTO chats (messages) VALUES ('[]'::JSONB) RETURNING id`
       );
       const chatId = chatResult.rows[0].id;
 
-      // Create contact
+      console.log('Creating contact for post:', postId, 'seller:', sellerId, 'buyer:', req.user.user_id, 'chat:', chatId, 'type:', type);
       const contactResult = await pool.query(
         `INSERT INTO contacts (post_id, seller_id, buyer_id, chat_id, status, type)
-         VALUES ($1, $2, $3, $4, 'pending', 'old_item_posts')
+         VALUES ($1, $2, $3, $4, 'pending', $5)
          RETURNING *`,
-        [postId, sellerId, req.user.user_id, chatId]
+        [postId, sellerId, req.user.user_id, chatId, type]
       );
 
       const contact = contactResult.rows[0];
 
-      // Update old_item_posts with contact info
+      // 4. Update post status to pending
       await pool.query(
-        `UPDATE old_item_posts
-         SET contacts = COALESCE(contacts, '[]'::JSONB) || $1::JSONB,
+        `UPDATE ${tableName} 
+         SET status = 'pending',
              updated_at = CURRENT_TIMESTAMP
-         WHERE id = $2`,
-        [JSON.stringify([{ contact_id: contact.id, driver_id: req.user.user_id }]), postId]
+         WHERE id = $1`,
+        [postId]
       );
+
+      // 5. Update post contacts array (JSONB)
+      if (type === 'old_item_posts') {
+        await pool.query(
+          `UPDATE old_item_posts
+             SET contacts = COALESCE(contacts, '[]'::JSONB) || $1::JSONB,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $2`,
+          [JSON.stringify([{ contact_id: contact.id, driver_id: req.user.user_id }]), postId]
+        );
+      } else if (type === 'trash_posts') {
+        await pool.query(
+          `UPDATE trash_posts
+             SET contacts = COALESCE(contacts, '[]'::JSONB) || $1::JSONB,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $2`,
+          [JSON.stringify([{ contact_id: contact.id, driver_id: req.user.user_id }]), postId]
+        );
+      }
 
       createdContacts.push(contact);
     }
@@ -1964,10 +2022,17 @@ app.get('/contacts', authMiddleware, async (req, res) => {
       // Driver sees contacts where they are the buyer
       query = `
         SELECT c.*,
-               oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+               COALESCE(oip.images, tp.images) as images,
+               oip.categories,
+               COALESCE(oip.remarks, tp.remarks) as remarks,
+               COALESCE(oip.status, tp.status) as post_status,
+               COALESCE(oip.address_snapshot, tp.address_snapshot) as address_snapshot,
+               tp.trash_bag_amount,
+               tp.coins_selected,
                u.full_name as seller_name, u.phone as seller_phone, u.avatar_url as seller_avatar
         FROM contacts c
-        JOIN old_item_posts oip ON c.post_id = oip.id
+        LEFT JOIN old_item_posts oip ON c.post_id = oip.id AND c.type = 'old_item_posts'
+        LEFT JOIN trash_posts tp ON c.post_id = tp.id AND c.type = 'trash_posts'
         JOIN users u ON c.seller_id = u.id
         WHERE c.buyer_id = $1
         ORDER BY c.created_at DESC
@@ -1977,10 +2042,15 @@ app.get('/contacts', authMiddleware, async (req, res) => {
       // Seller sees contacts where they are the seller
       query = `
         SELECT c.*,
-               oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+               COALESCE(oip.images, tp.images) as images,
+               oip.categories,
+               COALESCE(oip.remarks, tp.remarks) as remarks,
+               COALESCE(oip.status, tp.status) as post_status,
+               COALESCE(oip.address_snapshot, tp.address_snapshot) as address_snapshot,
                u.full_name as buyer_name, u.phone as buyer_phone, u.avatar_url as buyer_avatar
         FROM contacts c
-        JOIN old_item_posts oip ON c.post_id = oip.id
+        LEFT JOIN old_item_posts oip ON c.post_id = oip.id AND c.type = 'old_item_posts'
+        LEFT JOIN trash_posts tp ON c.post_id = tp.id AND c.type = 'trash_posts'
         JOIN users u ON c.buyer_id = u.id
         WHERE c.seller_id = $1
         ORDER BY c.created_at DESC

@@ -6,7 +6,7 @@ import { getToken } from "../../services/auth";
 import BottomNav from "../../components/BottomNav";
 import PageHeader from "../../components/PageHeader";
 
-interface Contact {
+interface BaseContact {
   id: string;
   post_id: number;
   seller_id: string;
@@ -14,19 +14,33 @@ interface Contact {
   chat_id: string;
   post_status: string;
   created_at: string;
-  categories: string[];
-  remarks: string;
   images?: string[];
+  remarks?: string;
   seller_name?: string;
   seller_phone?: string;
   address_snapshot?: any;
 }
+
+interface OldItemContact extends BaseContact {
+  type: 'old_item_posts';
+  categories?: string[];
+}
+
+interface TrashContact extends BaseContact {
+  type: 'trash_posts';
+  trash_bag_amount?: number;
+  coins_selected?: number;
+}
+
+type Contact = OldItemContact | TrashContact;
+
 
 function History() {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
+  const [typeFilter, setTypeFilter] = useState<'old_item_posts' | 'trash_posts'>('old_item_posts');
 
   useEffect(() => {
     fetchContacts();
@@ -42,6 +56,7 @@ function History() {
     try {
       const data = await api.getContacts(token);
       setContacts(data);
+      console.log("Contacts:", data);
     } catch (error) {
       console.error("Failed to fetch contacts:", error);
     } finally {
@@ -62,13 +77,6 @@ function History() {
       default:
         return styles["status-pending"];
     }
-  };
-
-  const getPostTypeLabel = (categories: string[]) => {
-    if (categories && categories.includes('trash') || categories?.some(c => c.toLowerCase().includes('ขยะ'))) {
-      return 'รับทิ้งขยะ';
-    }
-    return 'รับซื้อของเก่า';
   };
 
   const formatDate = (dateString: string) => {
@@ -101,15 +109,32 @@ function History() {
   const tabs = ["All", "Waiting", "Pending", "Completed", "Cancelled"];
 
   const filteredContacts = contacts.filter((contact) => {
+    if (contact.type !== typeFilter) return false;
     if (activeTab === "All") return true;
-    return contact.post_status.toLowerCase() === activeTab.toLowerCase();
+    return contact.post_status?.toLowerCase() === activeTab.toLowerCase();
   });
 
   return (
     <div className={styles["page-container"]}>
       <PageHeader title="History" backTo="/home" />
 
-      {/* Filters */}
+      {/* Type Toggle */}
+      <div className={styles["filters-scroll"]} style={{ borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+        <button
+          className={`${styles["filter-chip"]} ${typeFilter === 'old_item_posts' ? styles.active : ''}`}
+          onClick={() => { setTypeFilter('old_item_posts'); setActiveTab('All'); }}
+        >
+          🛒 Old Item
+        </button>
+        <button
+          className={`${styles["filter-chip"]} ${typeFilter === 'trash_posts' ? styles.active : ''}`}
+          onClick={() => { setTypeFilter('trash_posts'); setActiveTab('All'); }}
+        >
+          🗑️ Trash
+        </button>
+      </div>
+
+      {/* Status Filters */}
       <div className={styles["filters-scroll"]}>
         {tabs.map((tab) => (
           <button
@@ -151,9 +176,9 @@ function History() {
               <div className={styles["card-content"]}>
                 <div className={styles["card-header"]}>
                   <h3 className={styles["post-title"]}>
-                    {getPostTypeLabel(contact.categories)}
+                    {typeFilter === 'trash_posts' ? '🗑️ Trash Pickup' : '🛒 Old Item'}
                   </h3>
-                  <span className={`${styles["status-badge"]} ${getStatusClass(contact.post_status)}`}>
+                  <span className={`${styles["status-badge"]} ${getStatusClass(contact.post_status ?? '')}`}>
                     {contact.post_status}
                   </span>
                 </div>
@@ -161,25 +186,38 @@ function History() {
                   {formatDate(contact.created_at)}
                 </div>
                 <div className={styles["tags-container"]}>
-                  {contact.categories
-                    ?.filter(cat => !cat.includes('อื่น'))
-                    .slice(0, 2)
-                    .map((cat, index) => (
-                      <span key={index} className={styles["category-tag"]}>
-                        {cat.length > 10 ? cat.slice(0, 10) + '...' : cat}
-                      </span>
-                    ))}
-                  {contact.categories && contact.categories.filter(cat => !cat.includes('อื่น')).length > 2 && (
-                    <span className={styles["category-tag"]}>
-                      +{contact.categories.filter(cat => !cat.includes('อื่น')).length - 2}
-                    </span>
+                  {typeFilter === 'trash_posts' ? (
+                    <>
+                      {contact.trash_bag_amount && (
+                        <span className={styles["category-tag"]}>📦 {contact.trash_bag_amount} bags</span>
+                      )}
+                      {contact.coins_selected !== undefined && (
+                        <span className={styles["category-tag"]}>🪙 {contact.coins_selected} coins</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {contact.categories
+                        ?.filter(cat => !cat.includes('อื่น'))
+                        .slice(0, 2)
+                        .map((cat, index) => (
+                          <span key={index} className={styles["category-tag"]}>
+                            {cat.length > 10 ? cat.slice(0, 10) + '...' : cat}
+                          </span>
+                        ))}
+                      {contact.categories && contact.categories.filter(cat => !cat.includes('อื่น')).length > 2 && (
+                        <span className={styles["category-tag"]}>
+                          +{contact.categories.filter(cat => !cat.includes('อื่น')).length - 2}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <p className={styles["empty-state"]}>No contacts found.</p>
+          <p className={styles["empty-state"]}>No {typeFilter === 'trash_posts' ? 'trash' : 'old item'} contacts found.</p>
         )}
       </div>
 

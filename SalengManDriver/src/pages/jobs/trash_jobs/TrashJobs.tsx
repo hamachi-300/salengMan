@@ -165,7 +165,7 @@ function TrashJobs() {
                                     <div className={styles.jobInfo}>
                                         <p className={styles.remarks}>{contact.remarks || "No remarks"}</p>
                                         <p className={styles.trashInfo}>
-                                            {contact.trash_type === 'anytime' ? 'Anytime' : 'Fix Time'} • {contact.trash_bag_amount} Bags
+                                            {contact.trash_bag_amount} Bags
                                         </p>
                                     </div>
 

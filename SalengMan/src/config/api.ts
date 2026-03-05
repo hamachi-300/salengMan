@@ -579,6 +579,7 @@ export const api = {
 
   // Create Trash Post
   createTrashPost: async (token: string, data: any): Promise<any> => {
+    console.log("Trash post data in API:", data);
     const res = await fetch(`${API_URL}/trash-posts`, {
       method: 'POST',
       headers: {

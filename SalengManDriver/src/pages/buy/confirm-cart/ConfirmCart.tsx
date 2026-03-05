@@ -129,8 +129,8 @@ function ConfirmCart() {
     setSubmitting(true);
 
     try {
-      const postIds = cartItems.map(item => item.id);
-      await api.createContacts(token, postIds);
+      const postItems = cartItems.map(item => ({ id: item.id, type: 'old_item_posts' }));
+      await api.createContacts(token, postItems);
 
       // Clear cart after successful contact creation
       localStorage.setItem('driver_cart', JSON.stringify([]));

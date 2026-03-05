@@ -283,18 +283,18 @@ export const api = {
   //   return res.json();
   // },
 
-  // // Get contacts for current user
-  // getContacts: async (token: string): Promise<any[]> => {
-  //   const res = await fetch(`${API_URL}/contacts`, {
-  //     headers: { 'Authorization': `Bearer ${token}` },
-  //   });
+  // Get contacts for current user
+  getContacts: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/contacts`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
 
-  //   if (!res.ok) {
-  //     throw new Error('Failed to fetch contacts');
-  //   }
+    if (!res.ok) {
+      throw new Error('Failed to fetch contacts');
+    }
 
-  //   return res.json();
-  // },
+    return res.json();
+  },
 
   // Get single contact by ID
   getContact: async (token: string, contactId: string): Promise<any> => {

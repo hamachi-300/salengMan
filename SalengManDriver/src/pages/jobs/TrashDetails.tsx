@@ -80,6 +80,7 @@ function TrashDetails() {
         if (!token || !id) return;
         try {
             const data = await api.getTrashPostById(token, id);
+            console.log("Trash post details:", data);
             setPost(data);
         } catch (error) {
             console.error("Failed to fetch trash post details:", error);
@@ -93,8 +94,12 @@ function TrashDetails() {
         if (!token || !id) return;
 
         setIsPickingUp(true);
+        // i need add type to post object
+        // code here
+
+        console.log('Creating contacts for:', post);
         try {
-            await api.createContacts(token, [{ id: Number(id), type: 'trash_posts' }]);
+            await api.createContacts(token, [{ id: Number(post?.id), type: post?.post_type || 'anytime' }]);
             setShowSuccessModal(true);
         } catch (error) {
             console.error("Failed to pick up trash:", error);
@@ -167,12 +172,12 @@ function TrashDetails() {
                     </div>
                 </div>
 
-                <div className={styles.section}>
+                {/* <div className={styles.section}>
                     <span className={styles.sectionLabel}>Mode</span>
                     <div className={styles.modeBadge}>
                         {post.post_type === 'fast' ? 'Fix Time' : 'Anytime'}
                     </div>
-                </div>
+                </div> */}
 
                 <div className={styles.section}>
                     <span className={styles.sectionLabel}>Pickup Location</span>
@@ -221,8 +226,8 @@ function TrashDetails() {
                 isOpen={showSuccessModal}
                 title="Success!"
                 message="You have accepted this trash pickup request. You can now chat with the customer in your jobs list."
-                onConfirm={() => navigate('/jobs/contacts')}
-                confirmText="Go to Jobs"
+                onConfirm={() => navigate('/history')}
+                confirmText="Go to History"
             />
 
             {viewerImages.length > 0 && (
