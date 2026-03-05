@@ -109,7 +109,7 @@ function ContactList() {
                 <div className={styles["header-row"]}>
                     <span className={styles["header-title"]}>CONTACTS ({contacts.length})</span>
                 </div>
-
+                
                 {loading ? (
                     <p className={styles.loading}>Loading contacts...</p>
                 ) : contacts.length === 0 ? (

@@ -212,7 +212,7 @@ function Notify() {
                         if (n.type === 'chat') {
                           navigate(`/chat/${n.refer_id}`);
                         } else {
-                          navigate(`/history/${n.refer_id}`);
+                          navigate(`/contact/${n.refer_id}`);
                         }
                       }
                     }}

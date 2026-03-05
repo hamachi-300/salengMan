@@ -155,6 +155,18 @@ function EsgDisposeTrash() {
                                             <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
                                         </svg>
                                     </div>
+                                    <button
+                                        className={styles.skipTaskButton}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowConfirmSkip(true);
+                                        }}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                        </svg>
+                                        Skip this collection
+                                    </button>
                                 </div>
                             </div>
                         ) : (
@@ -242,6 +254,18 @@ function EsgDisposeTrash() {
                                             <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
                                         </svg>
                                     </div>
+                                    <button
+                                        className={styles.skipTaskButton}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowConfirmSkip(true);
+                                        }}
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                        </svg>
+                                        Skip this collection
+                                    </button>
                                 </div>
                             </div>
                         )}

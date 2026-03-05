@@ -105,7 +105,6 @@ async function waitForDatabase() {
     try {
       await pool.query('SELECT 1');
       console.log('Database connected');
-      await runMigrations();
       return true;
     } catch (err) {
       console.log(`Waiting for database... (${retries} retries left)`);
@@ -1325,8 +1324,7 @@ app.post('/old-item-posts/:id/cancel', authMiddleware, async (req, res) => {
         contact.buyer_id,
         "Post Old Item Cancelled From Seller",
         reason,
-        "cancelled contact",
-        id
+        contact.id
       ]
     );
 
@@ -1721,18 +1719,22 @@ app.get('/contacts', authMiddleware, async (req, res) => {
 // Get single contact by ID
 app.get('/contacts/:id', authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT c.*,
-              oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
-              seller.full_name as seller_name, seller.phone as seller_phone, seller.avatar_url as seller_avatar,
-              buyer.full_name as buyer_name, buyer.phone as buyer_phone, buyer.avatar_url as buyer_avatar
-       FROM contacts c
-       JOIN old_item_posts oip ON c.post_id = oip.id
-       JOIN users seller ON c.seller_id = seller.id
-       JOIN users buyer ON c.buyer_id = buyer.id
-       WHERE c.id = $1 AND (c.seller_id = $2 OR c.buyer_id = $2)`,
-      [req.params.id, req.user.user_id]
-    );
+    const idInput = req.params.id;
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(idInput);
+
+    const query = `
+      SELECT c.*,
+             oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+             seller.full_name as seller_name, seller.phone as seller_phone, seller.avatar_url as seller_avatar,
+             buyer.full_name as buyer_name, buyer.phone as buyer_phone, buyer.avatar_url as buyer_avatar
+      FROM contacts c
+      JOIN old_item_posts oip ON c.post_id = oip.id
+      JOIN users seller ON c.seller_id = seller.id
+      JOIN users buyer ON c.buyer_id = buyer.id
+      WHERE ${isUUID ? 'c.id = $1' : 'c.post_id = $1'} AND (c.seller_id = $2 OR c.buyer_id = $2)
+    `;
+
+    const result = await pool.query(query, [idInput, req.user.user_id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Contact not found' });
@@ -2370,6 +2372,7 @@ async function start() {
       status TEXT DEFAULT 'waiting',
       recycling_center_addresss TEXT DEFAULT '',
       evidences_image TEXT[] DEFAULT '{}',
+      chat_id UUID REFERENCES chats(id),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -2487,6 +2490,9 @@ async function start() {
     banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
   `).catch(err => console.error('Migration error (reports/banned tables):', err.message));
+
+  // Run additional migrations after tables are created
+  await runMigrations();
 
   // Start background jobs
   setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
@@ -2970,8 +2976,9 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     // 4. Create ESG Task
     const now = new Date();
     let taskDate = new Date(now.getFullYear(), now.getMonth(), parseInt(date), 8, 0, 0);
-    if (taskDate < now) {
-      taskDate = new Date(now.getFullYear(), now.getMonth() + 1, parseInt(date), 8, 0, 0);
+    // If the provided day is before today's day, it means we are scheduling for the next month's occurrence of this day.
+    if (parseInt(date) < now.getDate()) {
+      taskDate.setMonth(taskDate.getMonth() + 1);
     }
 
     await client.query(

@@ -468,7 +468,7 @@ function ContactDetail() {
                     </div>
                 </div>
 
-                {contact.status !== 'completed' && (
+                {contact.status !== 'completed' && contact.status !== 'cancelled' && (
                     <button
                         className={styles.cancelButton}
                         onClick={handleCancelClick}
