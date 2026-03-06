@@ -188,6 +188,12 @@
     border: 1px solid var(--pending-border);
 }
 
+.status-recieved {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
 .status-completed {
     background-color: var(--completed-bg);
     color: var(--completed-text);

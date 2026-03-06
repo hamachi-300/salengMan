@@ -51,6 +51,10 @@
   --cancelled-border: #EA906C;
   --cancelled-text: #EEE2DE;
 
+  --recieved-bg: #E3F2FD;
+  --recieved-border: #BBDEFB;
+  --recieved-text: #1976D2;
+
   --expired-bg: #25343F;
   --expired-border: #BFC9D1;
   --expired-text: #EAEFEF;
@@ -124,6 +128,10 @@ body {
   --cancelled-bg: #B31312;
   --cancelled-border: #B31312;
   --cancelled-text: #EEE2DE;
+
+  --recieved-bg: #E3F2FD;
+  --recieved-border: #BBDEFB;
+  --recieved-text: #1976D2;
 
   --expired-bg: #BFC9D1;
   --expired-border: #91a3b0;

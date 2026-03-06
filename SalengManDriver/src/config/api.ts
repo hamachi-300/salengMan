@@ -374,6 +374,16 @@ export const api = {
     return res.json();
   },
 
+  // Expire an accepted trash job (5h timeout) — cancels contact, resets post waiting_status to 'wait'
+  expireContact: async (token: string, contactId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/contacts/${contactId}/expire`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to expire contact');
+    return res.json();
+  },
+
   // Delete contact
   deleteContact: async (token: string, contactId: string): Promise<any> => {
     const res = await fetch(`${API_URL}/contacts/${contactId}`, {
@@ -554,6 +564,9 @@ export const api = {
       },
       body: JSON.stringify({ post_ids: postItems }),
     });
+
+    console.log('createContacts status:', res.status);  // ← เพิ่ม
+    
 
     if (!res.ok) {
       throw new Error('Failed to create contacts');

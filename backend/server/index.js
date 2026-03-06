@@ -1096,7 +1096,8 @@ app.post('/trash-posts', authMiddleware, async (req, res) => {
       [
         req.user.user_id,
         uploadedImageUrls,
-        mode === 'fixtime' ? 'fast' : 'anytime', // Map frontend mode to backend post_type
+        // mode === 'fixtime' ? 'fast' : 'anytime', // Map frontend mode to backend post_type
+        'anytime', // post_type: default to anytime
         requiredCoins,
         currentBalance,
         bag_count,
@@ -1207,6 +1208,7 @@ app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
        FROM trash_posts tp
        JOIN users u ON tp.user_id = u.id
        WHERE tp.status = 'waiting'
+       AND (tp.waiting_status = 'wait' OR tp.waiting_status IS NULL)
        ORDER BY tp.created_at DESC`,
       []
     );
@@ -1514,7 +1516,8 @@ app.put('/trash-posts/:id', authMiddleware, async (req, res) => {
       `UPDATE trash_posts 
        SET post_type = $1, images = $2, trash_bag_amount = $3, coins_selected = $4, remarks = $5, address_snapshot = $6 
        WHERE id = $7 AND user_id = $8`,
-      [mode === 'fixtime' ? 'fast' : 'anytime', uploadedImageUrls, bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
+      // [mode === 'fixtime' ? 'fast' : 'anytime', uploadedImageUrls, bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
+      [uploadedImageUrls, bag_count, coins, remarks, JSON.stringify(address), id, req.user.user_id]
     );
 
     res.json({ message: 'Trash post updated successfully' });
@@ -1933,9 +1936,9 @@ app.post('/contacts', authMiddleware, async (req, res) => {
 
       // 1. Get post details and seller ID based on type
       let postResult;
-      let tableName = type === 'anytime' ? 'trash_posts' : 'old_item_posts';
-
-      type = tableName;
+      // 'trash_posts' or 'anytime' both mean this is a trash post
+      const isTrashPost = type === 'trash_posts' || type === 'anytime';
+      let tableName = isTrashPost ? 'trash_posts' : 'old_item_posts';
 
       postResult = await pool.query(
         `SELECT * FROM ${tableName} WHERE id = $1`,
@@ -1947,14 +1950,23 @@ app.post('/contacts', authMiddleware, async (req, res) => {
       const sellerId = post.user_id;
 
       // 2. Check if contact already exists
+      // Use the stored type ('trash_posts') for trash posts, not the incoming type ('anytime')
+      // Skip cancelled contacts so drivers can re-pick up after expiry
+      const storedType = isTrashPost ? 'trash_posts' : type;
       const existingContact = await pool.query(
-        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2 AND type = $3',
-        [postId, req.user.user_id, type]
+        'SELECT * FROM contacts WHERE post_id = $1 AND buyer_id = $2 AND type = $3 AND status != $4',
+        [postId, req.user.user_id, storedType, 'cancelled']
       );
-
 
       if (existingContact.rows.length > 0) {
         createdContacts.push(existingContact.rows[0]);
+        // Still ensure waiting_status is 'accepted' in case it was missed
+        if (isTrashPost) {
+          await pool.query(
+            `UPDATE trash_posts SET waiting_status = 'accepted', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+            [postId]
+          );
+        }
         continue;
       }
 
@@ -1964,24 +1976,37 @@ app.post('/contacts', authMiddleware, async (req, res) => {
       );
       const chatId = chatResult.rows[0].id;
 
-      console.log('Creating contact for post:', postId, 'seller:', sellerId, 'buyer:', req.user.user_id, 'chat:', chatId, 'type:', type);
       const contactResult = await pool.query(
         `INSERT INTO contacts (post_id, seller_id, buyer_id, chat_id, status, type)
          VALUES ($1, $2, $3, $4, 'pending', $5)
          RETURNING *`,
-        [postId, sellerId, req.user.user_id, chatId, type]
+        [postId, sellerId, req.user.user_id, chatId, isTrashPost ? 'trash_posts' : type]
       );
 
       const contact = contactResult.rows[0];
 
       // 4. Update post status to pending
-      await pool.query(
-        `UPDATE ${tableName} 
-         SET status = 'pending',
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = $1`,
-        [postId]
-      );
+      // if type is trash post, set default status = 'waiting'  and after driver accept post, waiting_statuas turn to 'accepted'
+      // เมื่อ driver รับ trash post → อัปเดต waiting_status เป็น 'accepted'
+      // (status ยังคงเป็น 'waiting' เพราะยังไม่ได้รับของจริง)
+      if (isTrashPost) { // type 'trash_posts' or 'anytime' both map to trash
+        await pool.query(
+          `UPDATE trash_posts 
+           SET status = 'waiting',
+               waiting_status = 'accepted',
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $1`,
+          [postId]
+        );
+      } else { // if type is old item post
+        await pool.query(
+          `UPDATE ${tableName} 
+           SET status = 'pending',
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $1`,
+          [postId]
+        );
+      }
 
       // 5. Update post contacts array (JSONB)
       if (type === 'old_item_posts') {
@@ -2012,7 +2037,64 @@ app.post('/contacts', authMiddleware, async (req, res) => {
   }
 });
 
+// Expire an accepted trash job (5h timeout) — cancels contact and resets waiting_status to 'wait'
+app.post('/contacts/:id/expire', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const contactId = req.params.id;
+
+    await client.query('BEGIN');
+
+    const contactResult = await client.query(
+      `SELECT c.id, c.buyer_id, c.post_id, c.type
+       FROM contacts c
+       WHERE c.id = $1`,
+      [contactId]
+    );
+
+    if (contactResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    const contact = contactResult.rows[0];
+
+    if (contact.buyer_id !== req.user.user_id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const isTrashContact = contact.type === 'trash_posts' || contact.type === 'anytime';
+    if (!isTrashContact) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only trash contacts can be expired' });
+    }
+
+    // Cancel the contact (kept in history)
+    await client.query(
+      `UPDATE contacts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [contactId]
+    );
+
+    // Reset trash post so other drivers can pick it up again
+    await client.query(
+      `UPDATE trash_posts SET waiting_status = 'wait', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [contact.post_id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error expiring contact:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Get contacts for current user (both seller and driver)
+//get contact also get column type(old_item_posts or trash_posts) from table contacts
 app.get('/contacts', authMiddleware, async (req, res) => {
   try {
     let query;
@@ -2024,11 +2106,15 @@ app.get('/contacts', authMiddleware, async (req, res) => {
         SELECT c.*,
                COALESCE(oip.images, tp.images) as images,
                oip.categories,
+               c.type,
                COALESCE(oip.remarks, tp.remarks) as remarks,
-               COALESCE(oip.status, tp.status) as post_status,
+               CASE WHEN c.status = 'cancelled' THEN c.status
+                    ELSE COALESCE(oip.status, tp.status)
+               END as post_status,
                COALESCE(oip.address_snapshot, tp.address_snapshot) as address_snapshot,
                tp.trash_bag_amount,
                tp.coins_selected,
+               tp.waiting_status,
                u.full_name as seller_name, u.phone as seller_phone, u.avatar_url as seller_avatar
         FROM contacts c
         LEFT JOIN old_item_posts oip ON c.post_id = oip.id AND c.type = 'old_item_posts'
@@ -2102,7 +2188,11 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
 
     // 1. Fetch current status and check permissions
     const currentContact = await client.query(
-      'SELECT id, status, seller_id, buyer_id, post_id, chat_id, type FROM contacts WHERE id = $1',
+      `SELECT c.id, c.status, c.seller_id, c.buyer_id, c.post_id, c.chat_id, c.type,
+              tp.waiting_status
+       FROM contacts c
+       LEFT JOIN trash_posts tp ON c.post_id = tp.id AND (c.type = 'trash_posts' OR c.type = 'anytime')
+       WHERE c.id = $1`,
       [contactId]
     );
 
@@ -2127,10 +2217,26 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    // Buyer constraints: only allow updating to 'wait complete'
-    if (isBuyer && !isSeller && status !== 'wait complete') {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Drivers can only set status to wait complete' });
+    const isTrashContact = contact.type === 'trash_posts' || contact.type === 'anytime';
+
+    // Buyer constraints: 
+    // - old_item_posts: only allow 'wait complete'
+    // - trash_posts: allow 'recieved' IF waiting_status is 'accepted'
+    if (isBuyer && !isSeller) {
+      if (isTrashContact) {
+        if (status === 'recieved') {
+          if (contact.waiting_status !== 'accepted') {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ error: 'Cannot mark as recieved before driver is accepted' });
+          }
+        } else if (status !== 'wait complete') {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'Drivers can only set status to recieved or wait complete for trash' });
+        }
+      } else if (status !== 'wait complete') {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Drivers can only set status to wait complete for old items' });
+      }
     }
 
     // 2. Update the target contact status
@@ -2148,8 +2254,9 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
       const postId = contact.post_id;
 
       // Update post status to 'pending' and clear other contacts in array
+      const postTable = isTrashContact ? 'trash_posts' : 'old_item_posts';
       await client.query(
-        `UPDATE old_item_posts 
+        `UPDATE ${postTable} 
          SET status = 'pending',
              contacts = $1::JSONB,
              updated_at = CURRENT_TIMESTAMP
@@ -2183,11 +2290,24 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
       }
     }
 
+    // 2.5 If status is 'recieved' (for trash), update associated trash post status
+    if (status === 'recieved' && isTrashContact) {
+      const postId = contact.post_id;
+      await client.query(
+        `UPDATE trash_posts 
+         SET status = 'recieved',
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [postId]
+      );
+    }
+
     // 3. If status is 'completed', update associated post status
     if (status === 'completed') {
       const postId = contact.post_id;
+      const postTable = isTrashContact ? 'trash_posts' : 'old_item_posts';
       await client.query(
-        `UPDATE old_item_posts 
+        `UPDATE ${postTable} 
          SET status = 'completed',
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $1`,

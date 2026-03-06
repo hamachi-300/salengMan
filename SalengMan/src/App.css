@@ -51,6 +51,10 @@
   --cancelled-border: #EA906C;
   --cancelled-text: #EEE2DE;
 
+  --recieved-bg: #E3F2FD;
+  --recieved-border: #BBDEFB;
+  --recieved-text: #1976D2;
+
   --expired-bg: #25343F;
   --expired-border: #BFC9D1;
   --expired-text: #EAEFEF;
@@ -87,7 +91,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   width: 100%;
   height: 100%;
 }
@@ -123,9 +129,14 @@ body {
   --cancelled-border: #B31312;
   --cancelled-text: #EEE2DE;
 
+  --recieved-bg: #E3F2FD;
+  --recieved-border: #BBDEFB;
+  --recieved-text: #1976D2;
+
   --expired-bg: #BFC9D1;
   --expired-border: #91a3b0;
-  --expired-text: #EAEFEF;;
+  --expired-text: #EAEFEF;
+  ;
 }
 
 /* ===== Loading Screen ===== */

@@ -22,6 +22,7 @@ interface Contact {
     chat_id: string;
     status: string;
     post_status: string;
+    waiting_status?: 'wait' | 'accepted'; // trash only
     created_at: string;
     categories: string[];
     remarks: string;
@@ -278,6 +279,9 @@ function ContactDetail() {
         }
     };
 
+    const isTrashContact = contact?.categories?.includes('ทิ้งขยะ');
+    const canConfirmArrival = isTrashContact && contact?.post_status === 'waiting' && contact?.waiting_status === 'accepted' && contact?.status !== 'recieved';
+
     const renderChatIcon = () => (
         <div className={styles.chatRoomIcon} onClick={handleChat}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
@@ -502,6 +506,16 @@ function ContactDetail() {
                         Review Seller
                         <svg viewBox="0 0 24 24" fill="currentColor" className={styles.cartIcon}>
                             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                    </button>
+                ) : canConfirmArrival ? (
+                    <button
+                        className={styles.addToCartButton}
+                        onClick={handleConfirmArrival}
+                    >
+                        Confirm Arrival
+                        <svg viewBox="0 0 24 24" fill="currentColor" className={styles.cartIcon}>
+                            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" />
                         </svg>
                     </button>
                 ) : (

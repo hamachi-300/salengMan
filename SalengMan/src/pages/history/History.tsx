@@ -16,6 +16,7 @@ interface Post {
   status: string;
   images?: string[];
   post_type?: 'old_item' | 'trash_disposal';
+  waiting_status?: 'wait' | 'accepted'; // trash only
 }
 
 function History() {
@@ -105,6 +106,8 @@ function History() {
         return styles["status-pending"];
       case "waiting":
         return styles["status-waiting"];
+      case "recieved":
+        return styles["status-recieved"];
       case "completed":
         return styles["status-completed"];
       case "cancelled":
@@ -119,7 +122,7 @@ function History() {
   };
 
   const tabs = postTypeFilter === "trash_disposal"
-    ? ["All", "Waiting", "Completed", "Cancelled"]
+    ? ["All", "Waiting", "Recieved", "Completed", "Cancelled"]
     : ["All", "Pending", "Waiting", "Completed", "Cancelled"];
 
   const filteredPosts = posts.filter((post) => {
@@ -196,11 +199,25 @@ function History() {
                   <h3 className={styles["post-title"]}>
                     {getPostTypeLabel(post.post_type)}
                   </h3>
-                  <span
-                    className={`${styles["status-badge"]} ${getStatusClass(post.status)}`}
-                  >
-                    {post.status}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    <span className={`${styles["status-badge"]} ${getStatusClass(post.status)}`}>
+                      {post.post_type === 'trash_disposal' && post.status.toLowerCase() === 'recieved'
+                        ? 'Driver recieved'
+                        : post.status}
+                    </span>
+                    {post.post_type === 'trash_disposal' && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        backgroundColor: post.waiting_status === 'accepted' ? '#d4edda' : '#fff3cd',
+                        color: post.waiting_status === 'accepted' ? '#155724' : '#856404',
+                      }}>
+                        {post.waiting_status === 'accepted' ? '✅ Driver Accepted' : '⏳ Waiting for Driver'}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className={styles["post-time"]}>
                   {formatDate(post.created_at)}

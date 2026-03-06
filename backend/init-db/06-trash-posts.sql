@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS trash_posts (
     trash_bag_amount INTEGER DEFAULT 1,
     address_snapshot JSONB,
     contact_snapshot JSONB,
+    -- contacts JSONB DEFAULT '[]'::JSONB,
     status VARCHAR(50) DEFAULT 'waiting',
+    waiting_status VARCHAR(20) DEFAULT 'wait', -- 'wait' = no driver yet, 'accepted' = driver accepted
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -226,8 +226,8 @@ function TrashDetails() {
                 isOpen={showSuccessModal}
                 title="Success!"
                 message="You have accepted this trash pickup request. You can now chat with the customer in your jobs list."
-                onConfirm={() => navigate('/history')}
-                confirmText="Go to History"
+                onConfirm={() => navigate('/jobs/contacts')}
+                confirmText="Go to Jobs"
             />
 
             {viewerImages.length > 0 && (

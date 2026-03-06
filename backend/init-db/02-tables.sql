@@ -121,6 +121,14 @@ BEGIN
     ) THEN
         ALTER TABLE contacts ADD COLUMN type VARCHAR(50);
     END IF;
+
+    -- Add status column to contacts if not exists (for live DBs created before this column was added)
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'contacts' AND column_name = 'status'
+    ) THEN
+        ALTER TABLE contacts ADD COLUMN status VARCHAR(50) DEFAULT 'pending';
+    END IF;
 END $$;
 
 -- Create indexes for common queries

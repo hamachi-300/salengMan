@@ -315,7 +315,9 @@ function PostDetail() {
                         }}
                     >
                         <div className={styles['status-dot']} />
-                        {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                        {post.status.toLowerCase() === 'recieved' && post.post_type === 'trash_disposal'
+                            ? 'Driver recieved'
+                            : post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                     </div>
                     <span className={styles['post-type-label']}>{getPostTypeLabel(post.post_type)}</span>
                 </div>

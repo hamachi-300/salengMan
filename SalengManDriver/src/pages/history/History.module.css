@@ -7,6 +7,34 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Type Toggle Segmented Control */
+.type-toggle-container {
+    display: flex;
+    background-color: var(--color-bg-2);
+    border-radius: 30px;
+    padding: 6px;
+    margin: 16px 16px 0 16px;
+}
+
+.type-toggle-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    border-radius: 25px;
+    background: transparent;
+    color: var(--color-text);
+    font-family: var(--font-thai-fun);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.type-toggle-btn.active {
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
+}
+
 /* Filters */
 .filters-scroll {
     display: flex;
@@ -159,6 +187,12 @@
     border: 1px solid var(--pending-border);
 }
 
+.status-recieved {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
 .status-waiting {
     background-color: var(--waiting-bg);
     color: var(--waiting-text);
@@ -175,6 +209,57 @@
     background-color: var(--cancelled-bg);
     color: var(--cancelled-text);
     border: 1px solid var(--cancelled-border);
+}
+
+/* Actions */
+.arrival-btn-container {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.arrival-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.distance-label {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+}
+
+.elapsed-label {
+    font-size: 12px;
+    color: #888;
+    white-space: nowrap;
+}
+
+.elapsed-warning {
+    color: #e53935;
+    font-weight: 600;
+}
+
+.confirm-arrival-btn {
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-family: var(--font-thai-fun);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(255, 137, 34, 0.2);
+}
+
+.confirm-arrival-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 6px rgba(255, 137, 34, 0.2);
 }
 
 /* Empty State */
