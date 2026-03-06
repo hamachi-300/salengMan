@@ -5,10 +5,11 @@ platform :ios, '14.0'
   # Pods for salengmandriver_iOS
 end
 
-target 'salengmandriver_macOS' do
-platform :osx, '11.0'
-  # Pods for salengmandriver_macOS
-end
+
+# target 'salengmandriver_macOS' do
+# platform :osx, '11.0'
+#   # Pods for salengmandriver_macOS
+# end
 
 # Delete the deployment target for iOS and macOS, causing it to be inherited from the Podfile
 post_install do |installer|
