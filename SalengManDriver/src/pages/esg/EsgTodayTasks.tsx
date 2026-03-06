@@ -48,7 +48,7 @@ const EsgTodayTasks: React.FC = () => {
                             <div
                                 key={task.tasks_id}
                                 className={styles.subCard}
-                                onClick={() => navigate(`/esg/subscriptor-detail/${task.esg_subscriptor_id}/${new Date(task.date).getDate()}`)}
+                                onClick={() => navigate(`/esg/task-monitor/${task.tasks_id}`)}
                             >
                                 <div className={styles.subInfo}>
                                     <div className={styles.avatarContainer}>

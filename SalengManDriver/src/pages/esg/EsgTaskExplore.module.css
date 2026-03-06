@@ -1,0 +1,25 @@
+.page {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.mapContainer {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.loading,
+.empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #888;
+    font-size: 1rem;
+    padding: 40px;
+    text-align: center;
+}

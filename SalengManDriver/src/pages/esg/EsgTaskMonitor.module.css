@@ -1,0 +1,265 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.loading,
+.empty {
+    text-align: center;
+    padding: 60px 40px;
+    color: #888;
+    font-size: 1rem;
+}
+
+/* Timeline Styles */
+.timelineSection {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sectionLabel {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-text);
+    opacity: 0.3;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.timeline {
+    display: flex;
+    justify-content: space-between;
+}
+
+.timelineStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.stepIcon {
+    width: 36px;
+    height: 36px;
+    background: var(--color-bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    opacity: 0.3;
+    filter: grayscale(1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.4s ease;
+}
+
+.activeStep .stepIcon {
+    opacity: 1;
+    filter: none;
+    border-color: rgba(255, 122, 48, 0.2);
+}
+
+.currentStep .stepIcon {
+    background: var(--orange-button);
+    border-color: transparent;
+    transform: translateY(-2px) scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.3);
+    color: white;
+}
+
+.stepLabel {
+    font-size: 0.65rem;
+    font-weight: 700;
+    opacity: 0.4;
+    text-transform: uppercase;
+}
+
+.activeStep .stepLabel {
+    opacity: 0.8;
+}
+
+.currentStep .stepLabel {
+    opacity: 1;
+    color: var(--orange-button);
+}
+
+.stepLine {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    z-index: -1;
+}
+
+.activeStep .stepLine {
+    background: var(--orange-button);
+    opacity: 0.3;
+}
+
+/* GPS Section */
+.gpsSection {
+    margin-bottom: 8px;
+}
+
+.gpsButton {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(255, 122, 48, 0.15), rgba(255, 122, 48, 0.05));
+    border: 1px solid rgba(255, 122, 48, 0.3);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.gpsButton:hover {
+    background: rgba(255, 122, 48, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 122, 48, 0.15);
+}
+
+.gpsIcon {
+    width: 50px;
+    height: 50px;
+    background: var(--orange-button);
+    color: white;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(255, 122, 48, 0.3);
+}
+
+.gpsText {
+    flex: 1;
+}
+
+.gpsText h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.gpsText p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: white;
+    opacity: 0.6;
+}
+
+.chevronIcon {
+    width: 24px;
+    height: 24px;
+    color: white;
+    opacity: 0.3;
+}
+
+/* Subscriptor Card (Matches Today/Tomorrow list cards) */
+.subCardContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.subCard {
+    background-color: var(--color-bg-2);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.subCard:active {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.subInfo {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex: 1;
+}
+
+.avatarContainer {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #444;
+    border: 2px solid #22c55e;
+}
+
+.onlineIndicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background-color: #4CAF50;
+    border: 2px solid #333;
+    border-radius: 50%;
+}
+
+.details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.nameRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+.packageText {
+    font-size: 0.85rem;
+    color: white;
+    opacity: 0.8;
+    margin: 4px 0 0 0;
+    font-weight: 500;
+}

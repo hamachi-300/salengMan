@@ -7,21 +7,20 @@ import styles from './MapSelector.module.css';
 import logoIcon from '../assets/icon/logo.svg';
 import AlertPopup from './AlertPopup';
 
-// Custom blue circle home icon for pickup
-const homeMarkerSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
-  <circle cx="20" cy="20" r="18" fill="white" stroke="#2196F3" stroke-width="2" />
-  <circle cx="20" cy="20" r="15" fill="#2196F3" />
-  <path d="M20 12l-6 5v8h4v-5h4v5h4v-8l-6-5z" fill="white" />
+// Custom blue pin icon for GPS/Pickup
+const gpsMarkerSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));">
+  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FF4444" stroke="white" stroke-width="2"/>
+  <circle cx="12" cy="9" r="2.5" fill="white"/>
 </svg>
 `;
 
-const HomeIcon = L.divIcon({
-    html: homeMarkerSvg,
-    className: 'home-marker',
+const GpsIcon = L.divIcon({
+    html: gpsMarkerSvg,
+    className: 'gps-marker',
     iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20]
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
 });
 
 // Custom orange pin icon for adding address
@@ -107,8 +106,8 @@ const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnable
         }
     }, [position, map]);
 
-    // Use OrangePinIcon when adding/editing address (!isReadOnly), otherwise HomeIcon
-    const markerIcon = !isReadOnly ? OrangePinIcon : HomeIcon;
+    // Use OrangePinIcon when adding/editing address (!isReadOnly), otherwise GpsIcon
+    const markerIcon = !isReadOnly ? OrangePinIcon : GpsIcon;
 
     return position === null ? null : (
         <Marker position={position} icon={markerIcon}>

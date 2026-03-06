@@ -31,6 +31,9 @@ import EsgSubscriptorList from "./pages/esg/EsgSubscriptorList";
 import EsgSubscriptorDetail from "./pages/esg/EsgSubscriptorDetail";
 import EsgTomorrowTask from "./pages/esg/EsgTomorrowTask";
 import EsgTodayTasks from "./pages/esg/EsgTodayTasks";
+import EsgTaskMonitor from "./pages/esg/EsgTaskMonitor";
+import EsgTaskExplore from "./pages/esg/EsgTaskExplore";
+import EsgTrashInfo from "./pages/esg/EsgTrashInfo";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -82,6 +85,9 @@ function AppRoutes() {
         <Route path="/esg/subscriptors" element={<EsgSubscriptorList />} />
         <Route path="/esg/tomorrow_task" element={<EsgTomorrowTask />} />
         <Route path="/esg/today_tasks" element={<EsgTodayTasks />} />
+        <Route path="/esg/task-monitor/:id" element={<EsgTaskMonitor />} />
+        <Route path="/esg/task-explore/:id" element={<EsgTaskExplore />} />
+        <Route path="/esg/trash-info/:id" element={<EsgTrashInfo />} />
         <Route path="/esg/subscriptor-detail/:supId/:date" element={<EsgSubscriptorDetail />} />
       </Route>
     </Routes>

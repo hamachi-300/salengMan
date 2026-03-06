@@ -2371,7 +2371,8 @@ async function start() {
       carbon_reduce NUMERIC DEFAULT 0,
       status TEXT DEFAULT 'waiting',
       recycling_center_addresss TEXT DEFAULT '',
-      evidences_image TEXT[] DEFAULT '{}',
+      evidences_images TEXT[] DEFAULT '{}',
+      receipt_images TEXT[] DEFAULT '{}',
       chat_id UUID REFERENCES chats(id),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -2383,6 +2384,27 @@ async function start() {
 
   // --- MIGRATIONS FOR ESG TABLES ---
   try {
+    // esg_tasks migrations: rename image column and add receipt column
+    await pool.query(`
+      DO $$
+      BEGIN
+        -- Rename column if exists
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'evidences_image') THEN
+          ALTER TABLE esg_tasks RENAME COLUMN evidences_image TO evidences_images;
+        END IF;
+
+        -- Add receipt_images if not exists
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'receipt_images') THEN
+          ALTER TABLE esg_tasks ADD COLUMN receipt_images TEXT[] DEFAULT '{}';
+        END IF;
+
+        -- Add chat_id if not exists
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'chat_id') THEN
+          ALTER TABLE esg_tasks ADD COLUMN chat_id UUID REFERENCES chats(id);
+        END IF;
+      END $$;
+    `);
+
     // esg_subscriptors migrations
     await pool.query(`
       ALTER TABLE esg_subscriptors ADD COLUMN IF NOT EXISTS address_id INTEGER;
@@ -3122,6 +3144,34 @@ app.get('/esg/tasks/nearest', authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.get('/esg/tasks/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT t.*, u.full_name as user_name, u.avatar_url as user_avatar,
+              a.address as pickup_address, a.phone as pickup_phone,
+              a.lat as pickup_lat, a.lng as pickup_lng,
+              s.package_name
+       FROM esg_tasks t
+       JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
+       JOIN users u ON s.user_id = u.id
+       JOIN addresses a ON s.address_id = a.id
+       WHERE t.tasks_id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.json({ task: result.rows[0] });
+  } catch (error) {
+    console.error('Error fetching ESG task by ID:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 app.patch('/esg/tasks/:id/status', authMiddleware, async (req, res) => {
   try {

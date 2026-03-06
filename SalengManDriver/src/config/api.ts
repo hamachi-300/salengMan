@@ -609,4 +609,13 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch today tasks');
     return res.json();
   },
+
+  // Get ESG task by ID
+  getEsgTaskById: async (token: string, id: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/tasks/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch task details');
+    return res.json();
+  },
 };

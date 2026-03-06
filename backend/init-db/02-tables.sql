@@ -163,8 +163,35 @@ CREATE TABLE IF NOT EXISTS esg_driver (
     UNIQUE(user_id)
 );
 
+-- ESG Tasks table
+CREATE TABLE IF NOT EXISTS esg_tasks (
+    tasks_id SERIAL PRIMARY KEY,
+    esg_subscriptor_id TEXT REFERENCES esg_subscriptors(sup_id) ON DELETE CASCADE,
+    esg_driver_id TEXT REFERENCES esg_driver(driver_id) ON DELETE CASCADE,
+    date TIMESTAMP NOT NULL,
+    weight JSONB DEFAULT '[]'::jsonb,
+    carbon_reduce NUMERIC DEFAULT 0,
+    status TEXT DEFAULT 'waiting',
+    recycling_center_addresss TEXT DEFAULT '',
+    evidences_images TEXT[] DEFAULT '{}',
+    receipt_images TEXT[] DEFAULT '{}',
+    chat_id UUID REFERENCES chats(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Banned emails table
+CREATE TABLE IF NOT EXISTS banned_emails (
+    email VARCHAR(255) PRIMARY KEY,
+    reason TEXT,
+    banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_esg_subscriptors_user_id ON esg_subscriptors(user_id);
+CREATE INDEX IF NOT EXISTS idx_esg_tasks_subscriptor_id ON esg_tasks(esg_subscriptor_id);
+CREATE INDEX IF NOT EXISTS idx_esg_tasks_driver_id ON esg_tasks(esg_driver_id);
+CREATE INDEX IF NOT EXISTS idx_esg_tasks_date ON esg_tasks(date);
 CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
 CREATE INDEX IF NOT EXISTS idx_old_item_posts_user_id ON old_item_posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_old_item_posts_status ON old_item_posts(status);
