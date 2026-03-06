@@ -187,6 +187,22 @@ CREATE TABLE IF NOT EXISTS banned_emails (
     banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Recycling Addresses table
+CREATE TABLE IF NOT EXISTS recycling_addresses (
+    address_id TEXT PRIMARY KEY,
+    label VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
+    phone VARCHAR(20),
+    note TEXT,
+    province VARCHAR(100),
+    district VARCHAR(100),
+    images TEXT[] DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_esg_subscriptors_user_id ON esg_subscriptors(user_id);
 CREATE INDEX IF NOT EXISTS idx_esg_tasks_subscriptor_id ON esg_tasks(esg_subscriptor_id);

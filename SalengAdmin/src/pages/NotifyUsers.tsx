@@ -38,9 +38,25 @@ const NotifyUsers = () => {
                 }
             });
             const data = await response.json();
-            setUsers(data);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(data.error || 'Failed to fetch users');
+            }
+
+            if (Array.isArray(data)) {
+                setUsers(data);
+            } else {
+                console.error('Expected array but received:', data);
+                setUsers([]);
+            }
         } catch (error) {
             console.error('Error fetching users:', error);
+            setUsers([]);
         } finally {
             setLoading(false);
         }

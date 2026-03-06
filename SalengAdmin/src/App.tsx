@@ -5,6 +5,7 @@ import Reports from './pages/Reports';
 import ReportDetailView from './pages/ReportDetailView';
 import UsersManagement from './pages/UsersManagement';
 import NotifyUsers from './pages/NotifyUsers';
+import RecyclingAddresses from './pages/RecyclingAddresses';
 import Login from './pages/Login';
 import './App.css';
 
@@ -29,6 +30,7 @@ function App() {
           <Route index element={<Navigate to="/users" replace />} />
           <Route path="users" element={<UsersManagement />} />
           <Route path="notify" element={<NotifyUsers />} />
+          <Route path="recycling" element={<RecyclingAddresses />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:type/:id" element={<ReportDetailView />} />
         </Route>

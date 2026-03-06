@@ -2505,13 +2505,28 @@ async function start() {
         END IF;
     END $$;
 
-  --Banned emails table
     CREATE TABLE IF NOT EXISTS banned_emails(
     email VARCHAR(255) PRIMARY KEY,
     reason TEXT,
     banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
-  `).catch(err => console.error('Migration error (reports/banned tables):', err.message));
+
+  -- Recycling Addresses table
+  CREATE TABLE IF NOT EXISTS recycling_addresses (
+    address_id TEXT PRIMARY KEY,
+    label VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
+    phone VARCHAR(20),
+    note TEXT,
+    province VARCHAR(100),
+    district VARCHAR(100),
+    images TEXT[] DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  `).catch(err => console.error('Migration error (reports/banned/recycling tables):', err.message));
 
   // Run additional migrations after tables are created
   await runMigrations();
@@ -3199,6 +3214,111 @@ app.patch('/esg/tasks/:id/status', authMiddleware, async (req, res) => {
     res.json({ success: true, status });
   } catch (error) {
     console.error('Error updating ESG task status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Recycling Addresses CRUD
+app.get('/recycling-addresses', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM recycling_addresses ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching recycling addresses:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/recycling-addresses/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM recycling_addresses WHERE address_id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recycling address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// FACTORY IMAGE UPLOAD
+// ============================================
+app.post('/upload/factory-image', adminAuthMiddleware, async (req, res) => {
+  try {
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const file = req.files.image;
+    const fileName = `recycling-factories/${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+
+    await minioClient.putObject(BUCKET_NAME, fileName, file.data, file.size, {
+      'Content-Type': file.mimetype
+    });
+
+    const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+    res.json({ url: imageUrl });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/recycling-addresses', adminAuthMiddleware, async (req, res) => {
+  try {
+    let { address_id, label, address, lat, lng, phone, note, province, district, images } = req.body;
+
+    // Auto-generate ID if not provided
+    if (!address_id) {
+      address_id = `FACTORY-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
+
+    const result = await pool.query(
+      `INSERT INTO recycling_addresses (address_id, label, address, lat, lng, phone, note, province, district, images)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [address_id, label, address, lat, lng, phone, note, province, district, images || []]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { label, address, lat, lng, phone, note, province, district, images } = req.body;
+    const result = await pool.query(
+      `UPDATE recycling_addresses 
+       SET label = $1, address = $2, lat = $3, lng = $4, phone = $5, note = $6, province = $7, district = $8, images = $9, updated_at = CURRENT_TIMESTAMP
+       WHERE address_id = $10
+       RETURNING *`,
+      [label, address, lat, lng, phone, note, province, district, images || [], id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recycling address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM recycling_addresses WHERE address_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recycling address not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting recycling address:', error);
     res.status(500).json({ error: error.message });
   }
 });

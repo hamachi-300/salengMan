@@ -53,6 +53,14 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     <Mail size={20} />
                     <span>Send Message</span>
                 </NavLink>
+                <NavLink
+                    to="/recycling"
+                    onClick={onClose}
+                    className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+                >
+                    <MapPin size={20} />
+                    <span>Recycling Factories</span>
+                </NavLink>
                 <div style={{ flex: 1 }} />
                 <button
                     className="nav-item"
