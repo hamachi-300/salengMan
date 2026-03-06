@@ -554,6 +554,32 @@ export const api = {
     return res.json();
   },
 
+  // Get all trash bin locations
+  getTrashBins: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-bins`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch trash bins');
+    return res.json();
+  },
+
+  // Driver confirms disposal at a trash bin (validates 100m proximity)
+  disposeContact: async (token: string, contactId: string, location: { lat: number; lng: number }): Promise<any> => {
+    const res = await fetch(`${API_URL}/contacts/${contactId}/dispose`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(location),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to confirm disposal');
+    }
+    return res.json();
+  },
+
   // Create contacts (driver initiates contact with sellers - supports both old items and trash)
   createContacts: async (token: string, postItems: (number | { id: number, type: string })[]): Promise<any[]> => {
     const res = await fetch(`${API_URL}/contacts`, {

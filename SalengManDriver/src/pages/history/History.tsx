@@ -322,6 +322,19 @@ function History() {
                   )}
                 </div>
 
+                {/* Find Trash Bin button for recieved trash jobs */}
+                {typeFilter === 'trash_posts' &&
+                  contact.post_status?.toLowerCase() === 'recieved' && (
+                    <div className={styles["arrival-btn-container"]}>
+                      <button
+                        className={styles["confirm-arrival-btn"]}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/trash-bin-map/${contact.id}`); }}
+                      >
+                        🗑️ Find Trash Bin
+                      </button>
+                    </div>
+                  )}
+
                 {/* Distance + Confirm Arrival for Trash Posts in Accepted Tab */}
                 {typeFilter === 'trash_posts' &&
                   contact.post_status?.toLowerCase() === 'waiting' &&

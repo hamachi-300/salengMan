@@ -26,6 +26,7 @@ import ContactList from "./pages/jobs/contact_list/ContactList";
 import ExploreMap from "./pages/jobs/ExploreMap";
 import DisposeTrash from "./pages/jobs/DisposeTrash";
 import TrashDetails from "./pages/jobs/TrashDetails";
+import TrashBinMap from "./pages/jobs/TrashBinMap";
 import { UserProvider, useUser } from "./context/UserContext";
 
 
@@ -73,6 +74,7 @@ function AppRoutes() {
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
         <Route path="/dispose-trash" element={<DisposeTrash />} />
         <Route path="/trash-details/:id" element={<TrashDetails />} />
+        <Route path="/trash-bin-map/:contactId" element={<TrashBinMap />} />
       </Route>
 
 

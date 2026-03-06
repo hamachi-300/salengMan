@@ -2728,6 +2728,133 @@ async function checkExpiredPosts() {
   }
 }
 
+// ============================================
+// TRASH BINS ENDPOINTS
+// ============================================
+
+// GET /trash-bins — all authenticated users
+app.get('/trash-bins', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, lat, lng, address FROM trash_bins ORDER BY id'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /trash-bins — admin only
+app.post('/trash-bins', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const { name, lat, lng, address } = req.body;
+  if (!name || lat == null || lng == null) return res.status(400).json({ error: 'name, lat, lng required' });
+  try {
+    const result = await pool.query(
+      'INSERT INTO trash_bins (name, lat, lng, address) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, lat, lng, address || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /trash-bins/:id — admin only
+app.put('/trash-bins/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const { name, lat, lng, address } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE trash_bins SET name=$1, lat=$2, lng=$3, address=$4, updated_at=NOW() WHERE id=$5 RETURNING *',
+      [name, lat, lng, address || null, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /trash-bins/:id — admin only
+app.delete('/trash-bins/:id', authMiddleware, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  try {
+    await pool.query('DELETE FROM trash_bins WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /contacts/:id/dispose — driver confirms trash disposal at a bin
+app.post('/contacts/:id/dispose', authMiddleware, async (req, res) => {
+  const { lat, lng } = req.body;
+  if (lat == null || lng == null) return res.status(400).json({ error: 'lat and lng required' });
+
+  try {
+    // Verify contact belongs to this driver and is 'recieved'
+    const contactResult = await pool.query(
+      'SELECT * FROM contacts WHERE id=$1',
+      [req.params.id]
+    );
+    if (contactResult.rows.length === 0) return res.status(404).json({ error: 'Contact not found' });
+    const contact = contactResult.rows[0];
+
+    if (contact.buyer_id !== req.user.id) return res.status(403).json({ error: 'Not your contact' });
+    if (contact.status !== 'recieved') return res.status(400).json({ error: 'Contact is not in recieved status' });
+
+    // Haversine distance helper
+    const haversine = (lat1, lng1, lat2, lng2) => {
+      const R = 6371000; // metres
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
+
+    // Check proximity to any trash bin
+    const binsResult = await pool.query('SELECT id, name, lat, lng FROM trash_bins');
+    const bins = binsResult.rows;
+    if (bins.length === 0) return res.status(400).json({ error: 'No trash bins configured' });
+
+    let nearestBin = null;
+    let nearestDist = Infinity;
+    for (const bin of bins) {
+      const dist = haversine(lat, lng, parseFloat(bin.lat), parseFloat(bin.lng));
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearestBin = bin;
+      }
+    }
+
+    if (nearestDist > 100) {
+      return res.status(400).json({
+        error: `You are too far from any trash bin. Nearest bin "${nearestBin.name}" is ${Math.round(nearestDist)}m away (must be within 100m).`,
+        nearestBin: nearestBin.name,
+        nearestDistance: Math.round(nearestDist)
+      });
+    }
+
+    // Mark contact and trash post as completed
+    const updatedContact = await pool.query(
+      "UPDATE contacts SET status='completed', updated_at=NOW() WHERE id=$1 RETURNING *",
+      [req.params.id]
+    );
+
+    await pool.query(
+      "UPDATE trash_posts SET status='completed', updated_at=NOW() WHERE id=$1",
+      [contact.post_id]
+    );
+
+    res.json(updatedContact.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 async function start() {
@@ -2744,6 +2871,20 @@ async function start() {
         refer_id INTEGER
     );
   `).catch(err => console.error('Migration error (notifies):', err.message));
+
+  // Ensure trash_bins table exists
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS trash_bins (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        lat DECIMAL(10,8) NOT NULL,
+        lng DECIMAL(11,8) NOT NULL,
+        address TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_trash_bins_location ON trash_bins(lat, lng);
+  `).catch(err => console.error('Migration error (trash_bins):', err.message));
 
   // Start background jobs
   setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
