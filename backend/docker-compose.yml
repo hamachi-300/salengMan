@@ -156,6 +156,24 @@ services:
       - ./server:/app
       - /app/node_modules
 
+  # ============================================
+  # Admin Dashboard - Monitoring & Management (Port 5173)
+  # ============================================
+  admin:
+    build:
+      context: ../SalengAdmin
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
+    container_name: salengman-admin
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - salengman-network
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
   minio_data:

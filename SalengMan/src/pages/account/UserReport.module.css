@@ -1,0 +1,227 @@
+.pageContainer {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    padding-bottom: calc(30px + var(--safe-area-bottom, 0px));
+    color: var(--color-text);
+    font-family: var(--font-thai-polite);
+}
+
+.content {
+    padding: 20px;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reportedUserCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--color-bg-2);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.miniAvatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-bg);
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.miniInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.miniName {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-family: var(--font-eng-fun);
+}
+
+.miniLabel {
+    font-size: 12px;
+    color: #ef4444;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--font-eng-fun);
+    margin-top: 2px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: var(--color-bg-2);
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inputGroup label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    font-family: var(--font-eng-fun);
+    opacity: 0.9;
+}
+
+.input,
+.textarea {
+    padding: 14px 18px;
+    background-color: var(--color-bg);
+    border: 1.5px solid transparent;
+    border-radius: 14px;
+    font-size: 15px;
+    color: var(--color-text);
+    font-family: var(--font-thai-polite);
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.input:focus,
+.textarea:focus {
+    border-color: #ef4444;
+    background-color: var(--color-bg-2);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.imageUploadWrapper {
+    margin-top: 4px;
+}
+
+.uploadPlaceholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 140px;
+    border: 2px dashed #94a3b8;
+    background-color: rgba(148, 163, 184, 0.05);
+    border-radius: 16px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.uploadPlaceholder:hover {
+    background-color: rgba(239, 68, 68, 0.05);
+    border-color: #ef4444;
+    color: #ef4444;
+    transform: scale(1.02);
+}
+
+.uploadPlaceholder svg {
+    width: 28px;
+    height: 28px;
+}
+
+.imagePreviewWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.imagePreview {
+    width: 100%;
+    max-height: 250px;
+    object-fit: contain;
+    border-radius: 16px;
+    background-color: var(--color-bg);
+    border: 1.5px solid #ef4444;
+}
+
+.removeImageBtn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 28px;
+    height: 28px;
+    background: #ef4444;
+    color: white;
+    border: 2px solid var(--color-bg-2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.submitBtn {
+    padding: 18px;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-eng-fun);
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    margin-top: 8px;
+}
+
+.submitBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+}
+
+.submitBtn:active {
+    transform: translateY(0);
+}
+
+.submitBtn:disabled {
+    background-color: #cbd5e1;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.errorState {
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--color-text);
+    opacity: 0.6;
+    font-family: var(--font-eng-fun);
+}
+
+@media (prefers-color-scheme: dark) {
+
+    .reportedUserCard,
+    .form {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .miniAvatar {
+        border-color: var(--color-bg-2);
+    }
+}

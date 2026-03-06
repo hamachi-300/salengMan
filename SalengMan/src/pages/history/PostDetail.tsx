@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import styles from "./PostDetail.module.css";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
@@ -8,8 +8,11 @@ import { getToken } from "../../services/auth";
 import ConfirmPopup from "../../components/ConfirmPopup";
 import RequestCancelPopup from "../../components/RequestCancelPopup";
 import SuccessPopup from "../../components/SuccessPopup";
+import AlertPopup from "../../components/AlertPopup";
+import ReviewPopup from "../../components/ReviewPopup";
+import ImageViewer from "../../components/ImageViewer";
 import { useSell } from "../../context/SellContext";
-import { useTrash } from "../../context/TrashContext";
+import profileLogo from "../../assets/icon/profile.svg";
 
 interface Post {
     id: number;
@@ -21,19 +24,20 @@ interface Post {
     address_snapshot: any;
     pickup_time: any;
     post_type?: 'old_item' | 'trash_disposal';
-    trash_status?: string;
-    mode?: string;
-    trash_bag_amount?: number;
-    coins_selected?: number;
-    contacts?: { contact_id: string; driver_id: string; chat_id?: string }[];
+    contacts?: {
+        contact_id: string;
+        driver_id: string;
+        chat_id?: string;
+        driver_name?: string;
+        driver_avatar?: string;
+        driver_phone?: string;
+    }[];
 }
 
 function PostDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
     const { setEditingPost, discardEdit } = useSell();
-    const { setImages, setBagCount, setCoins, setRemarks, setAddress, setReturnTo, setEditingPostId } = useTrash();
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -44,6 +48,14 @@ function PostDetail() {
     const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [completing, setCompleting] = useState(false);
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [showReviewPopup, setShowReviewPopup] = useState(false);
+    const [submittingReview, setSubmittingReview] = useState(false);
+
+    // Image viewer state
+    const [viewerImages, setViewerImages] = useState<string[]>([]);
+    const [viewerIndex, setViewerIndex] = useState(0);
+
     const isEditable = post?.status === 'waiting';
 
     useEffect(() => {
@@ -60,30 +72,8 @@ function PostDetail() {
         if (!id) return;
 
         try {
-            const postType = (location.state as any)?.post_type;
-            let data: any = null;
-            let actualPostType = postType;
-
-            if (postType === 'trash_disposal') {
-                data = await api.getTrashPostById(token, id);
-            } else if (postType === 'old_item') {
-                data = await api.getPostById(token, id);
-            } else {
-                // If post_type is completely missing from state (e.g. direct link or lost state)
-                // We try old item first
-                try {
-                    data = await api.getPostById(token, id);
-                    actualPostType = 'old_item';
-                } catch (e) {
-                    // Fallback to trash
-                    console.log("Not an old item, trying trash post...");
-                    data = await api.getTrashPostById(token, id);
-                    actualPostType = 'trash_disposal';
-                }
-            }
-
-            // Re-inject post_type because the backend response might not include it
-            setPost({ ...data, post_type: actualPostType });
+            const data = await api.getPostById(token, id);
+            setPost(data);
         } catch (err: any) {
             console.error("Failed to load post:", err);
             setError("Failed to load post details");
@@ -109,15 +99,11 @@ function PostDetail() {
         if (!token || !post) return;
 
         try {
-            if (post.post_type === 'trash_disposal') {
-                await api.deleteTrashPost(token, post.id);
-            } else {
-                await api.deletePost(token, post.id);
-            }
+            await api.deletePost(token, post.id);
             navigate("/history");
         } catch (err: any) {
             console.error("Failed to delete post:", err);
-            alert(err.message || "Failed to delete post");
+            setAlertMessage(err.message || "Failed to delete post");
         } finally {
             setDeleteLoading(false);
             setShowDeleteConfirm(false);
@@ -131,12 +117,12 @@ function PostDetail() {
 
         try {
             await api.cancelPost(token, post.id, reason);
-            alert("Post cancelled and buyer notified");
+            setAlertMessage("Post cancelled and buyer notified");
             fetchPost(); // Refresh post details
             setShowCancelConfirm(false);
         } catch (err: any) {
             console.error("Failed to cancel post:", err);
-            alert(err.message || "Failed to cancel post");
+            setAlertMessage(err.message || "Failed to cancel post");
         } finally {
             setCancelLoading(false);
         }
@@ -173,38 +159,19 @@ function PostDetail() {
             lng: address.lng,
         } : null;
 
-        if (post.post_type === 'trash_disposal') {
-            setImages(post.images || []);
-            setBagCount(post.trash_bag_amount || 1);
-            setCoins(post.coins_selected || 1);
-            setRemarks(post.remarks || '');
-            setAddress(addressData);
-            setEditingPostId(post.id);
-            setReturnTo(`/history/${post.id}`);
+        setEditingPost(post.id, {
+            images: post.images || [],
+            categories: post.categories || [],
+            remarks: post.remarks || '',
+            address: addressData,
+            pickupTime: pickupTime ? {
+                date: pickupTime.date,
+                startTime: pickupTime.startTime,
+                endTime: pickupTime.endTime,
+            } : null,
+        });
 
-            // Map the targetPage properly since Edit link might pass '/sell' 
-            // but we need to go to '/trash/details' or similar.
-            // If targetPage includes 'time', we ignore since trash has no time.
-            let trashTarget = '/trash';
-            if (targetPage.includes('address')) {
-                trashTarget = '/trash/select-address';
-            }
-            navigate(trashTarget);
-        } else {
-            setEditingPost(post.id, {
-                images: post.images || [],
-                categories: post.categories || [],
-                remarks: post.remarks || '',
-                address: addressData,
-                pickupTime: pickupTime ? {
-                    date: pickupTime.date,
-                    startTime: pickupTime.startTime,
-                    endTime: pickupTime.endTime,
-                } : null,
-            });
-
-            navigate(targetPage);
-        }
+        navigate(targetPage);
     };
 
     const handleChat = () => {
@@ -215,7 +182,7 @@ function PostDetail() {
                     navigate(`/chat/${chatId}`, { state: { postId: post.id, backToDetail: true } });
                 } else {
                     console.error("Chat ID not found for contact");
-                    alert("Unable to open chat: Chat ID is missing.");
+                    setAlertMessage("Unable to open chat: Chat ID is missing.");
                 }
             } else {
                 navigate(`/history/${post.id}/buyers`);
@@ -233,7 +200,7 @@ function PostDetail() {
         const contactId = post.contacts[0].contact_id;
         if (!contactId) {
             console.error("No contact_id found in post contacts:", post.contacts[0]);
-            alert("Error: Contact information is missing for this post. Please try again with a new post.");
+            setAlertMessage("Error: Contact information is missing for this post. Please try again with a new post.");
             return;
         }
 
@@ -245,9 +212,60 @@ function PostDetail() {
             setShowSuccess(true);
         } catch (err: any) {
             console.error("Failed to complete transaction:", err);
-            alert(err.message || "Failed to complete transaction");
+            setAlertMessage(err.message || "Failed to complete transaction");
         } finally {
             setCompleting(false);
+        }
+    };
+
+    const handleOpenReview = async () => {
+        if (!post || !post.contacts || post.contacts.length === 0) return;
+        const token = getToken();
+        if (!token) return;
+
+        const driverId = post.contacts[0].driver_id;
+        if (!driverId) {
+            setAlertMessage("Error: Driver information is missing.");
+            return;
+        }
+
+        try {
+            const { hasReviewed } = await api.checkReviewStatus(token, driverId, post.id);
+            if (hasReviewed) {
+                setAlertMessage("You have already reviewed this user for this post");
+            } else {
+                setShowReviewPopup(true);
+            }
+        } catch (err: any) {
+            console.error("Failed to check review status:", err);
+            // Fallback to showing popup if check fails, the backend will still catch double-reviews
+            setShowReviewPopup(true);
+        }
+    };
+
+    const handleReviewSubmit = async (score: number) => {
+        if (!post || !post.contacts || post.contacts.length === 0) return;
+        const token = getToken();
+        if (!token) return;
+
+        const driverId = post.contacts[0].driver_id;
+        if (!driverId) {
+            setAlertMessage("Error: Driver information is missing.");
+            return;
+        }
+
+        setSubmittingReview(true);
+        try {
+            await api.reviewUser(token, driverId, score, post.id);
+            setShowReviewPopup(false);
+            setAlertMessage("Review submitted successfully! Thank you.");
+            // Refresh to ensure we get the latest state or just to be safe
+            await fetchPost();
+        } catch (err: any) {
+            console.error("Failed to submit review:", err);
+            setAlertMessage(err.message || "Failed to submit review");
+        } finally {
+            setSubmittingReview(false);
         }
     };
 
@@ -315,9 +333,7 @@ function PostDetail() {
                         }}
                     >
                         <div className={styles['status-dot']} />
-                        {post.status.toLowerCase() === 'recieved' && post.post_type === 'trash_disposal'
-                            ? 'Driver recieved'
-                            : post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                        {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                     </div>
                     <span className={styles['post-type-label']}>{getPostTypeLabel(post.post_type)}</span>
                 </div>
@@ -333,7 +349,17 @@ function PostDetail() {
                         </div>
                         <div className={styles['image-grid']}>
                             {post.images.map((img, idx) => (
-                                <img key={idx} src={img} alt={`Item ${idx + 1}`} className={styles['image-item']} />
+                                <img
+                                    key={idx}
+                                    src={img}
+                                    alt={`Item ${idx + 1}`}
+                                    className={styles['image-item']}
+                                    onClick={() => {
+                                        setViewerImages(post.images!);
+                                        setViewerIndex(idx);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                />
                             ))}
                         </div>
                     </div>
@@ -342,39 +368,22 @@ function PostDetail() {
                 {/* Details Card */}
                 <div className={styles['card']}>
                     <div className={styles['card-title']}>
-                        <span>{post.post_type === 'trash_disposal' ? 'Disposal Summary' : 'Item Details'}</span>
+                        <span>Item Details</span>
                         {isEditable && (
                             <span className={styles['edit-link']} onClick={() => handleEdit('/sell')}>Edit</span>
                         )}
                     </div>
 
-                    {post.post_type === 'trash_disposal' ? (
-                        <>
-                            <div className={styles['detail-row']}>
-                                <div className={styles['detail-content']}>
-                                    <span className={styles['detail-label']}>Number of Bags</span>
-                                    <span className={styles['detail-value']}>{post.trash_bag_amount} Bags</span>
-                                </div>
-                            </div>
-                            <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
-                                <div className={styles['detail-content']}>
-                                    <span className={styles['detail-label']}>Offered Incentive</span>
-                                    <span className={styles['detail-value']}>🪙 {post.coins_selected} Coins</span>
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div className={styles['detail-row']}>
-                            <div className={styles['detail-content']}>
-                                <span className={styles['detail-label']}>Categories</span>
-                                <div className={styles['tags-wrapper']}>
-                                    {post.categories && post.categories.map(cat => (
-                                        <span key={cat} className={styles['category-chip']}>{cat}</span>
-                                    ))}
-                                </div>
+                    <div className={styles['detail-row']}>
+                        <div className={styles['detail-content']}>
+                            <span className={styles['detail-label']}>Categories</span>
+                            <div className={styles['tags-wrapper']}>
+                                {post.categories.map(cat => (
+                                    <span key={cat} className={styles['category-chip']}>{cat}</span>
+                                ))}
                             </div>
                         </div>
-                    )}
+                    </div>
 
                     {post.remarks && (
                         <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
@@ -428,29 +437,47 @@ function PostDetail() {
                         </div>
                     </div>
 
-                    {/* Time Row (Only for Old Items) */}
-                    {post.post_type !== 'trash_disposal' && (
-                        <div className={styles['detail-row']} style={{ marginTop: '16px' }}>
-                            <svg className={styles['detail-icon']} viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                            </svg>
-                            <div className={styles['detail-content']}>
-                                <div className={styles['detail-header']}>
-                                    <span className={styles['detail-label']}>Pickup Time</span>
-                                    {isEditable && (
-                                        <span className={styles['change-link']} onClick={() => handleEdit('/sell/select-time')}>Change</span>
-                                    )}
-                                </div>
-                                {pickupTime && (
-                                    <>
-                                        <span className={styles['detail-value']}>{formatDate(pickupTime.date)}</span>
-                                        <span className={styles['detail-value']}>{pickupTime.startTime} - {pickupTime.endTime}</span>
-                                    </>
+                    {/* Time Row */}
+                    <div className={styles['detail-row']} style={{ marginTop: '16px' }}>
+                        <svg className={styles['detail-icon']} viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                        </svg>
+                        <div className={styles['detail-content']}>
+                            <div className={styles['detail-header']}>
+                                <span className={styles['detail-label']}>Pickup Time</span>
+                                {isEditable && (
+                                    <span className={styles['change-link']} onClick={() => handleEdit('/sell/select-time')}>Change</span>
                                 )}
                             </div>
+                            {pickupTime && (
+                                <>
+                                    <span className={styles['detail-value']}>{formatDate(pickupTime.date)}</span>
+                                    <span className={styles['detail-value']}>{pickupTime.startTime} - {pickupTime.endTime}</span>
+                                </>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
+
+                {/* Driver */}
+                {(post.status === 'pending' || post.status === 'completed' || post.status === 'cancelled') && post.contacts && post.contacts.length > 0 && (
+                    <div className={styles['card']} style={{ padding: 0, border: 'none', backgroundColor: 'transparent', marginBottom: '8px' }}>
+                        <div
+                            className={styles['driverCard']}
+                            onClick={() => navigate(`/driver-profile/${post.contacts![0].driver_id}`, {
+                                state: { driverValues: { phone: post.contacts![0].driver_phone } }
+                            })}
+                        >
+                            <div className={styles['driverAvatar']}>
+                                <img src={post.contacts[0].driver_avatar || profileLogo} alt="Driver" />
+                            </div>
+                            <div className={styles['driverInfo']}>
+                                <span className={styles['driverName']}>{post.contacts[0].driver_name || 'Driver'}</span>
+                                <span className={styles['viewProfileText']}>Driver Profile</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 {post.status.toLowerCase() !== 'completed' && (
@@ -469,7 +496,7 @@ function PostDetail() {
                                 </button>
                             </>
                         ) : (
-                            post.status !== 'cancelled' && post.post_type !== 'trash_disposal' && (
+                            post.status !== 'cancelled' && (
                                 <button
                                     className={styles['view-buyers-btn']}
                                     onClick={() => navigate(`/history/${post.id}/buyers`)}
@@ -532,13 +559,43 @@ function PostDetail() {
                 message="โพสต์และรายการติดต่อนี้ถูกทำเครื่องหมายว่าเสร็จสิ้นแล้ว"
             />
 
+            <AlertPopup
+                isOpen={alertMessage !== null}
+                title={alertMessage?.includes('Failed') || alertMessage?.includes('Error') || alertMessage?.includes('Unable') ? 'Error' : 'Notice'}
+                message={alertMessage || ""}
+                onClose={() => {
+                    setAlertMessage(null);
+                    if (alertMessage === "Post cancelled and buyer notified") {
+                        navigate("/history");
+                    }
+                }}
+            />
+
+            <ReviewPopup
+                isOpen={showReviewPopup}
+                onClose={() => setShowReviewPopup(false)}
+                onSubmit={handleReviewSubmit}
+                isLoading={submittingReview}
+                title="Rate the Driver"
+                message={`How was your experience with ${post.contacts?.[0]?.driver_name || 'the driver'}?`}
+            />
+
             {post.status.toLowerCase() === 'completed' && (
                 <PageFooter
-                    title="Completed"
-                    onClick={() => { }}
-                    disabled={true}
+                    title="Review Driver"
+                    onClick={handleOpenReview}
+                    disabled={false}
                     showArrow={false}
-                    variant="green"
+                    variant="orange"
+                />
+            )}
+
+            {/* Image Viewer */}
+            {viewerImages.length > 0 && (
+                <ImageViewer
+                    images={viewerImages}
+                    initialIndex={viewerIndex}
+                    onClose={() => setViewerImages([])}
                 />
             )}
         </div>

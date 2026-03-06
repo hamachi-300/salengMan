@@ -1,0 +1,565 @@
+.usersManagementPage {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.mgmtCard {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.cardHeaderWithSearch {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.managementTabs {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-secondary);
+    padding: 0.35rem;
+    border-radius: 10px;
+}
+
+.mgmtTab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mgmtTab:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mgmtTab.active {
+    background: var(--bg-card);
+    color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.searchBox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 320px;
+    backdrop-filter: blur(8px);
+}
+
+.searchBox:focus-within {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 380px;
+}
+
+.searchIconMain {
+    color: var(--text-muted);
+    transition: color 0.3s;
+}
+
+.searchBox:focus-within .searchIconMain {
+    color: var(--primary);
+}
+
+.searchBox input {
+    background: none;
+    border: none;
+    color: var(--text-main);
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+    outline: none;
+}
+
+.searchBox input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.searchClearBtn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text-muted);
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.searchClearBtn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+.searchShortcut {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+}
+
+.searchShortcut span {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.usersTableWrapper {
+    overflow-x: auto;
+}
+
+.usersTable {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.usersTable th {
+    text-align: left;
+    padding: 1rem 1.5rem;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.usersTable td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.clickableRow {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.clickableRow:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.userAvatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.userAvatar.banned {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.userAvatarImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.userName {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.userSubtext {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.roleChip {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.roleChip.driver {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.roleChip.customer,
+.roleChip.seller {
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+}
+
+.roleChip.banned {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.actionCell {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.actionBtnIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.actionBtnIcon.info {
+    color: var(--primary);
+}
+
+.actionBtnIcon.ban {
+    color: #ef4444;
+}
+
+.actionBtnIcon:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.banModal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.banModal h2 {
+    color: #ef4444;
+    margin-bottom: 0.5rem;
+}
+
+.banModal p {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.formGroup {
+    margin-bottom: 1.25rem;
+}
+
+.formGroup label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.formGroup input,
+.formGroup textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-main);
+    transition: all 0.2s;
+    outline: none;
+}
+
+.formGroup textarea {
+    height: 100px;
+    resize: none;
+}
+
+.modalFooter {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.cancelBtn,
+.confirmBanBtn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.confirmBanBtn {
+    background: #ef4444;
+    border: none;
+    color: white;
+}
+
+/* User Details Modal */
+.userDetailsModal {
+    max-width: 500px;
+    width: 100%;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+.closeDetailsBtn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+.closeDetailsBtn:hover {
+    background: rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.detailsHeader {
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    color: white;
+}
+
+.detailsAvatar {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.largeAvatarImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detailsTitle h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.detailsGrid {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.detailItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detailItem.fullWidth {
+    grid-column: span 2;
+}
+
+.detailItem label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detailItem p {
+    font-size: 0.9375rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.coinDisplay {
+    color: #eab308;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.addressDisplay {
+    line-height: 1.5;
+    background: var(--bg-secondary);
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.detailsFooter {
+    padding: 0 2rem 2rem;
+}
+
+.actionBtnFullWidth {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.actionBtnFullWidth:hover {
+    background: #ef4444;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .cardHeaderWithSearch {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .searchBox {
+        width: 100% !important;
+    }
+
+    .managementTabs {
+        overflow-x: auto;
+        width: 100%;
+        padding-bottom: 0.5rem;
+        justify-content: flex-start !important;
+        mask-image: linear-gradient(to right, black 90%, transparent);
+    }
+
+    .mgmtTab {
+        flex-shrink: 0;
+    }
+
+    .searchShortcut {
+        display: none !important;
+    }
+
+    .detailsGrid {
+        grid-template-columns: 1fr !important;
+        padding: 1.5rem !important;
+        gap: 1.25rem !important;
+    }
+
+    .userDetailsModal {
+        width: 95% !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}

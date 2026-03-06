@@ -76,6 +76,31 @@ function Settings() {
           <div className={styles.placeholder}></div>
         </div>
 
+        {/* Help & Support Button */}
+        <button className={styles.helpButton} onClick={() => navigate("/help-support")}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" />
+          </svg>
+          Help & Support
+        </button>
+
+        {/* Test Notification Button */}
+        <button
+          className={styles.testNotifyButton}
+          onClick={async () => {
+            const { sendNotification } = await import('@tauri-apps/plugin-notification');
+            sendNotification({
+              title: "SalengMan Test",
+              body: "ระบบแจ้งเตือนทำงานได้ปกติ! (Notification system is working!)"
+            });
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+          </svg>
+          Test Notification
+        </button>
+
         {/* Logout Button */}
         <button className={styles.logoutButton} onClick={handleLogout} style={{ zIndex: 10, position: 'relative' }}>
           <svg viewBox="0 0 24 24" fill="currentColor">

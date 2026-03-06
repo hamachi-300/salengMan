@@ -591,8 +591,7 @@ export const api = {
       body: JSON.stringify({ post_ids: postItems }),
     });
 
-    console.log('createContacts status:', res.status);  // ← เพิ่ม
-    
+    console.log('createContacts status:', res.status);
 
     if (!res.ok) {
       throw new Error('Failed to create contacts');

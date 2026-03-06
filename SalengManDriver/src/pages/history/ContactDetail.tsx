@@ -282,6 +282,7 @@ function ContactDetail() {
     const isTrashContact = contact?.categories?.includes('ทิ้งขยะ');
     const canConfirmArrival = isTrashContact && contact?.post_status === 'waiting' && contact?.waiting_status === 'accepted' && contact?.status !== 'recieved';
 
+
     const renderChatIcon = () => (
         <div className={styles.chatRoomIcon} onClick={handleChat}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">

@@ -4,6 +4,7 @@
 GRANT SELECT ON users TO anon;
 GRANT SELECT ON old_item_posts TO anon;
 GRANT SELECT ON driver_locations TO anon;
+GRANT SELECT ON old_item_post_scores TO anon;
 
 -- Authenticated role - full access to own data
 GRANT ALL ON users TO authenticated;
@@ -11,6 +12,7 @@ GRANT ALL ON addresses TO authenticated;
 GRANT ALL ON old_item_posts TO authenticated;
 GRANT ALL ON orders TO authenticated;
 GRANT ALL ON driver_locations TO authenticated;
+GRANT ALL ON old_item_post_scores TO authenticated;
 
 -- Grant sequence usage
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
@@ -22,6 +24,7 @@ ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE old_item_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE driver_locations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE old_item_post_scores ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for users
 DROP POLICY IF EXISTS "Users can view all profiles" ON users;
@@ -81,4 +84,15 @@ DROP POLICY IF EXISTS "Drivers can update own location" ON driver_locations;
 CREATE POLICY "Drivers can update own location" ON driver_locations
     FOR ALL USING (
         driver_id::text = COALESCE(current_setting('request.jwt.claims', true)::json->>'user_id', '')
+    );
+
+-- RLS Policies for old_item_post_scores
+DROP POLICY IF EXISTS "Anyone can view scores" ON old_item_post_scores;
+CREATE POLICY "Anyone can view scores" ON old_item_post_scores
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can manage own scores" ON old_item_post_scores;
+CREATE POLICY "Users can manage own scores" ON old_item_post_scores
+    FOR ALL USING (
+        user_id::text = COALESCE(current_setting('request.jwt.claims', true)::json->>'user_id', '')
     );
