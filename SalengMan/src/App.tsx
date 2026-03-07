@@ -46,6 +46,7 @@ import EsgTrashTypeUser from "./pages/esg/EsgTrashTypeUser";
 import EsgTaskHistory from "./pages/esg/EsgTaskHistory";
 import EsgTaskDetail from "./pages/esg/EsgTaskDetail";
 import EsgReport from "./pages/esg/EsgReport";
+import ExecutiveSummary from "./pages/esg/ExecutiveSummary";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -90,6 +91,7 @@ function AppRoutes() {
         <Route path="/esg/task-history" element={<EsgTaskHistory />} />
         <Route path="/esg/task-detail/:id" element={<EsgTaskDetail />} />
         <Route path="/esg/report" element={<EsgReport />} />
+        <Route path="/esg/report/executive" element={<ExecutiveSummary />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />

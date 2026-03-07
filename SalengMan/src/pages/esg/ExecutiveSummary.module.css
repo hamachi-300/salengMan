@@ -1,0 +1,331 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1e1e1e);
+    color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+.scrollArea {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+}
+
+.actions {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.downloadButton {
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-family: var(--font-thai-fun, sans-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.downloadButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.downloadButton:active {
+    transform: scale(0.98);
+}
+
+.loadingSpinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ----------------------------------------------------
+   A4 Report Document Layout (White Theme)
+---------------------------------------------------- */
+.previewWrapper {
+    width: 100%;
+    min-width: max-content;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 40px;
+}
+
+.reportDocument {
+    background-color: #ffffff;
+    width: 794px;
+    min-width: 794px;
+    max-width: 794px;
+    height: 1123px;
+    min-height: 1123px;
+    max-height: 1123px;
+    box-sizing: border-box;
+    border-radius: 0;
+    padding: 60px 50px;
+    color: #1e293b;
+    font-family: sans-serif;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* 1. Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 24px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logoImage {
+    width: 48px;
+    height: 48px;
+}
+
+.brandName {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.reportInfo {
+    text-align: right;
+}
+
+.reportTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+}
+
+.reportPeriod {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* 2. Hero Section */
+.heroSection {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.heroTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+}
+
+.heroMainText {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #10b981;
+    /* Eco-Green */
+    margin: 0;
+    line-height: 1.2;
+}
+
+.heroMainText span {
+    font-size: 1.5rem;
+    color: #64748b;
+}
+
+.treeEquivalent {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+/* 3. Breakdown Section */
+.breakdownSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sectionTitle::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 24px;
+    background-color: #3b82f6;
+    /* Clean Blue */
+    border-radius: 4px;
+}
+
+.chartContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    background-color: #f8fafc;
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid #e2e8f0;
+}
+
+.donutWrapper {
+    width: 200px;
+    height: 200px;
+    position: relative;
+}
+
+.donutSvg {
+    width: 100%;
+    height: 100%;
+}
+
+.legendContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 200px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.legendLabel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.legendColor {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+.legendValue {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: right;
+}
+
+.legendValue span {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+/* 4. Verified Stamp */
+.footerSection {
+    margin-top: auto;
+    padding-top: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.verifiedStamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    border: 2px dashed #3b82f6;
+    padding: 16px 32px;
+    border-radius: 12px;
+    background-color: #eff6ff;
+    color: #1e3a8a;
+}
+
+.verifiedText {
+    display: flex;
+    flex-direction: column;
+}
+
+.verifiedTitle {
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.verifiedSub {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+/* Full Page Loading */
+.loadingScreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--color-text, #ffffff);
+    opacity: 0.7;
+}
+
+/* Mobile responsive breakpoint removed so A4 layout remains static on all devices */

@@ -41,8 +41,7 @@ function EsgReport() {
     const handleReportClick = (type: string) => {
         switch (type) {
             case 'executive':
-                setAlertConfig({ title: "กำลังพัฒนา", message: "ขออภัย ฟีเจอร์ Executive Summary Report กำลังอยู่ในระหว่างการพัฒนา" });
-                setShowAlert(true);
+                navigate('/esg/report/executive');
                 break;
             case 'audit':
                 setAlertConfig({ title: "กำลังพัฒนา", message: "ขออภัย ฟีเจอร์ Audit Report กำลังอยู่ในระหว่างการพัฒนา" });
