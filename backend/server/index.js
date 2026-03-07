@@ -3886,12 +3886,13 @@ app.get('/esg/user/stats', authMiddleware, async (req, res) => {
   const userId = req.user.user_id;
   const client = await pool.connect();
   try {
-    // 1. Get subscriptor_id for the user
-    const subRes = await client.query('SELECT sup_id FROM esg_subscriptors WHERE user_id = $1 AND is_active = true', [userId]);
+    // 1. Get subscriptor_id and created_at for the user
+    const subRes = await client.query('SELECT sup_id, created_at FROM esg_subscriptors WHERE user_id = $1 AND is_active = true', [userId]);
     if (subRes.rows.length === 0) {
-      return res.json({ history: [], factors: null });
+      return res.json({ history: [], factors: null, subscription_date: null });
     }
     const supId = subRes.rows[0].sup_id;
+    const subscriptionDate = subRes.rows[0].created_at;
 
     // 2. Aggregate carbon_reduce by month
     const historyRes = await client.query(`
@@ -3913,7 +3914,8 @@ app.get('/esg/user/stats', authMiddleware, async (req, res) => {
 
     res.json({
       history: historyRes.rows,
-      factors: factorsRes.rows[0] || { paper: 0, plastic: 0, metal: 0, glass: 0 }
+      factors: factorsRes.rows[0] || { paper: 0, plastic: 0, metal: 0, glass: 0 },
+      subscription_date: subscriptionDate
     });
   } catch (err) {
     console.error('Error fetching user ESG stats:', err);

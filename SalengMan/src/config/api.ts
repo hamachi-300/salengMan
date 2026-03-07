@@ -748,7 +748,8 @@ export const api = {
   // Get user ESG stats (carbon history and factors)
   getEsgUserStats: async (token: string): Promise<{
     history: { month: string, carbon: number }[],
-    factors: { paper: number, plastic: number, metal: number, glass: number }
+    factors: { paper: number, plastic: number, metal: number, glass: number },
+    subscription_date?: string
   }> => {
     const res = await fetch(`${API_URL}/esg/user/stats`, {
       method: 'GET',

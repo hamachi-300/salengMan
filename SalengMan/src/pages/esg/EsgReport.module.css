@@ -1,0 +1,188 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1e1e1e);
+    color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+.content {
+    flex: 1;
+    padding: 24px 20px;
+    overflow-y: auto;
+    padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.headerSection {
+    margin-bottom: -10px;
+}
+
+.title {
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(135deg, #fff 0%, #7ecece 100%);
+}
+
+.subtitle {
+    font-size: 0.95rem;
+    color: var(--color-text, #ffffff);
+    opacity: 0.6;
+    line-height: 1.5;
+}
+
+.cardContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.reportCard {
+    background-color: var(--color-bg-2, #2a2a2a);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    font-family: var(--font-thai-fun, sans-serif);
+}
+
+.reportCard:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background-color: #333;
+    border-color: rgba(126, 206, 206, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.reportCard:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.reportCard:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: rgba(42, 42, 42, 0.5);
+}
+
+.iconWrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.iconWrapper.locked {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.cardContent {
+    flex: 1;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cardTitle {
+    font-family: var(--font-eng-fun, sans-serif);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text, #ffffff);
+    margin: 0;
+}
+
+.cardDesc {
+    font-size: 0.85rem;
+    color: var(--color-text, #ffffff);
+    opacity: 0.6;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+    font-family: var(--font-eng-fun, sans-serif);
+}
+
+.badge.recommend {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.badge.locked {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.chevron {
+    color: var(--color-text, #ffffff);
+    opacity: 0.4;
+    align-self: center;
+    z-index: 1;
+}
+
+.lockedText {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #ef4444;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: var(--color-text, #ffffff);
+    opacity: 0.5;
+    gap: 16px;
+}
+
+.loader {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #22c55e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
