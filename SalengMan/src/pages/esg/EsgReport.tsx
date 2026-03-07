@@ -51,8 +51,7 @@ function EsgReport() {
                     setAlertConfig({ title: "ยังไม่สามารถดาวน์โหลดได้", message: "คุณต้องเป็นสมาชิกมากกว่า 3 เดือนขึ้นไปจึงจะสามารถดาวน์โหลดรายงาน 56-1 One Report ได้" });
                     setShowAlert(true);
                 } else {
-                    setAlertConfig({ title: "กำลังพัฒนา", message: "ขออภัย ฟีเจอร์ 56-1 One Report กำลังอยู่ในระหว่างการพัฒนา" });
-                    setShowAlert(true);
+                    navigate('/esg/report/one');
                 }
                 break;
         }

@@ -749,7 +749,10 @@ export const api = {
   getEsgUserStats: async (token: string): Promise<{
     history: { month: string, carbon: number }[],
     factors: { paper: number, plastic: number, metal: number, glass: number },
-    subscription_date?: string
+    subscription_date?: string,
+    total_tasks_count?: number,
+    unique_drivers_count?: number,
+    representative_driver_coin?: number
   }> => {
     const res = await fetch(`${API_URL}/esg/user/stats`, {
       method: 'GET',

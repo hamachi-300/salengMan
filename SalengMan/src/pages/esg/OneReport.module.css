@@ -1,0 +1,382 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+}
+
+.scrollArea {
+    flex: 1;
+    overflow: auto;
+    padding: 30px 20px;
+    padding-bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.actions {
+    width: 100%;
+    max-width: 842px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.exportButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pdfButton {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.excelButton {
+    background: #ffffff;
+    color: #10b981;
+    border: 1px solid #10b981;
+}
+
+.exportButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.previewWrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.reportDocument {
+    background-color: #ffffff;
+    width: 842px;
+    /* A4 aspect ratio width */
+    min-height: 1191px;
+    /* A4 aspect ratio height */
+    box-sizing: border-box;
+    padding: 60px;
+    color: #0f172a;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Formal Header */
+.header {
+    border-bottom: 3px solid #0f172a;
+    padding-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.brandInfo h1 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin: 0;
+    color: #0f172a;
+    letter-spacing: -1px;
+}
+
+.brandInfo h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #64748b;
+    margin: 4px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.reportMeta {
+    text-align: right;
+}
+
+.cycleBadge {
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: inline-block;
+    margin-bottom: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.metaText {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 2px 0;
+}
+
+/* Impact Statement */
+.impactStatement {
+    background-color: #f8fafc;
+    border-left: 5px solid #10b981;
+    padding: 24px;
+    border-radius: 0 8px 8px 0;
+}
+
+.statementTitle {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #10b981;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.statementText {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #1e293b;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Section Grid */
+.dimensionSection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sectionLetter {
+    width: 40px;
+    height: 40px;
+    background-color: #0f172a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    border-radius: 8px;
+}
+
+.sectionTitle {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.metricCard {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.2s;
+}
+
+.metricCard h4 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.metricValue {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.metricValue span {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+.metricTrend {
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.trendUp {
+    color: #10b981;
+}
+
+.trendDown {
+    color: #ef4444;
+}
+
+/* SDG Tags */
+.sdgContainer {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.sdgTag {
+    background-color: #0f172a;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Comparison Chart */
+.comparisonBlock {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 32px;
+}
+
+.chartTitle {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: #0f172a;
+}
+
+.barChart {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 40px;
+    padding-left: 20px;
+}
+
+.barGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.bar {
+    width: 60px;
+    background: linear-gradient(to top, #10b981, #34d399);
+    border-radius: 8px 8px 0 0;
+    position: relative;
+    transition: height 0.5s ease-out;
+}
+
+.barLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.barValue {
+    position: absolute;
+    top: -24px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+/* Governance Table */
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.dataTable th {
+    text-align: left;
+    padding: 12px;
+    background-color: #f8fafc;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.dataTable td {
+    padding: 12px;
+    font-size: 0.9rem;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Loading & Empty */
+.loadingSpinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingScreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.verifiedStamp {
+    margin-top: auto;
+    border-top: 2px solid #0f172a;
+    padding-top: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stampBox {
+    border: 2px solid #0f172a;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #0f172a;
+    transform: rotate(-2deg);
+}
