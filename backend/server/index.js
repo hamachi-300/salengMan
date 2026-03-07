@@ -3191,6 +3191,72 @@ app.get('/esg/tasks/driver/today', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/esg/tasks/history', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    // 1. Get sup_id for this user
+    const subRes = await pool.query(
+      'SELECT sup_id FROM esg_subscriptors WHERE user_id = $1 AND is_active = true LIMIT 1',
+      [user_id]
+    );
+    if (subRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Active subscription not found' });
+    }
+    const sup_id = subRes.rows[0].sup_id;
+
+    // 2. Fetch all tasks where date <= today
+    const taskRes = await pool.query(
+      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id
+       FROM esg_tasks t
+       LEFT JOIN esg_driver ed ON t.esg_driver_id = ed.driver_id
+       LEFT JOIN users u ON ed.user_id = u.id
+       WHERE t.esg_subscriptor_id = $1 
+         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date <= (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date
+       ORDER BY t.date DESC`,
+      [sup_id]
+    );
+
+    res.json({ tasks: taskRes.rows });
+  } catch (error) {
+    console.error('Error fetching ESG task history:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/esg/tasks/driver/history', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    // 1. Get driver_id for this user
+    const driverRes = await pool.query(
+      'SELECT driver_id FROM esg_driver WHERE user_id = $1 LIMIT 1',
+      [user_id]
+    );
+    if (driverRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+    const driver_id = driverRes.rows[0].driver_id;
+
+    // 2. Fetch all tasks where date <= today
+    const taskRes = await pool.query(
+      `SELECT t.*, u.full_name as user_name, u.avatar_url as user_avatar,
+              a.address as pickup_address, a.phone as pickup_phone
+       FROM esg_tasks t
+       JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
+       JOIN users u ON s.user_id = u.id
+       JOIN addresses a ON s.address_id = a.id
+       WHERE t.esg_driver_id = $1 
+         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date <= (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date
+       ORDER BY t.date DESC`,
+      [driver_id]
+    );
+
+    res.json({ tasks: taskRes.rows });
+  } catch (error) {
+    console.error('Error fetching ESG driver task history:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/esg/tasks/nearest', authMiddleware, async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -3204,6 +3270,12 @@ app.get('/esg/tasks/nearest', authMiddleware, async (req, res) => {
     }
     const { sup_id, package_name } = subRes.rows[0];
 
+    const { upcomingOnly } = req.query;
+    let statusFilter = "t.status NOT IN ('skipped')";
+    if (upcomingOnly === 'true') {
+      statusFilter = "t.status NOT IN ('skipped', 'completed', 'complete')";
+    }
+
     // 2. Find nearest task
     const taskRes = await pool.query(
       `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id,
@@ -3214,8 +3286,8 @@ app.get('/esg/tasks/nearest', authMiddleware, async (req, res) => {
        LEFT JOIN users u ON ed.user_id = u.id
        LEFT JOIN recycling_addresses ra ON t.recycling_center_addresss_id = ra.address_id
        WHERE t.esg_subscriptor_id = $1 
-         AND t.status NOT IN ('skipped', 'completed')
-         AND t.date >= (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date - INTERVAL '6 hours'
+         AND ${statusFilter}
+         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date >= (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date - INTERVAL '6 hours'
        ORDER BY t.date ASC LIMIT 1`,
       [sup_id]
     );
@@ -3234,18 +3306,23 @@ app.get('/esg/tasks/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT t.*, u.full_name as user_name, u.avatar_url as user_avatar,
+      `SELECT t.*, 
+              u_sub.full_name as user_name, u_sub.avatar_url as user_avatar,
               a.address as pickup_address, a.phone as pickup_phone,
               a.lat as pickup_lat, a.lng as pickup_lng,
               s.package_name,
               ra.label as factory_name, ra.address as factory_address,
               ra.lat as factory_lat, ra.lng as factory_lng, ra.phone as factory_phone,
-              ra.note as factory_note, ra.images as factory_images
+              ra.note as factory_note, ra.images as factory_images,
+              u_drv.full_name as driver_name, u_drv.avatar_url as driver_avatar,
+              ed.driver_id as esg_driver_id, u_drv.id as driver_user_id
        FROM esg_tasks t
        JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
-       JOIN users u ON s.user_id = u.id
+       JOIN users u_sub ON s.user_id = u_sub.id
        JOIN addresses a ON s.address_id = a.id
        LEFT JOIN recycling_addresses ra ON t.recycling_center_addresss_id = ra.address_id
+       LEFT JOIN esg_driver ed ON t.esg_driver_id = ed.driver_id
+       LEFT JOIN users u_drv ON ed.user_id = u_drv.id
        WHERE t.tasks_id = $1`,
       [id]
     );

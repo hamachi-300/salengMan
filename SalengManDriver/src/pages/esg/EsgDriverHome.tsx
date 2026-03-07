@@ -80,7 +80,7 @@ const EsgDriverHome: React.FC = () => {
                         <span>ตารางงานสัญญาประจำ</span>
                         <span className={styles.menuIcon}>›</span>
                     </button>
-                    <button className={styles.menuButton} onClick={() => { }}>
+                    <button className={styles.menuButton} onClick={() => navigate('/esg/task_history')}>
                         <span>ประวัติการทำงาน</span>
                         <span className={styles.menuIcon}>›</span>
                     </button>

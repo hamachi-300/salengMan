@@ -1,38 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './EsgTodayTasks.module.css';
-import PageHeader from '../../components/PageHeader';
-import { api } from '../../config/api';
-import { getToken } from '../../services/auth';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "./EsgTaskHistory.module.css";
+import PageHeader from "../../components/PageHeader";
+import { api } from "../../config/api";
+import { getToken } from "../../services/auth";
 
-const EsgTodayTasks: React.FC = () => {
+function EsgTaskHistory() {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchTodayTasks();
+        fetchHistory();
     }, []);
 
-    const fetchTodayTasks = async () => {
-        setLoading(true);
+    const fetchHistory = async () => {
+        const token = getToken();
+        if (!token) {
+            navigate("/signin");
+            return;
+        }
+
         try {
-            const token = getToken();
-            if (!token) {
-                navigate('/signin');
-                return;
-            }
-            const data = await api.getEsgDriverTodayTasks(token);
-            setTasks(data.tasks || []);
-        } catch (error) {
-            console.error('Failed to fetch today tasks:', error);
+            const data = await api.getEsgTaskHistory(token);
+            setTasks(data.tasks);
+        } catch (err: any) {
+            console.error("Failed to load history:", err);
         } finally {
             setLoading(false);
         }
     };
 
     const getStatusInfo = (status: string) => {
-        switch (status.toLowerCase()) {
+        switch (status) {
             case 'complete':
             case 'completed':
                 return { label: 'completed', color: '#22c55e' };
@@ -49,10 +49,10 @@ const EsgTodayTasks: React.FC = () => {
     if (loading) {
         return (
             <div className={styles.page}>
-                <PageHeader title="คนทิ้งขยะวันนี้" onBack={() => navigate('/esg/driver')} />
+                <PageHeader title="ประวัติการทิ้งขยะ" backTo="/esg/trash" />
                 <div className={styles.loadingContainer}>
                     <div className={styles.spinner}></div>
-                    <p>Loading Tasks...</p>
+                    <p>Loading History...</p>
                 </div>
             </div>
         );
@@ -60,14 +60,14 @@ const EsgTodayTasks: React.FC = () => {
 
     return (
         <div className={styles.page}>
-            <PageHeader title="คนทิ้งขยะวันนี้" onBack={() => navigate('/esg/driver')} />
+            <PageHeader title="ประวัติการทิ้งขยะ" backTo="/esg/trash" />
 
             <div className={styles.content}>
                 {tasks.length === 0 ? (
                     <div className={styles.emptyState}>
                         <div className={styles.emptyIcon}>📂</div>
-                        <h3>ไม่มีรายการที่ต้องเก็บ</h3>
-                        <p>วันนี้ไม่มีรายการที่คุณต้องเก็บขยะ</p>
+                        <h3>ไม่มีประวัติการทิ้งขยะ</h3>
+                        <p>คุณยังไม่มีรายการทิ้งขยะในอดีตหรือวันนี้</p>
                     </div>
                 ) : (
                     <div className={styles.taskList}>
@@ -79,7 +79,7 @@ const EsgTodayTasks: React.FC = () => {
                                 <div
                                     key={task.tasks_id}
                                     className={styles.taskCard}
-                                    onClick={() => navigate(`/esg/task-monitor/${task.tasks_id}`)}
+                                    onClick={() => navigate(`/esg/task-detail/${task.tasks_id}`)}
                                 >
                                     <div className={styles.cardHeader}>
                                         <div className={styles.dateInfo}>
@@ -103,12 +103,8 @@ const EsgTodayTasks: React.FC = () => {
 
                                     <div className={styles.cardBody}>
                                         <div className={styles.infoRow}>
-                                            <span className={styles.infoLabel}>customer :</span>
-                                            <span className={styles.infoValue}>{task.user_name}</span>
-                                        </div>
-                                        <div className={styles.infoRow}>
-                                            <span className={styles.infoLabel}>package :</span>
-                                            <span className={styles.infoValue}>{task.package_name}</span>
+                                            <span className={styles.infoLabel}>driver :</span>
+                                            <span className={styles.infoValue}>{task.driver_name || 'รอยืนยัน'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -119,6 +115,6 @@ const EsgTodayTasks: React.FC = () => {
             </div>
         </div>
     );
-};
+}
 
-export default EsgTodayTasks;
+export default EsgTaskHistory;

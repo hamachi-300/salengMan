@@ -118,7 +118,6 @@ function EsgDriverConfirm() {
         <div className={styles['page']}>
             <PageHeader
                 title="Confirm Driver"
-                backTo={`/esg/drivers/${supId}/${date}`}
             />
 
             <div className={styles['content']}>

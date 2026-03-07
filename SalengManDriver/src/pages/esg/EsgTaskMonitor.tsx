@@ -231,15 +231,16 @@ const EsgTaskMonitor: React.FC = () => {
         );
     }
 
+    const isCompleted = task.status === 'complete' || task.status === 'completed';
     const isInRadius = distance !== null && distance <= 300;
     const uploadedEvidenceCount = evidenceImages.filter(img => img !== null).length;
     const isReadyToComplete = isInRadius && uploadedEvidenceCount >= 3 && receiptImage !== null;
 
     return (
         <div className={styles.container}>
-            <PageHeader title="Task Monitor" onBack={() => navigate('/esg/today_tasks')} />
+            <PageHeader title="Task Monitor" />
 
-            <div className={styles.content}>
+            <div className={`${styles.content} ${isCompleted ? styles.completedContent : ''}`}>
                 {/* Status Timeline */}
                 <div className={styles.timelineSection}>
                     <span className={styles.sectionLabel}>TRASH PROGRESS</span>
@@ -269,7 +270,110 @@ const EsgTaskMonitor: React.FC = () => {
                     </div>
                 </div>
 
-                {task.status === 'pending' ? (
+                {task.status === 'complete' || task.status === 'completed' ? (
+                    <div className={styles.completedView}>
+
+                        {/* Subscriptor Card */}
+                        <div className={styles.subCardContainer}>
+                            <span className={styles.sectionLabel}>คนทิ้งขยะ</span>
+                            <div className={styles.subCard} onClick={() => navigate(`/esg/subscriptor-detail/${task.esg_subscriptor_id}/${new Date(task.date).getDate()}`)}>
+                                <div className={styles.subInfo}>
+                                    <div className={styles.avatarContainer}>
+                                        <img src={task.user_avatar || profileLogo} className={styles.avatar} alt="Avatar" />
+                                        <div className={styles.onlineIndicator} />
+                                    </div>
+                                    <div className={styles.details}>
+                                        <div className={styles.nameRow}>
+                                            <h3 className={styles.name}>{task.user_name}</h3>
+                                        </div>
+                                        <p className={styles.packageText}>package : {task.package_name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Date Info Section */}
+                        <div className={styles.dateInfoSection}>
+                            <div className={styles.dateRow}>
+                                <div className={styles.dateIcon}>🚚</div>
+                                <div className={styles.dateDetails}>
+                                    <div className={styles.dateLabel}>วันที่ไปเอาขยะ</div>
+                                    <div className={styles.dateValue}>
+                                        {new Date(task.created_at).toLocaleDateString('th-TH', {
+                                            day: 'numeric', month: 'long', year: 'numeric',
+                                            hour: '2-digit', minute: '2-digit'
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={styles.dateRow}>
+                                <div className={styles.dateIcon}>🏁</div>
+                                <div className={styles.dateDetails}>
+                                    <div className={styles.dateLabel}>วันที่ปิดงาน</div>
+                                    <div className={styles.dateValue}>
+                                        {task.complete_time ? new Date(task.complete_time).toLocaleDateString('th-TH', {
+                                            day: 'numeric', month: 'long', year: 'numeric',
+                                            hour: '2-digit', minute: '2-digit'
+                                        }) : '---'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Trash & Impact Section */}
+                        <div className={styles.actionButtons}>
+                            <button className={styles.outlineBtn} onClick={() => navigate(`/esg/trash-type/${id}`)}>
+                                <div className={styles.btnLeft}>
+                                    <span className={`${styles.btnIcon} ${styles.trashIcon}`}>📦</span>
+                                    <span className={styles.btnTitle}>ประเภทและน้ำหนักขยะ</span>
+                                </div>
+                                <span className={styles.btnArrow}>›</span>
+                            </button>
+                        </div>
+
+                        <div className={styles.impactSection}>
+                            <div className={styles.impactInfo}>
+                                <h4>ลด CARBON สะสม</h4>
+                                <div className={styles.impactHighlight}>
+                                    <span className={styles.impactNumber}>{task.carbon_reduce || '0.00'}</span>
+                                    <span className={styles.impactUnit}>kg</span>
+                                </div>
+                            </div>
+                            <div className={styles.impactBadge}>
+                                <span>🌳</span>
+                                <span>{task.tree_equivalent || '0'}</span>
+                            </div>
+                        </div>
+
+                        {/* Evidence Images */}
+                        {task.evidences_images && task.evidences_images.length > 0 && (
+                            <div className={styles.imageGallerySection}>
+                                <span className={styles.sectionLabel}>รูปถ่ายตอนส่ง</span>
+                                <div className={styles.previewGallery}>
+                                    {task.evidences_images.map((img: string, idx: number) => (
+                                        <div key={idx} className={styles.previewSlot}>
+                                            <img src={img} className={styles.previewImage} alt={`Evidence ${idx + 1}`} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Receipt Images */}
+                        {task.receipt_images && task.receipt_images.length > 0 && (
+                            <div className={`${styles.imageGallerySection} ${styles.receiptGallery}`}>
+                                <span className={styles.sectionLabel}>รูปถ่ายใบเสร็จ</span>
+                                <div className={styles.previewGallery}>
+                                    {task.receipt_images.map((img: string, idx: number) => (
+                                        <div key={idx} className={styles.previewSlot}>
+                                            <img src={img} className={styles.previewImage} alt={`Receipt ${idx + 1}`} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : task.status === 'pending' ? (
                     <>
                         {/* Driver & Factory Distance */}
                         <div className={styles.distanceContainer}>
@@ -413,13 +517,15 @@ const EsgTaskMonitor: React.FC = () => {
                 )}
             </div>
 
-            <PageFooter
-                title={task.status === 'pending' ? "Complete Task" : "ใส่ข้อมูลการทิ้งขยะ"}
-                onClick={task.status === 'pending' ? handleFinalizeTask : () => navigate(`/esg/trash-info/${id}`)}
-                variant="orange"
-                disabled={task.status === 'pending' && (!isReadyToComplete || isSubmitting)}
-                showArrow={false}
-            />
+            {task.status !== 'complete' && task.status !== 'completed' && (
+                <PageFooter
+                    title={task.status === 'pending' ? "Complete Task" : "ใส่ข้อมูลการทิ้งขยะ"}
+                    onClick={task.status === 'pending' ? handleFinalizeTask : () => navigate(`/esg/trash-info/${id}`)}
+                    variant="orange"
+                    disabled={task.status === 'pending' && (!isReadyToComplete || isSubmitting)}
+                    showArrow={false}
+                />
+            )}
 
             <AlertPopup
                 isOpen={showSuccess}

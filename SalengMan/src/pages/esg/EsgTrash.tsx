@@ -83,7 +83,7 @@ function EsgTrash() {
                     </button>
                 </div>
 
-                <button className={styles.menuButton} onClick={() => { }}>
+                <button className={styles.menuButton} onClick={() => navigate('/esg/task-history')}>
                     <span>ประวัติการทิ้งขยะ</span>
                     <span className={styles.menuIcon}>›</span>
                 </button>

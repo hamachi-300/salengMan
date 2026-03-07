@@ -681,8 +681,8 @@ export const api = {
   },
 
   // Get nearest ESG task for the user
-  getNearestEsgTask: async (token: string): Promise<{ task: any | null, package_name?: string | null }> => {
-    const res = await fetch(`${API_URL}/esg/tasks/nearest`, {
+  getNearestEsgTask: async (token: string, upcomingOnly: boolean = false): Promise<{ task: any | null, package_name?: string | null }> => {
+    const res = await fetch(`${API_URL}/esg/tasks/nearest${upcomingOnly ? '?upcomingOnly=true' : ''}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -725,6 +725,21 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to fetch ESG task');
+    }
+    return res.json();
+  },
+
+  // Get ESG Task History
+  getEsgTaskHistory: async (token: string): Promise<{ tasks: any[] }> => {
+    const res = await fetch(`${API_URL}/esg/tasks/history`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch ESG task history');
     }
     return res.json();
   }

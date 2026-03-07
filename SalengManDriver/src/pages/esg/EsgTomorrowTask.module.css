@@ -1,9 +1,12 @@
-.container {
+.page {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
-    background-color: var(--color-bg);
+    background-color: var(--color-bg, #1a1a1a);
+    color: var(--color-text, #ffffff);
+    overflow: hidden;
 }
 
 .dateHeader {
@@ -20,22 +23,38 @@
 
 .content {
     flex: 1;
-    padding: 16px;
+    padding: 24px 20px;
     overflow-y: auto;
-}
-
-.loading,
-.empty {
-    text-align: center;
-    padding: 60px 40px;
-    color: #888;
-    font-size: 1rem;
-}
-
-.subList {
     display: flex;
     flex-direction: column;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.loadingContainer,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text);
+    opacity: 0.6;
+    text-align: center;
     gap: 16px;
+}
+
+.spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(255, 122, 48, 0.1);
+    border-top-color: var(--orange-button, #ff7a30);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.emptyIcon {
+    font-size: 64px;
+    margin-bottom: 8px;
 }
 
 .groupedContainer {
@@ -70,141 +89,122 @@
     opacity: 0.2;
 }
 
-.subCard {
-    background-color: var(--color-bg-2);
-    border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.subCard:active {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.subInfo {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    flex: 1;
-}
-
-.avatarContainer {
-    position: relative;
-    width: 56px;
-    height: 56px;
-    flex-shrink: 0;
-}
-
-.avatar {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    background-color: #444;
-    border: 2px solid var(--orange-button);
-}
-
-.onlineIndicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 14px;
-    height: 14px;
-    background-color: #4CAF50;
-    border: 2px solid #333;
-    border-radius: 50%;
-}
-
-.details {
+.taskList {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    flex: 1;
+    gap: 20px;
+    padding-bottom: 20px;
 }
 
-.nameRow {
+.taskCard {
+    background-color: var(--color-bg-2, #2a2a2a);
+    border-radius: 24px;
+    padding: 20px;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
 }
 
-.name {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0;
-    color: white;
-}
-
-.statusBadge {
-    font-size: 0.65rem;
-    background-color: rgba(34, 197, 94, 0.2);
-    color: #22c55e;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: 700;
-}
-
-.skippedBadge {
-    background-color: rgba(156, 163, 175, 0.2);
-    color: #9ca3af;
+.taskCard:active {
+    transform: scale(0.98);
 }
 
 .skippedCard {
     opacity: 0.6;
     filter: grayscale(0.5);
-    border: 1px dashed rgba(156, 163, 175, 0.3);
-    box-shadow: none;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
-.address {
-    font-size: 0.9rem;
-    color: var(--color-text);
-    opacity: 0.8;
-    margin: 0;
-    font-weight: 500;
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.dateText {
-    font-size: 0.9rem;
+.dateInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.day {
+    font-size: 2.2rem;
+    font-weight: 800;
     color: var(--color-text);
-    opacity: 0.9;
-    margin: 4px 0;
+    line-height: 1;
+}
+
+.monthYear {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.month {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--orange-button, #ff7a30);
+}
+
+.year {
+    font-size: 0.8rem;
+    opacity: 0.4;
     font-weight: 600;
 }
 
-.packageText {
+.statusBadge {
+    padding: 6px 14px;
+    border-radius: 12px;
     font-size: 0.85rem;
-    color: white;
-    opacity: 0.8;
-    margin: 2px 0 0 0;
-    font-weight: 500;
-}
-
-.dateTag {
-    font-size: 0.75rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--color-text);
-    padding: 2px 10px;
-    border-radius: 100px;
     font-weight: 700;
-    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.sideContent {
+.cardBody {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
     gap: 8px;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+}
+
+.infoLabel {
+    font-size: 0.9rem;
+    opacity: 0.5;
+    font-weight: 500;
     min-width: 80px;
 }
 
-.distanceText {
+.infoValue {
     font-size: 0.95rem;
-    color: var(--orange-button);
-    font-weight: 800;
+    font-weight: 700;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

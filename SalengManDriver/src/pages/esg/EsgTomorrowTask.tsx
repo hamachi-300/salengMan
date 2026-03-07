@@ -4,7 +4,6 @@ import styles from './EsgTomorrowTask.module.css';
 import PageHeader from '../../components/PageHeader';
 import { api } from '../../config/api';
 import { getToken } from '../../services/auth';
-import profileLogo from '../../assets/icon/profile.svg';
 
 const EsgTomorrowTask: React.FC = () => {
     const navigate = useNavigate();
@@ -20,7 +19,10 @@ const EsgTomorrowTask: React.FC = () => {
         setLoading(true);
         try {
             const token = getToken();
-            if (!token) return;
+            if (!token) {
+                navigate('/signin');
+                return;
+            }
             const data = await api.getEsgDriverNextTask(token);
             setTasks(data.tasks || []);
         } catch (error) {
@@ -58,11 +60,38 @@ const EsgTomorrowTask: React.FC = () => {
         });
     };
 
+    const getStatusInfo = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'complete':
+            case 'completed':
+                return { label: 'completed', color: '#22c55e' };
+            case 'pending':
+            case 'in-progress':
+                return { label: 'pending', color: '#ff7a30' };
+            case 'skipped':
+                return { label: 'skipped', color: '#ef4444' };
+            default:
+                return { label: 'waiting', color: '#6366f1' };
+        }
+    };
+
     const groupedTasks = groupTasksByDate(tasks);
     const sortedDates = Object.keys(groupedTasks).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
+    if (loading) {
+        return (
+            <div className={styles.page}>
+                <PageHeader title="งานต่อไป" onBack={() => navigate('/esg/driver')} />
+                <div className={styles.loadingContainer}>
+                    <div className={styles.spinner}></div>
+                    <p>Loading Tasks...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className={styles.container}>
+        <div className={styles.page}>
             <PageHeader title="งานต่อไป" onBack={() => navigate('/esg/driver')} />
 
             <div className={styles.dateHeader}>
@@ -70,10 +99,12 @@ const EsgTomorrowTask: React.FC = () => {
             </div>
 
             <div className={styles.content}>
-                {loading ? (
-                    <div className={styles.loading}>กำลังโหลด...</div>
-                ) : tasks.length === 0 ? (
-                    <div className={styles.empty}>ไม่มีงานที่คุณรับไว้ในอนาคต</div>
+                {tasks.length === 0 ? (
+                    <div className={styles.emptyState}>
+                        <div className={styles.emptyIcon}>📂</div>
+                        <h3>ไม่มีงานที่คุณรับไว้ในอนาคต</h3>
+                        <p>ขณะนี้ยังไม่มีรายการงานที่คุณรับล่วงหน้าไว้</p>
+                    </div>
                 ) : (
                     <div className={styles.groupedContainer}>
                         {sortedDates.map((dateKey) => (
@@ -82,29 +113,50 @@ const EsgTomorrowTask: React.FC = () => {
                                     <span className={styles.groupHeaderText}>{getDateHeader(dateKey)}</span>
                                     <div className={styles.divider} />
                                 </div>
-                                <div className={styles.subList}>
-                                    {groupedTasks[dateKey].map((task) => (
-                                        <div
-                                            key={task.tasks_id}
-                                            className={`${styles.subCard} ${task.status === 'skipped' ? styles.skippedCard : ''}`}
-                                            onClick={() => navigate(`/esg/subscriptor-detail/${task.esg_subscriptor_id}/${new Date(task.date).getDate()}`)}
-                                        >
-                                            <div className={styles.subInfo}>
-                                                <div className={styles.avatarContainer}>
-                                                    <img src={task.user_avatar || profileLogo} className={styles.avatar} alt="Avatar" />
-                                                    <div className={styles.onlineIndicator} />
-                                                </div>
-                                                <div className={styles.details}>
-                                                    <div className={styles.nameRow}>
-                                                        <h3 className={styles.name}>{task.user_name}</h3>
+                                <div className={styles.taskList}>
+                                    {groupedTasks[dateKey].map((task) => {
+                                        const statusInfo = getStatusInfo(task.status);
+                                        const taskDate = new Date(task.date);
+
+                                        return (
+                                            <div
+                                                key={task.tasks_id}
+                                                className={`${styles.taskCard} ${task.status === 'skipped' ? styles.skippedCard : ''}`}
+                                                onClick={() => navigate(`/esg/subscriptor-detail/${task.esg_subscriptor_id}/${new Date(task.date).getDate()}`)}
+                                            >
+                                                <div className={styles.cardHeader}>
+                                                    <div className={styles.dateInfo}>
+                                                        <span className={styles.day}>{taskDate.getDate()}</span>
+                                                        <div className={styles.monthYear}>
+                                                            <span className={styles.month}>
+                                                                {taskDate.toLocaleDateString('th-TH', { month: 'short' })}
+                                                            </span>
+                                                            <span className={styles.year}>
+                                                                {taskDate.getFullYear() + 543}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <p className={styles.packageText}>
-                                                        package : {task.package_name}
-                                                    </p>
+                                                    <div
+                                                        className={styles.statusBadge}
+                                                        style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color }}
+                                                    >
+                                                        {statusInfo.label}
+                                                    </div>
+                                                </div>
+
+                                                <div className={styles.cardBody}>
+                                                    <div className={styles.infoRow}>
+                                                        <span className={styles.infoLabel}>customer :</span>
+                                                        <span className={styles.infoValue}>{task.user_name}</span>
+                                                    </div>
+                                                    <div className={styles.infoRow}>
+                                                        <span className={styles.infoLabel}>package :</span>
+                                                        <span className={styles.infoValue}>{task.package_name}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         ))}

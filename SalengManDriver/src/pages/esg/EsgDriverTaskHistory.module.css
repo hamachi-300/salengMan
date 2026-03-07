@@ -141,6 +141,33 @@
     font-weight: 700;
 }
 
+.addressValue {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.impactRow {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+    padding: 10px 14px;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 12px;
+}
+
+.impactItem {
+    font-size: 0.85rem;
+    color: #22c55e;
+    font-weight: 600;
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);

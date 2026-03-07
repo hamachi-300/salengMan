@@ -16,11 +16,24 @@ function EsgDisposeTrash() {
     const [skipping, setSkipping] = useState(false);
     const [showConfirmSkip, setShowConfirmSkip] = useState(false);
 
+    const isCompleted = task && (task.status === 'complete' || task.status === 'completed');
+    const isToday = task && new Date(task.date).toDateString() === new Date().toDateString() && !isCompleted;
+
     useEffect(() => {
         fetchNearestTask();
     }, []);
 
-    const fetchNearestTask = async () => {
+    useEffect(() => {
+        if (isCompleted && task?.tasks_id) {
+            const seenId = localStorage.getItem('esg_seen_task');
+            if (seenId !== task.tasks_id.toString()) {
+                localStorage.setItem('esg_seen_task', task.tasks_id.toString());
+                navigate(`/esg/task-detail/${task.tasks_id}`, { replace: true });
+            }
+        }
+    }, [isCompleted, task, navigate]);
+
+    const fetchNearestTask = async (upcomingOnly = false) => {
         const token = getToken();
         if (!token) {
             navigate("/signin");
@@ -28,7 +41,18 @@ function EsgDisposeTrash() {
         }
 
         try {
-            const data = await api.getNearestEsgTask(token);
+            const data = await api.getNearestEsgTask(token, upcomingOnly);
+
+            // If this is a completed task, check if we've already acknowledged it
+            if (!upcomingOnly && data.task && (data.task.status === 'complete' || data.task.status === 'completed')) {
+                const seenId = localStorage.getItem('esg_seen_task');
+                if (seenId === data.task.tasks_id.toString()) {
+                    // Already seen this result. Show upcoming date instead.
+                    fetchNearestTask(true);
+                    return;
+                }
+            }
+
             setTask(data.task);
             setPackageName(data.package_name || null);
         } catch (err: any) {
@@ -69,7 +93,6 @@ function EsgDisposeTrash() {
         );
     }
 
-    const isToday = task && new Date(task.date).toDateString() === new Date().toDateString();
 
     return (
         <div className={styles.page}>
@@ -82,7 +105,146 @@ function EsgDisposeTrash() {
                     </div>
                 ) : (
                     <div className={styles.taskContainer}>
-                        {!isToday ? (
+                        {isCompleted ? (
+                            <div className={styles.completedView}>
+                                {/* Progress Timeline */}
+                                <div className={styles.timelineSection}>
+                                    <span className={styles.sectionLabel}>TRASH PROGRESS</span>
+                                    <div className={styles.timeline}>
+                                        {[
+                                            { status: 'waiting', label: 'Waiting', icon: '📅' },
+                                            { status: 'pending', label: 'Pending', icon: '🚚' },
+                                            { status: 'complete', label: 'Completed', icon: '✅' }
+                                        ].map((step, index) => {
+                                            const statuses = ['waiting', 'pending', 'complete'];
+                                            let currentStatus = task.status;
+                                            if (currentStatus === 'completed') currentStatus = 'complete';
+                                            if (currentStatus === 'in-progress') currentStatus = 'pending';
+
+                                            const currentIndex = statuses.indexOf(currentStatus) === -1 ? 0 : statuses.indexOf(currentStatus);
+                                            const isActive = index <= currentIndex;
+                                            const isCurrent = index === currentIndex;
+
+                                            return (
+                                                <div key={step.status} className={`${styles.timelineStep} ${isActive ? styles.activeStep : ''} ${isCurrent ? styles.currentStep : ''}`}>
+                                                    <div className={styles.stepIcon}>{step.icon}</div>
+                                                    <span className={styles.stepLabel}>{step.label}</span>
+                                                    {index < 2 && <div className={styles.stepLine} />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Driver Card */}
+                                <div className={styles.driverSection}>
+                                    <span className={styles.sectionLabel}>DRIVER IN CHARGE</span>
+                                    <div
+                                        className={styles.driverCard}
+                                        onClick={() => navigate(`/esg/driver-detail/${task.driver_user_id}`)}
+                                    >
+                                        <div className={styles.avatarContainer}>
+                                            <img
+                                                src={task.driver_avatar || profileLogo}
+                                                alt={task.driver_name}
+                                                className={styles.avatar}
+                                            />
+                                            <div className={styles.onlineIndicator} />
+                                        </div>
+                                        <div className={styles.driverInfo}>
+                                            <h3 className={styles.driverName}>{task.driver_name}</h3>
+                                            <span className={styles.driverStatus}>ESG Partner</span>
+                                        </div>
+                                        <svg className={styles.chevronIcon} viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Date Info Section */}
+                                <div className={styles.dateInfoSection}>
+                                    <div className={styles.dateRow}>
+                                        <div className={styles.dateIcon}>🚚</div>
+                                        <div className={styles.dateDetails}>
+                                            <div className={styles.dateLabel}>วันที่ไปเอาขยะ</div>
+                                            <div className={styles.dateValue}>
+                                                {new Date(task.created_at).toLocaleDateString('th-TH', {
+                                                    day: 'numeric', month: 'long', year: 'numeric',
+                                                    hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className={styles.dateRow}>
+                                        <div className={styles.dateIcon}>🏁</div>
+                                        <div className={styles.dateDetails}>
+                                            <div className={styles.dateLabel}>วันที่ปิดงาน</div>
+                                            <div className={styles.dateValue}>
+                                                {task.complete_time ? new Date(task.complete_time).toLocaleDateString('th-TH', {
+                                                    day: 'numeric', month: 'long', year: 'numeric',
+                                                    hour: '2-digit', minute: '2-digit'
+                                                }) : '---'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Trash & Impact Section */}
+                                <div className={styles.actionButtons}>
+                                    <button className={styles.outlineBtn} onClick={() => navigate(`/esg/trash-type/${task.tasks_id}`)}>
+                                        <div className={styles.btnLeft}>
+                                            <span className={styles.btnIcon}>📦</span>
+                                            <span className={styles.btnTitle}>ประเภทและน้ำหนักขยะ</span>
+                                        </div>
+                                        <svg className={styles.btnArrow} viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className={styles.impactSection}>
+                                    <div className={styles.impactInfo}>
+                                        <h4>ลด CARBON สะสม</h4>
+                                        <div className={styles.impactHighlight}>
+                                            <span className={styles.impactNumber}>{task.carbon_reduce || '0.00'}</span>
+                                            <span className={styles.impactUnit}>kg</span>
+                                        </div>
+                                    </div>
+                                    <div className={styles.impactBadge}>
+                                        <span>🌳</span>
+                                        <span>{task.tree_equivalent || '0'}</span>
+                                    </div>
+                                </div>
+
+                                {/* Evidence Images */}
+                                {task.evidences_images && task.evidences_images.length > 0 && (
+                                    <div className={styles.imageGallerySection}>
+                                        <span className={styles.sectionLabel}>รูปถ่ายตอนส่ง</span>
+                                        <div className={styles.previewGallery}>
+                                            {task.evidences_images.map((img: string, idx: number) => (
+                                                <div key={idx} className={styles.previewSlot}>
+                                                    <img src={img} className={styles.previewImage} alt={`Evidence ${idx + 1}`} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Receipt Images */}
+                                {task.receipt_images && task.receipt_images.length > 0 && (
+                                    <div className={`${styles.imageGallerySection} ${styles.receiptGallery}`}>
+                                        <span className={styles.sectionLabel}>รูปถ่ายใบเสร็จ</span>
+                                        <div className={styles.previewGallery}>
+                                            {task.receipt_images.map((img: string, idx: number) => (
+                                                <div key={idx} className={styles.previewSlot}>
+                                                    <img src={img} className={styles.previewImage} alt={`Receipt ${idx + 1}`} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : !isToday ? (
                             <div className={styles.upcomingContainer}>
                                 <div className={styles.upcomingHeader}>
                                     <div className={styles.calendarIcon}>
@@ -179,7 +341,7 @@ function EsgDisposeTrash() {
                                     </button>
                                 </div>
                             </div>
-                        ) : task.status === 'pending' ? (
+                        ) : task.status === 'pending' || task.status === 'in-progress' ? (
                             <div className={styles.todayContainer}>
                                 <div className={styles.todayHeader}>
                                     <div className={styles.pendingIcon}>
@@ -221,7 +383,6 @@ function EsgDisposeTrash() {
                                     </div>
                                 </div>
 
-                                {/* Environmental Impact Summary */}
                                 <div className={styles.impactCard}>
                                     <span className={styles.sectionLabel}>CARBON REDUCTION</span>
                                     <div className={styles.impactContent}>
@@ -306,7 +467,7 @@ function EsgDisposeTrash() {
                                             const statuses = ['waiting', 'pending', 'complete'];
                                             let currentStatus = task.status;
                                             if (currentStatus === 'completed') currentStatus = 'complete';
-                                            if (currentStatus === 'in-progress') currentStatus = 'pending'; // Map in-progress to pending for 3-step UI
+                                            if (currentStatus === 'in-progress') currentStatus = 'pending';
 
                                             const currentIndex = statuses.indexOf(currentStatus) === -1 ? 0 : statuses.indexOf(currentStatus);
                                             const isActive = index <= currentIndex;
@@ -384,34 +545,37 @@ function EsgDisposeTrash() {
                 )}
             </div>
 
-            {!isToday && task ? (
-                <PageFooter
-                    title="Skip This Task"
-                    onClick={() => setShowConfirmSkip(true)}
-                    variant="orange"
-                    showArrow={false}
-                />
-            ) : isToday && task ? (
-                <PageFooter
-                    title={(
-                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-12-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                            </svg>
-                            Track Driver
-                        </span>
-                    )}
-                    onClick={() => navigate(`/esg/track-driver/${task.driver_user_id}/${task.tasks_id}${task.status === 'pending' ? '?mode=factory' : ''}`)}
-                    variant="orange"
-                    showArrow={false}
-                />
-            ) : (
-                <PageFooter
-                    title="เลือกวันทิ้งขยะเพิ่มเติม"
-                    onClick={() => navigate('/esg/choose-date-driver')}
-                    variant="orange"
-                    showArrow={false}
-                />
+            {/* Page Footer Logic */}
+            {!isCompleted && (
+                !isToday && task ? (
+                    <PageFooter
+                        title="Skip This Task"
+                        onClick={() => setShowConfirmSkip(true)}
+                        variant="orange"
+                        showArrow={false}
+                    />
+                ) : isToday && task ? (
+                    <PageFooter
+                        title={(
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-12-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                                </svg>
+                                Track Driver
+                            </span>
+                        )}
+                        onClick={() => navigate(`/esg/track-driver/${task.driver_user_id}/${task.tasks_id}${task.status === 'pending' ? '?mode=factory' : ''}`)}
+                        variant="orange"
+                        showArrow={false}
+                    />
+                ) : !task ? (
+                    <PageFooter
+                        title="เลือกวันทิ้งขยะเพิ่มเติม"
+                        onClick={() => navigate('/esg/choose-date-driver')}
+                        variant="orange"
+                        showArrow={false}
+                    />
+                ) : null
             )}
 
             <ConfirmPopup

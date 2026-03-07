@@ -659,4 +659,16 @@ export const api = {
     }
     return res.json();
   },
+
+  // Get ESG driver task history (today and past)
+  getEsgDriverTaskHistory: async (token: string): Promise<{ tasks: any[] }> => {
+    const res = await fetch(`${API_URL}/esg/tasks/driver/history`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) throw new Error("Failed to fetch driver task history");
+    return res.json();
+  },
 };

@@ -4,8 +4,9 @@
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    background-color: var(--color-bg, #1a1a1a);
+    background-color: var(--color-bg, #1e1e1e);
     color: var(--color-text, #ffffff);
+    font-family: var(--font-thai-fun, sans-serif);
     overflow: hidden;
 }
 
@@ -64,8 +65,10 @@
     cursor: pointer;
 }
 
-.taskCard:active {
-    transform: scale(0.98);
+.taskCard:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 122, 48, 0.3);
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .cardHeader {
@@ -116,6 +119,7 @@
     gap: 6px;
 }
 
+
 .cardBody {
     display: flex;
     flex-direction: column;
@@ -133,13 +137,13 @@
     font-size: 0.9rem;
     opacity: 0.5;
     font-weight: 500;
-    min-width: 80px;
 }
 
 .infoValue {
     font-size: 0.95rem;
     font-weight: 700;
 }
+
 
 @keyframes spin {
     to {
