@@ -2783,11 +2783,14 @@ app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
     );
     const tomorrowJobsCount = parseInt(tasksRes.rows[0].count);
 
-    // Get today's jobs count for this driver
+    // Get today's jobs count for this driver (Today's scheduled tasks + Unfinished overdue tasks)
     const todayRes = await pool.query(
       `SELECT COUNT(*) FROM esg_tasks 
        WHERE esg_driver_id = $1 
-         AND (date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date 
+         AND (
+           (date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date 
+           OR (status IN ('waiting', 'pending') AND (date AT TIME ZONE 'Asia/Bangkok')::date < (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date)
+         )
          AND status != 'skipped'`,
       [driver.driver_id]
     );
@@ -3110,7 +3113,10 @@ app.get('/esg/tasks/driver/today', authMiddleware, async (req, res) => {
        JOIN users u ON s.user_id = u.id
        JOIN addresses a ON s.address_id = a.id
        WHERE t.esg_driver_id = $1 
-         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date
+         AND (
+           (t.date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date
+           OR (t.status IN ('waiting', 'pending') AND (t.date AT TIME ZONE 'Asia/Bangkok')::date < (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date)
+         )
          AND t.status != 'skipped'
        ORDER BY t.date ASC`,
       [esg_driver_id]
@@ -3187,6 +3193,55 @@ app.get('/esg/tasks/:id', authMiddleware, async (req, res) => {
   }
 });
 
+
+
+app.post('/esg/tasks/:id/complete', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { weight, carbon_reduce, recycling_center_addresss } = req.body;
+
+    await client.query('BEGIN');
+
+    // 1. Update task: status to pending, date to NOW (real time), weight, carbon_reduce, factory
+    const updateTaskQuery = `
+      UPDATE esg_tasks 
+      SET 
+        status = 'pending',
+        date = CURRENT_TIMESTAMP,
+        weight = $1,
+        carbon_reduce = $2,
+        recycling_center_addresss = $3,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE tasks_id = $4
+      RETURNING *
+    `;
+    const taskRes = await client.query(updateTaskQuery, [JSON.stringify(weight), carbon_reduce, recycling_center_addresss, id]);
+
+    if (taskRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    // 2. Update Driver's accumulated weight
+    const totalWeight = weight.reduce((sum, item) => sum + parseFloat(item.weight || 0), 0);
+    const driverId = taskRes.rows[0].esg_driver_id;
+
+    await client.query(
+      'UPDATE esg_driver SET weight_accumulate = weight_accumulate + $1, updated_at = CURRENT_TIMESTAMP WHERE driver_id = $2',
+      [totalWeight, driverId]
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true, task: taskRes.rows[0] });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error completing ESG task:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
 
 app.patch('/esg/tasks/:id/status', authMiddleware, async (req, res) => {
   try {

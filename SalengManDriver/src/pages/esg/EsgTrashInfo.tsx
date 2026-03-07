@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styles from "./EsgTrashInfo.module.css";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
-
 interface TrashItem {
     id: string;
     type: string;
@@ -19,7 +18,43 @@ const COMMON_CATEGORIES = [
 
 function EsgTrashInfo() {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const [trashList, setTrashList] = useState<TrashItem[]>([]);
+    const [selectedFactory, setSelectedFactory] = useState<any | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Persistence: Load from localStorage on mount
+    useEffect(() => {
+        const savedData = localStorage.getItem(`trash_info_${id}`);
+        if (savedData) {
+            try {
+                const { trashList: savedList, selectedFactory: savedFactory } = JSON.parse(savedData);
+                if (savedList) setTrashList(savedList);
+                if (savedFactory) setSelectedFactory(savedFactory);
+            } catch (e) {
+                console.error("Failed to parse saved trash info", e);
+            }
+        }
+        setIsInitialized(true);
+    }, [id]);
+
+    // Handle Factory returned from navigation state (ChooseFactory page)
+    useEffect(() => {
+        if (location.state?.selectedFactory) {
+            setSelectedFactory(location.state.selectedFactory);
+        }
+    }, [location.state]);
+
+    // Persistence: Save to localStorage whenever state changes
+    useEffect(() => {
+        if (!isInitialized) return;
+
+        localStorage.setItem(`trash_info_${id}`, JSON.stringify({
+            trashList,
+            selectedFactory
+        }));
+    }, [id, trashList, selectedFactory, isInitialized]);
 
     const handleAddMore = () => {
         const newItem: TrashItem = {
@@ -142,7 +177,7 @@ function EsgTrashInfo() {
 
             <PageFooter
                 title="เลือกโรงงานรีไซเคิล"
-                onClick={() => { }}
+                onClick={() => navigate(`/esg/choose-factory/${id}`)}
                 disabled={!isValid}
                 variant="orange"
                 showArrow={true}

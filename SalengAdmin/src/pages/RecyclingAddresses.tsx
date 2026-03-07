@@ -62,7 +62,13 @@ const RecyclingAddresses = () => {
             }
 
             if (Array.isArray(data)) {
-                setAddresses(data);
+                // Ensure lat/lng are numbers (Postgres returns DECIMAL as strings)
+                const parsedData = data.map(item => ({
+                    ...item,
+                    lat: item.lat ? parseFloat(item.lat) : undefined,
+                    lng: item.lng ? parseFloat(item.lng) : undefined
+                }));
+                setAddresses(parsedData);
             } else {
                 console.error('Expected array but received:', data);
                 setAddresses([]);
@@ -323,8 +329,8 @@ const RecyclingAddresses = () => {
                                         </td>
                                         <td data-label="Details">
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem' }}>
-                                                {addr.lat && <span>Lat: {addr.lat.toFixed(6)}</span>}
-                                                {addr.lng && <span>Lng: {addr.lng.toFixed(6)}</span>}
+                                                {addr.lat && <span>Lat: {Number(addr.lat).toFixed(6)}</span>}
+                                                {addr.lng && <span>Lng: {Number(addr.lng).toFixed(6)}</span>}
                                                 {addr.images && addr.images.length > 0 ? (
                                                     <span><ImageIcon size={12} /> {addr.images.length} images</span>
                                                 ) : <span>No images</span>}
@@ -472,7 +478,7 @@ const RecyclingAddresses = () => {
                                                 <div key={index} className={styles.imagePreview}>
                                                     <img src={url} alt={`Factory ${index}`} />
                                                     <button type="button" className={styles.removeImageBtn} onClick={() => removeImage(index)}>
-                                                        <X size={10} />
+                                                        X
                                                     </button>
                                                 </div>
                                             ))}

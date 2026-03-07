@@ -618,4 +618,28 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch task details');
     return res.json();
   },
+
+  // Get all recycling factories
+  getRecyclingAddresses: async (): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/recycling-addresses`);
+    if (!res.ok) throw new Error('Failed to fetch recycling factories');
+    return res.json();
+  },
+
+  // Complete ESG task
+  completeEsgTask: async (token: string, id: string, data: { weight: any[]; carbon_reduce: number; recycling_center_addresss: string }): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/tasks/${id}/complete`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to complete ESG task');
+    }
+    return res.json();
+  },
 };

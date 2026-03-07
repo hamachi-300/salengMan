@@ -15,6 +15,10 @@ const EsgTaskMonitor: React.FC = () => {
 
     useEffect(() => {
         fetchTaskDetails();
+
+        // Clear all cached trash information when visiting the monitor page
+        const keysToRemove = Object.keys(localStorage).filter(key => key.startsWith('trash_info_'));
+        keysToRemove.forEach(key => localStorage.removeItem(key));
     }, [id]);
 
     const fetchTaskDetails = async () => {

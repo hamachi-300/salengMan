@@ -51,8 +51,8 @@ const EsgDriverHome: React.FC = () => {
                 {/* Primary Action: Start Job Today */}
                 <span className={styles.sectionLabel}>ภารกิจวันนี้</span>
                 <div
-                    className={`${styles.wideServiceCard} ${!(profile?.todayJobsCount > 0) ? styles.disabled : ''}`}
-                    onClick={() => profile?.todayJobsCount > 0 && navigate('/esg/today_tasks')}
+                    className={styles.wideServiceCard}
+                    onClick={() => navigate('/esg/today_tasks')}
                 >
                     <div className={styles.wideServiceIconWrapper}>
                         <svg className={styles.serviceIcon} viewBox="0 0 24 24" fill="currentColor">
