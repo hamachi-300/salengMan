@@ -632,6 +632,7 @@ export const api = {
     sup_id?: string,
     package?: string,
     expiresAt?: string,
+    wasExpired?: boolean,
     pickup_days?: { date: number, have_driver: boolean, driver: string[], chat_id: string | null }[]
   }> => {
     const res = await fetch(`${API_URL}/esg/subscription/status`, {

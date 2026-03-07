@@ -95,7 +95,11 @@ const EsgDriverTaskHistory: React.FC = () => {
                                         </div>
                                         <div
                                             className={styles.statusBadge}
-                                            style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color }}
+                                            style={{
+                                                backgroundColor: `var(--${statusInfo.label}-bg)`,
+                                                color: `var(--${statusInfo.label}-text)`,
+                                                border: `1px solid var(--${statusInfo.label}-border)`
+                                            }}
                                         >
                                             {statusInfo.label}
                                         </div>

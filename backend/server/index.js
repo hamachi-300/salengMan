@@ -2691,11 +2691,12 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
 });
 
 app.get('/esg/subscription/status', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
     const user_id = req.user.user_id;
 
-    // Check if the user has an active subscription that hasn't expired
-    const result = await pool.query(
+    // 1. Check if the user has an active subscription that hasn't expired
+    const activeResult = await client.query(
       `SELECT sup_id, package_name, end_sub, pickup_days 
        FROM esg_subscriptors 
        WHERE user_id = $1 AND is_active = true AND end_sub > timezone('Asia/Bangkok', CURRENT_TIMESTAMP) 
@@ -2704,20 +2705,107 @@ app.get('/esg/subscription/status', authMiddleware, async (req, res) => {
       [user_id]
     );
 
-    if (result.rows.length > 0) {
-      res.json({
+    if (activeResult.rows.length > 0) {
+      return res.json({
         hasActiveSubscription: true,
-        sup_id: result.rows[0].sup_id,
-        package: result.rows[0].package_name,
-        expiresAt: result.rows[0].end_sub,
-        pickup_days: result.rows[0].pickup_days
+        sup_id: activeResult.rows[0].sup_id,
+        package: activeResult.rows[0].package_name,
+        expiresAt: activeResult.rows[0].end_sub,
+        pickup_days: activeResult.rows[0].pickup_days
       });
-    } else {
-      res.json({ hasActiveSubscription: false });
     }
+
+    // 2. Check if there is an expired subscription that is still marked as active
+    const expiredResult = await client.query(
+      `SELECT sup_id, pickup_days 
+       FROM esg_subscriptors 
+       WHERE user_id = $1 AND is_active = true AND end_sub <= timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+       ORDER BY end_sub DESC LIMIT 1`,
+      [user_id]
+    );
+
+    if (expiredResult.rows.length > 0) {
+      const { sup_id, pickup_days } = expiredResult.rows[0];
+
+      await client.query('BEGIN');
+
+      // Reset subscription data
+      const defaultPickupDays = Array.from({ length: 29 }, () => null);
+      await client.query(
+        `UPDATE esg_subscriptors SET 
+            package_name = NULL,
+            pickup_days = $2,
+            is_active = false,
+            begin_sub = NULL,
+            end_sub = NULL,
+            max_weight = 0,
+            time_per_month = 0
+         WHERE sup_id = $1`,
+        [sup_id, JSON.stringify(defaultPickupDays)]
+      );
+
+      // Identify drivers to notify
+      const driverIds = new Set();
+      if (Array.isArray(pickup_days)) {
+        pickup_days.forEach(day => {
+          if (day && Array.isArray(day.driver)) {
+            day.driver.forEach(dId => driverIds.add(dId));
+          }
+        });
+      }
+
+      // Update each driver and send notification
+      for (const dId of driverIds) {
+        const driverRes = await client.query(
+          'SELECT user_id, pickup_days FROM esg_driver WHERE driver_id = $1',
+          [dId]
+        );
+
+        if (driverRes.rows.length > 0) {
+          const driverUserId = driverRes.rows[0].user_id;
+          let driverPickupDays = driverRes.rows[0].pickup_days;
+
+          if (Array.isArray(driverPickupDays)) {
+            driverPickupDays = driverPickupDays.map(day => {
+              if (day && Array.isArray(day.contract_user)) {
+                day.contract_user = day.contract_user.filter(u => u.id !== sup_id);
+              }
+              return day;
+            });
+
+            await client.query(
+              'UPDATE esg_driver SET pickup_days = $1 WHERE driver_id = $2',
+              [JSON.stringify(driverPickupDays), dId]
+            );
+          }
+
+          // Send notification to driver
+          await client.query(
+            `INSERT INTO notifies (notify_user_id, notify_header, notify_content, type) 
+             VALUES ($1, $2, $3, $4)`,
+            [driverUserId, 'your esg subscriptor expired', 'ผู้ทิ้งขยะที่คุณทำสัญญาด้วยหมดอายุแล้ว', 'esg_expired']
+          );
+        }
+      }
+
+      // Remove waiting and pending tasks
+      await client.query(
+        "DELETE FROM esg_tasks WHERE esg_subscriptor_id = $1 AND status IN ('waiting', 'pending')",
+        [sup_id]
+      );
+
+      await client.query('COMMIT');
+      return res.json({ hasActiveSubscription: false, wasExpired: true });
+    }
+
+    // No active or expired-active subscription
+    res.json({ hasActiveSubscription: false });
   } catch (error) {
+    if (client) await client.query('ROLLBACK');
     console.error('Error in /esg/subscription/status:', error);
     res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 

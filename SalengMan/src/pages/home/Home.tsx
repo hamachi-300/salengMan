@@ -7,11 +7,14 @@ import { useSell } from "../../context/SellContext";
 import BottomNav from "../../components/BottomNav";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
+import AlertPopup from "../../components/AlertPopup";
+import { useState } from "react";
 
 function Home() {
   const navigate = useNavigate();
   const { user, refreshUser } = useUser();
   const { discardEdit } = useSell();
+  const [showExpiredAlert, setShowExpiredAlert] = useState(false);
 
   // Refresh user data when page loads and discard any edit mode
   useEffect(() => {
@@ -96,7 +99,11 @@ function Home() {
                 if (status.hasActiveSubscription) {
                   navigate("/esg/trash");
                 } else {
-                  navigate("/esg/subscription");
+                  if (status.wasExpired) {
+                    setShowExpiredAlert(true);
+                  } else {
+                    navigate("/esg/subscription");
+                  }
                 }
               } catch (error) {
                 console.error("Failed to check subscription status", error);
@@ -118,6 +125,16 @@ function Home() {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      <AlertPopup
+        isOpen={showExpiredAlert}
+        title="Subscription Expired"
+        message="สัญญา ESG ของคุณหมดอายุแล้ว รายการที่จ้างไว้จะถูกยกเลิกทั้งหมด"
+        onClose={() => {
+          setShowExpiredAlert(false);
+          navigate("/esg/subscription");
+        }}
+      />
     </div>
   );
 }
