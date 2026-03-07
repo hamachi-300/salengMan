@@ -37,6 +37,8 @@ import EsgTrashInfo from "./pages/esg/EsgTrashInfo";
 import EsgChooseFactory from "./pages/esg/EsgChooseFactory";
 import EsgTrashType from "./pages/esg/EsgTrashType";
 import EsgDriverTaskHistory from "./pages/esg/EsgDriverTaskHistory";
+import EsgDeposit from "./pages/esg/EsgDeposit";
+import EsgWeightStats from "./pages/esg/EsgWeightStats";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -95,6 +97,8 @@ function AppRoutes() {
         <Route path="/esg/trash-type/:id" element={<EsgTrashType />} />
         <Route path="/esg/task_history" element={<EsgDriverTaskHistory />} />
         <Route path="/esg/subscriptor-detail/:supId/:date" element={<EsgSubscriptorDetail />} />
+        <Route path="/esg/deposit" element={<EsgDeposit />} />
+        <Route path="/esg/weight_stats" element={<EsgWeightStats />} />
       </Route>
     </Routes>
   );

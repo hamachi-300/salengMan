@@ -36,12 +36,12 @@ const EsgDriverHome: React.FC = () => {
                 {/* Stats Section */}
                 <span className={styles.sectionLabel}>สรุปผลงานของคุณ</span>
                 <div className={styles.statsGrid}>
-                    <div className={styles.statCard}>
+                    <div className={styles.statCard} onClick={() => navigate('/esg/deposit')}>
                         <div className={`${styles.statIconWrapper} ${styles.moneyIcon}`}>฿</div>
                         <span className={styles.statLabel}>Coin สะสม</span>
                         <span className={styles.statValue}>{profile?.coin || 0}</span>
                     </div>
-                    <div className={styles.statCard}>
+                    <div className={styles.statCard} onClick={() => navigate('/esg/weight_stats')}>
                         <div className={`${styles.statIconWrapper} ${styles.weightIcon}`}>♻</div>
                         <span className={styles.statLabel}>ขยะสะสม (kg)</span>
                         <span className={styles.statValue}>{profile?.weight_accumulate || 0}</span>

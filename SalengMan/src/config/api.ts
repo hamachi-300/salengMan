@@ -743,5 +743,23 @@ export const api = {
       throw new Error('Failed to fetch ESG task history');
     }
     return res.json();
+  },
+
+  // Get user ESG stats (carbon history and factors)
+  getEsgUserStats: async (token: string): Promise<{
+    history: { month: string, carbon: number }[],
+    factors: { paper: number, plastic: number, metal: number, glass: number }
+  }> => {
+    const res = await fetch(`${API_URL}/esg/user/stats`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch user ESG stats');
+    }
+    return res.json();
   }
 };

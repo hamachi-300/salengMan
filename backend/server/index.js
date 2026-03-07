@@ -2949,6 +2949,82 @@ app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// --- ESG Driver Stats & Deposit ---
+
+/**
+ * GET /esg/driver/weight-stats
+ * Returns monthly aggregated weight from completed ESG tasks for the driver
+ */
+app.get('/esg/driver/weight-stats', authMiddleware, async (req, res) => {
+  const userId = req.user.user_id;
+  const client = await pool.connect();
+  try {
+    // 1. Get driver_id
+    const driverRes = await client.query('SELECT driver_id FROM esg_driver WHERE user_id = $1', [userId]);
+    if (driverRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+    const driverId = driverRes.rows[0].driver_id;
+
+    // 2. Aggregate weight by month for completed tasks
+    const statsRes = await client.query(`
+      WITH task_weights AS (
+        SELECT 
+          date_trunc('month', date AT TIME ZONE 'Asia/Bangkok') as month,
+          (SELECT SUM((val->>'weight')::numeric) FROM jsonb_array_elements(weight) AS val) as total_weight
+        FROM esg_tasks 
+        WHERE esg_driver_id = $1 AND status = 'completed'
+      )
+      SELECT 
+        to_char(month, 'YYYY-MM') as month,
+        SUM(total_weight) as weight
+      FROM task_weights
+      GROUP BY month
+      ORDER BY month ASC
+    `, [driverId]);
+
+    res.json(statsRes.rows);
+  } catch (err) {
+    console.error('Error fetching weight stats:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * POST /esg/driver/deposit
+ * Mock endpoint for depositing accumulated coins
+ */
+app.post('/esg/driver/deposit', authMiddleware, async (req, res) => {
+  const userId = req.user.user_id;
+  const client = await pool.connect();
+  try {
+    const driverRes = await client.query('SELECT driver_id, coin FROM esg_driver WHERE user_id = $1', [userId]);
+    if (driverRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Driver profile not found' });
+    }
+
+    const driver = driverRes.rows[0];
+    const coinValue = parseFloat(driver.coin || 0);
+
+    if (coinValue < 100) {
+      return res.status(400).json({ error: 'Minimum deposit is 100 coins' });
+    }
+
+    // Mock successful deposit: reset coins to 0
+    await client.query('UPDATE esg_driver SET coin = 0 WHERE driver_id = $1', [driver.driver_id]);
+
+    res.json({ success: true, message: 'Deposit successful', amount: coinValue });
+  } catch (err) {
+    console.error('Error processing deposit:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+});
+
+
 app.get('/esg/available-subscriptions', authMiddleware, async (req, res) => {
   try {
     const { date } = req.query; // date index 1-28
@@ -3471,6 +3547,33 @@ app.post('/esg/tasks/:id/complete', authMiddleware, async (req, res) => {
       [totalWeight, driverId]
     );
 
+    // 3. Update ESG Factors for Subscriber
+    const esg_subscriptor_id = taskRes.rows[0].esg_subscriptor_id;
+    if (Array.isArray(weight)) {
+      for (const item of weight) {
+        // The driver app sends Thai names, e.g., 'กระดาษ'
+        // Map them to the English columns in esg_factors
+        const materialTypeMap = {
+          'กระดาษ': 'paper',
+          'พลาสติก': 'plastic',
+          'โลหะและอลูมิเนียม': 'metal',
+          'แก้ว': 'glass'
+        };
+
+        const mappedType = materialTypeMap[item.type] || (item.type && item.type.toLowerCase());
+        const materialWeight = parseFloat(item.weight || 0);
+
+        if (['paper', 'plastic', 'metal', 'glass'].includes(mappedType) && materialWeight > 0) {
+          await client.query(
+            `UPDATE esg_factors 
+             SET ${mappedType} = ${mappedType} + $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) 
+             WHERE sub_id = $2`,
+            [materialWeight, esg_subscriptor_id]
+          );
+        }
+      }
+    }
+
     await client.query('COMMIT');
     res.json({ success: true, task: taskRes.rows[0] });
   } catch (error) {
@@ -3514,9 +3617,19 @@ app.post('/esg/tasks/:id/finalize', authMiddleware, async (req, res) => {
     const task = taskRes.rows[0];
     const { esg_driver_id, esg_subscriptor_id, weight, date, package_name, chat_id } = task;
 
-    // 2. Determine Coins
     const coinsEarned = package_name?.toLowerCase().includes('enterprise') ? 20 : 10;
-    const totalWeight = Array.isArray(weight) ? weight.reduce((sum, item) => sum + parseFloat(item.weight || 0), 0) : 0;
+
+    // Parse weight properly as it is stored as JSON string in the db
+    let weightArray = Array.isArray(weight) ? weight : [];
+    if (typeof weight === 'string') {
+      try {
+        weightArray = JSON.parse(weight);
+      } catch (e) {
+        console.warn("Could not parse weight string", e);
+      }
+    }
+
+    const totalWeight = weightArray.reduce((sum, item) => sum + parseFloat(item.weight || 0), 0);
 
     // 3. Process and Upload Images to Minio
     const uploadedEvidenceUrls = [];
@@ -3585,8 +3698,8 @@ app.post('/esg/tasks/:id/finalize', authMiddleware, async (req, res) => {
     );
 
     // 5. Update ESG Factors for Subscriber
-    if (Array.isArray(weight)) {
-      for (const item of weight) {
+    if (Array.isArray(weightArray)) {
+      for (const item of weightArray) {
         const materialType = item.type?.toLowerCase(); // paper, plastic, metal, glass
         const materialWeight = parseFloat(item.weight || 0);
 
@@ -3762,6 +3875,51 @@ app.delete('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => 
   } catch (error) {
     console.error('Error deleting recycling address:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /esg/user/stats
+ * Returns monthly carbon reduction and material factors for the user
+ */
+app.get('/esg/user/stats', authMiddleware, async (req, res) => {
+  const userId = req.user.user_id;
+  const client = await pool.connect();
+  try {
+    // 1. Get subscriptor_id for the user
+    const subRes = await client.query('SELECT sup_id FROM esg_subscriptors WHERE user_id = $1 AND is_active = true', [userId]);
+    if (subRes.rows.length === 0) {
+      return res.json({ history: [], factors: null });
+    }
+    const supId = subRes.rows[0].sup_id;
+
+    // 2. Aggregate carbon_reduce by month
+    const historyRes = await client.query(`
+      SELECT 
+        to_char(date_trunc('month', date AT TIME ZONE 'Asia/Bangkok'), 'YYYY-MM') as month,
+        SUM(COALESCE(carbon_reduce, 0))::numeric as carbon
+      FROM esg_tasks 
+      WHERE esg_subscriptor_id = $1 AND status = 'completed'
+      GROUP BY month
+      ORDER BY month ASC
+    `, [supId]);
+
+    // 3. Get material factors
+    const factorsRes = await client.query(`
+      SELECT paper, plastic, metal, glass 
+      FROM esg_factors 
+      WHERE sub_id = $1
+    `, [supId]);
+
+    res.json({
+      history: historyRes.rows,
+      factors: factorsRes.rows[0] || { paper: 0, plastic: 0, metal: 0, glass: 0 }
+    });
+  } catch (err) {
+    console.error('Error fetching user ESG stats:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 

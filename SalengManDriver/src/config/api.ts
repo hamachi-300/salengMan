@@ -671,4 +671,26 @@ export const api = {
     if (!res.ok) throw new Error("Failed to fetch driver task history");
     return res.json();
   },
+
+  // Get monthly weight accumulation stats
+  getEsgDriverWeightStats: async (token: string): Promise<{ month: string, weight: number }[]> => {
+    const res = await fetch(`${API_URL}/esg/driver/weight-stats`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch weight stats');
+    return res.json();
+  },
+
+  // Mock deposit coins
+  depositEsgCoins: async (token: string): Promise<{ success: boolean, message: string, amount: number }> => {
+    const res = await fetch(`${API_URL}/esg/driver/deposit`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to process deposit');
+    }
+    return res.json();
+  },
 };

@@ -83,28 +83,10 @@
 
 .chartMockup {
     position: absolute;
-    top: 10px;
-    left: 15px;
-    right: 15px;
-    bottom: 25px;
-}
-
-.yAxisLine {
-    position: absolute;
+    top: 5px;
     left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background-color: rgba(255, 255, 255, 0.8);
-}
-
-.xAxisLine {
-    position: absolute;
-    left: 0;
-    bottom: 0;
     right: 0;
-    height: 2px;
-    background-color: rgba(255, 255, 255, 0.8);
+    bottom: 0;
 }
 
 .svgChart {
@@ -261,4 +243,252 @@
 .menuIcon {
     opacity: 0.4;
     font-size: 1.2rem;
+}
+
+/* Stats Popup */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.popupContent {
+    background: #1e1e1e;
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    border-radius: 32px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.popupHeader {
+    padding: 24px 24px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.popupHeader h3 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.closePopup {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.popupBody {
+    padding: 0 24px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.chartSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chartLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    opacity: 0.5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.popupLineChart {
+    height: 150px;
+    width: 100%;
+    padding: 10px 0;
+    position: relative;
+}
+
+/* Donut Chart */
+.donutSection {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 24px;
+}
+
+.donutWrapper {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+}
+
+.materialsList {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.materialItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.materialLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.7;
+}
+
+.materialDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.materialValue {
+    font-weight: 700;
+}
+
+/* Impact Section in Popup */
+.impactSection {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 24px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.impactInfo h4 {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.impactHighlight {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.impactNumber {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: white;
+}
+
+.impactUnit {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.impactBadge {
+    padding: 12px;
+    border-radius: 16px;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Chart Helper */
+.loadingChart,
+.emptyChart {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.material-paper {
+    background-color: #facc15;
+}
+
+.material-plastic {
+    background-color: #3b82f6;
+}
+
+.material-metal {
+    background-color: #94a3b8;
+}
+
+.material-glass {
+    background-color: #ec4899;
+}
+
+.donutSvg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.emptyDonut {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 50%;
 }
