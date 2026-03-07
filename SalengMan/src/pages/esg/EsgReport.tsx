@@ -44,8 +44,7 @@ function EsgReport() {
                 navigate('/esg/report/executive');
                 break;
             case 'audit':
-                setAlertConfig({ title: "กำลังพัฒนา", message: "ขออภัย ฟีเจอร์ Audit Report กำลังอยู่ในระหว่างการพัฒนา" });
-                setShowAlert(true);
+                navigate('/esg/report/audit');
                 break;
             case '56-1':
                 if (monthsSubscribed < 3) {

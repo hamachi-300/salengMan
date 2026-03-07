@@ -3370,10 +3370,12 @@ app.get('/esg/tasks/history', authMiddleware, async (req, res) => {
 
     // 2. Fetch all tasks where date <= today
     const taskRes = await pool.query(
-      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id
+      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id,
+              ra.label as factory_name
        FROM esg_tasks t
        LEFT JOIN esg_driver ed ON t.esg_driver_id = ed.driver_id
        LEFT JOIN users u ON ed.user_id = u.id
+       LEFT JOIN recycling_addresses ra ON NULLIF(t.recycling_center_addresss_id, '') IS NOT NULL AND ra.address_id = t.recycling_center_addresss_id
        WHERE t.esg_subscriptor_id = $1 
          AND (t.date AT TIME ZONE 'Asia/Bangkok')::date <= (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date
        ORDER BY t.date DESC`,
