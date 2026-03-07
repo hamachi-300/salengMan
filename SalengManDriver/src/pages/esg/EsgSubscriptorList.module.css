@@ -171,6 +171,12 @@
     color: var(--orange-button);
 }
 
+.maxWeightNextDate {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
 .subAddress {
     font-size: 0.85rem;
     color: #aaa;

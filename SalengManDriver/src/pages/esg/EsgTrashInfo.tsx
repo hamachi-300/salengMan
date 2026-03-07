@@ -3,6 +3,8 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styles from "./EsgTrashInfo.module.css";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
+import { api } from "../../config/api";
+import { getToken } from "../../services/auth";
 interface TrashItem {
     id: string;
     type: string;
@@ -23,6 +25,7 @@ function EsgTrashInfo() {
     const [trashList, setTrashList] = useState<TrashItem[]>([]);
     const [selectedFactory, setSelectedFactory] = useState<any | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [task, setTask] = useState<any>(null);
 
     // Persistence: Load from localStorage on mount
     useEffect(() => {
@@ -45,6 +48,21 @@ function EsgTrashInfo() {
             setSelectedFactory(location.state.selectedFactory);
         }
     }, [location.state]);
+
+    useEffect(() => {
+        const fetchTaskDetails = async () => {
+            const token = getToken();
+            if (!token || !id) return;
+            try {
+                const data = await api.getEsgTaskById(token, id);
+                setTask(data.task);
+            } catch (error) {
+                console.error("Failed to fetch task details:", error);
+            }
+        };
+
+        fetchTaskDetails();
+    }, [id]);
 
     // Persistence: Save to localStorage whenever state changes
     useEffect(() => {
@@ -85,6 +103,13 @@ function EsgTrashInfo() {
                 <div className={styles.headerSection}>
                     <h2 className={styles.title}>ข้อมูลการเก็บขยะ</h2>
                     <p className={styles.subtitle}>กรุณาระบุประเภทและน้ำหนักของขยะที่เก็บได้</p>
+                    {task?.package_name && (
+                        <div className={styles.maxWeightInfo}>
+                            แพ็กเกจ: <strong>{task.package_name}</strong>
+                            {task.package_name.toLowerCase().includes('enterprise') && ' (สูงสุด 200kg)'}
+                            {task.package_name.toLowerCase().includes('standard') && ' (สูงสุด 50kg)'}
+                        </div>
+                    )}
                 </div>
 
                 {trashList.length === 0 ? (

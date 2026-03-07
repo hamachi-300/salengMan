@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import styles from './MapSelector.module.css';
 import logoIcon from '../assets/icon/logo.svg';
 import AlertPopup from './AlertPopup';
+import { LocateFixed } from 'lucide-react';
 
 // Custom blue pin icon for GPS/Pickup
 const gpsMarkerSvg = `
@@ -83,8 +84,10 @@ interface MapSelectorProps {
     isReadOnly?: boolean;
     showGpsButton?: boolean;
     showRefreshButton?: boolean;
+    showRecenterButton?: boolean;
     onRefresh?: () => void;
     onGpsClick?: (lat: number, lng: number) => void;
+    onRecenter?: () => void;
 }
 
 const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnabled }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void, isReadOnly?: boolean, setAutoBoundsEnabled: (enabled: boolean) => void }) => {
@@ -159,7 +162,7 @@ const getSystemTheme = (): 'dark' | 'light' => {
     return 'dark';
 };
 
-export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, showRefreshButton, onRefresh, onGpsClick }: MapSelectorProps) {
+export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, showRefreshButton, showRecenterButton, onRefresh, onGpsClick, onRecenter }: MapSelectorProps) {
     const [position, setPosition] = useState<L.LatLng | null>(
         initialLat && initialLng ? new L.LatLng(initialLat, initialLng) : null
     );
@@ -369,6 +372,12 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
         }
     };
 
+    const handleRecenter = () => {
+        setAutoBoundsEnabled(true);
+        setTriggerFitBounds(prev => prev + 1);
+        if (onRecenter) onRecenter();
+    };
+
     return (
         <div className={styles.container}>
             <MapContainer
@@ -437,7 +446,7 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                 </button>
             )}
 
-            {(!isReadOnly || showGpsButton) && (
+            {(!isReadOnly || showGpsButton) && !showRecenterButton && (
                 <button
                     className={showGpsButton ? styles.gpsButtonTop : styles.gpsButton}
                     onClick={handleGetCurrentLocation}
@@ -451,6 +460,16 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                             <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
                         </svg>
                     )}
+                </button>
+            )}
+
+            {showRecenterButton && (
+                <button
+                    className={styles.gpsButtonTop}
+                    onClick={handleRecenter}
+                    title="Recenter Map"
+                >
+                    <LocateFixed size={24} />
                 </button>
             )}
 

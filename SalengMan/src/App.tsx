@@ -42,6 +42,7 @@ import EsgDriverConfirm from "./pages/esg/EsgDriverConfirm";
 import EsgDisposeTrash from "./pages/esg/EsgDisposeTrash";
 import EsgTrackDriver from "./pages/esg/EsgTrackDriver";
 import EsgDriverDetail from "./pages/esg/EsgDriverDetail";
+import EsgTrashTypeUser from "./pages/esg/EsgTrashTypeUser";
 
 function AppRoutes() {
   const { loading } = useUser();
@@ -82,6 +83,7 @@ function AppRoutes() {
         <Route path="/esg/dispose-trash" element={<EsgDisposeTrash />} />
         <Route path="/esg/track-driver/:driverId/:taskId" element={<EsgTrackDriver />} />
         <Route path="/esg/driver-detail/:driverId" element={<EsgDriverDetail />} />
+        <Route path="/esg/trash-type/:id" element={<EsgTrashTypeUser />} />
         <Route path="/coin" element={<Coin />} />
         <Route path="/coin/confirm" element={<ConfirmBuyCoin />} />
         <Route path="/coin/history" element={<HistoryCoin />} />

@@ -11,6 +11,13 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 
+// Helper to get current time in Bangkok (UTC+7)
+const getBangkokTime = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 7));
+};
+
 // Database connection
 const poolConfig = {
   max: 20,
@@ -171,7 +178,7 @@ app.get('/health', async (req, res) => {
   try {
     res.json({
       status: 'OK',
-      timestamp: new Date().toISOString(),
+      timestamp: getBangkokTime().toISOString().replace('Z', '+07:00'),
       database: 'connected' // Simple check
     });
   } catch (error) {
@@ -581,7 +588,7 @@ app.patch('/auth/me', authMiddleware, async (req, res) => {
 
     values.push(userId);
     const result = await pool.query(
-      `UPDATE users SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      `UPDATE users SET ${updates.join(', ')}, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        WHERE id = $${paramIndex}
        RETURNING id, email, full_name, phone, role, avatar_url, gender, coin, default_address`,
       values
@@ -688,7 +695,7 @@ app.post('/users/:id/review', authMiddleware, async (req, res) => {
       reviewer_id: reviewerId,
       post_id: postId,
       score: score,
-      created_at: new Date().toISOString()
+      created_at: getBangkokTime().toISOString().replace('Z', '+07:00')
     };
 
     reviews.push(newReview);
@@ -700,7 +707,7 @@ app.post('/users/:id/review', authMiddleware, async (req, res) => {
     // 5. Update or Insert
     if (scoreResult.rows.length > 0) {
       await client.query(
-        'UPDATE old_item_post_scores SET score = $1, reviewed_user_id = $2::jsonb, updated_at = CURRENT_TIMESTAMP WHERE user_id = $3',
+        `UPDATE old_item_post_scores SET score = $1, reviewed_user_id = $2::jsonb, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE user_id = $3`,
         [newAverage, JSON.stringify(reviews), targetUserId]
       );
     } else {
@@ -1241,7 +1248,7 @@ app.put('/old-item-posts/:id', authMiddleware, async (req, res) => {
            remarks = $3,
            address_snapshot = $4,
            pickup_time = $5,
-           updated_at = CURRENT_TIMESTAMP
+           updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        WHERE id = $6
        RETURNING *`,
       [
@@ -1306,13 +1313,13 @@ app.post('/old-item-posts/:id/cancel', authMiddleware, async (req, res) => {
 
     // 3. Update post status to 'cancelled'
     await client.query(
-      "UPDATE old_item_posts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      "UPDATE old_item_posts SET status = 'cancelled', updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE id = $1",
       [id]
     );
 
     // 4. Update contact status to 'cancelled'
     await client.query(
-      "UPDATE contacts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      "UPDATE contacts SET status = 'cancelled', updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE id = $1",
       [contact.id]
     );
 
@@ -1567,7 +1574,7 @@ app.patch('/orders/:id/status', authMiddleware, async (req, res) => {
     const orderId = req.params.id;
 
     const result = await pool.query(
-      `UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP
+      `UPDATE orders SET status = $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        WHERE id = $2 AND (driver_id = $3 OR seller_id = $3)
        RETURNING *`,
       [status, orderId, req.user.user_id]
@@ -1660,7 +1667,7 @@ app.post('/contacts', authMiddleware, async (req, res) => {
       await pool.query(
         `UPDATE old_item_posts
          SET contacts = COALESCE(contacts, '[]'::JSONB) || $1::JSONB,
-             updated_at = CURRENT_TIMESTAMP
+             updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
          WHERE id = $2`,
         [JSON.stringify([{ contact_id: contact.id, driver_id: req.user.user_id }]), postId]
       );
@@ -1790,7 +1797,7 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
 
     // 2. Update the target contact status
     const updateResult = await client.query(
-      `UPDATE contacts SET status = $1, updated_at = CURRENT_TIMESTAMP
+      `UPDATE contacts SET status = $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        WHERE id = $2
        RETURNING *`,
       [status, contactId]
@@ -1807,7 +1814,7 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
         `UPDATE old_item_posts 
          SET status = 'pending',
              contacts = $1::JSONB,
-             updated_at = CURRENT_TIMESTAMP
+             updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
          WHERE id = $2`,
         [JSON.stringify([{ contact_id: contactId, driver_id: contact.buyer_id, chat_id: contact.chat_id }]), postId]
       );
@@ -1844,7 +1851,7 @@ app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
       await client.query(
         `UPDATE old_item_posts 
          SET status = 'completed',
-             updated_at = CURRENT_TIMESTAMP
+             updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
          WHERE id = $1`,
         [postId]
       );
@@ -1909,14 +1916,14 @@ app.post('/contacts/:id/cancel', authMiddleware, async (req, res) => {
 
     // 2. Update contact status to 'cancelled'
     await client.query(
-      "UPDATE contacts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      "UPDATE contacts SET status = 'cancelled', updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE id = $1",
       [id]
     );
 
     // 3. Update associated post status to 'cancelled'
     if (contact.post_id) {
       await client.query(
-        "UPDATE old_item_posts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+        "UPDATE old_item_posts SET status = 'cancelled', updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE id = $1",
         [contact.post_id]
       );
     }
@@ -2019,13 +2026,13 @@ app.post('/chats/:id/messages', authMiddleware, async (req, res) => {
       sender_id: req.user.user_id,
       text: text || null,
       image_url: imageUrl,
-      timestamp: new Date().toISOString()
+      timestamp: getBangkokTime().toISOString().replace('Z', '+07:00')
     };
 
     const result = await pool.query(
       `UPDATE chats
        SET messages = messages || $1::JSONB,
-           updated_at = CURRENT_TIMESTAMP
+           updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        WHERE id = $2
        RETURNING *`,
       [JSON.stringify([message]), req.params.id]
@@ -2192,7 +2199,7 @@ app.post('/driver-location', authMiddleware, async (req, res) => {
     // but we use 'driver_id' as our unique constraint.
     await pool.query(`
       INSERT INTO driver_locations (driver_id, lat, lng, heading, speed, updated_at)
-      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      VALUES ($1, $2, $3, $4, $5, timezone('Asia/Bangkok', CURRENT_TIMESTAMP))
       ON CONFLICT (driver_id) DO UPDATE SET
         lat = EXCLUDED.lat,
         lng = EXCLUDED.lng,
@@ -2304,7 +2311,7 @@ async function start() {
       lng DECIMAL NOT NULL,
       heading DECIMAL,
       speed DECIMAL,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
     );
   `);
 
@@ -2325,8 +2332,8 @@ async function start() {
       coin NUMERIC DEFAULT 0,
       weight_accumulate NUMERIC DEFAULT 0,
       pickup_days JSONB DEFAULT '[]'::jsonb,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+      updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
       UNIQUE(user_id)
     );
   `).catch(err => console.error('Migration error (esg_driver):', err.message));
@@ -2339,14 +2346,26 @@ async function start() {
       package_name TEXT,
       pickup_days JSONB DEFAULT '[]'::jsonb,
       is_active BOOLEAN DEFAULT TRUE,
-      begin_sub TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      end_sub TIMESTAMP,
+      begin_sub TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+      end_sub TIMESTAMPTZ,
       max_weight NUMERIC,
       time_per_month INTEGER,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+      updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
     );
   `).catch(err => console.error('Migration error (esg_subscriptors):', err.message));
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS esg_factors (
+      sub_id TEXT PRIMARY KEY REFERENCES esg_subscriptors(sup_id) ON DELETE CASCADE,
+      paper NUMERIC DEFAULT 0,
+      plastic NUMERIC DEFAULT 0,
+      metal NUMERIC DEFAULT 0,
+      glass NUMERIC DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+      updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+    );
+  `).catch(err => console.error('Migration error (esg_factors):', err.message));
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS esg_package_history (
@@ -2357,7 +2376,7 @@ async function start() {
       max_dates_per_month INTEGER,
       cost NUMERIC,
       total_cost NUMERIC,
-      subscription_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      subscription_datetime TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
     );
   `).catch(err => console.error('Migration error (esg_package_history):', err.message));
 
@@ -2366,16 +2385,17 @@ async function start() {
       tasks_id SERIAL PRIMARY KEY,
       esg_subscriptor_id TEXT REFERENCES esg_subscriptors(sup_id) ON DELETE CASCADE,
       esg_driver_id TEXT REFERENCES esg_driver(driver_id) ON DELETE CASCADE,
-      date TIMESTAMP NOT NULL,
+      date TIMESTAMPTZ NOT NULL,
       weight JSONB DEFAULT '[]'::jsonb,
       carbon_reduce NUMERIC DEFAULT 0,
       status TEXT DEFAULT 'waiting',
-      recycling_center_addresss TEXT DEFAULT '',
+      recycling_center_addresss_id TEXT DEFAULT '',
+      tree_equivalent NUMERIC DEFAULT 0,
       evidences_images TEXT[] DEFAULT '{}',
       receipt_images TEXT[] DEFAULT '{}',
       chat_id UUID REFERENCES chats(id),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+      complete_time TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
     );
     CREATE INDEX IF NOT EXISTS idx_esg_tasks_subscriptor_id ON esg_tasks(esg_subscriptor_id);
     CREATE INDEX IF NOT EXISTS idx_esg_tasks_driver_id ON esg_tasks(esg_driver_id);
@@ -2401,6 +2421,28 @@ async function start() {
         -- Add chat_id if not exists
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'chat_id') THEN
           ALTER TABLE esg_tasks ADD COLUMN chat_id UUID REFERENCES chats(id);
+        END IF;
+
+        -- Rename recycling_center_addresss to recycling_center_addresss_id
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'recycling_center_addresss') 
+           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'recycling_center_addresss_id') THEN
+          ALTER TABLE esg_tasks RENAME COLUMN recycling_center_addresss TO recycling_center_addresss_id;
+        END IF;
+
+        -- Ensure recycling_center_addresss_id exists (in case the base creation was updated)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'recycling_center_addresss_id') THEN
+          ALTER TABLE esg_tasks ADD COLUMN recycling_center_addresss_id TEXT DEFAULT '';
+        END IF;
+
+        -- Add tree_equivalent NUMERIC if not exists
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'tree_equivalent') THEN
+          ALTER TABLE esg_tasks ADD COLUMN tree_equivalent NUMERIC DEFAULT 0;
+        END IF;
+
+        -- Rename updated_at to complete_time
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'updated_at') 
+           AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'esg_tasks' AND column_name = 'complete_time') THEN
+          ALTER TABLE esg_tasks RENAME COLUMN updated_at TO complete_time;
         END IF;
       END $$;
     `);
@@ -2447,7 +2489,7 @@ async function start() {
     notify_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     notify_header TEXT NOT NULL,
     notify_content TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    timestamp TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
     type VARCHAR(50),
     refer_id VARCHAR(255),
     contact_type VARCHAR(50)
@@ -2481,7 +2523,7 @@ async function start() {
     content TEXT NOT NULL,
     image_url TEXT,
     is_read BOOLEAN DEFAULT FALSE,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
   );
     CREATE TABLE IF NOT EXISTS user_reports(
     id SERIAL PRIMARY KEY,
@@ -2491,7 +2533,7 @@ async function start() {
     content TEXT NOT NULL,
     image_url TEXT,
     is_read BOOLEAN DEFAULT FALSE,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
   );
 
   --Ensure is_read column exists if tables were already created
@@ -2508,7 +2550,7 @@ async function start() {
     CREATE TABLE IF NOT EXISTS banned_emails(
     email VARCHAR(255) PRIMARY KEY,
     reason TEXT,
-    banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    banned_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
   );
 
   -- Recycling Addresses table
@@ -2523,8 +2565,8 @@ async function start() {
     province VARCHAR(100),
     district VARCHAR(100),
     images TEXT[] DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
   );
   `).catch(err => console.error('Migration error (reports/banned/recycling tables):', err.message));
 
@@ -2567,10 +2609,7 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
     // 1. Generate unique sup_id
     const sup_id = `ESG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    // 2. Set subscription dates
-    const begin_sub = new Date();
-    const end_sub = new Date();
-    end_sub.setFullYear(begin_sub.getFullYear() + 1);
+    // 2. Subscription dates will be handled by PostgreSQL functions below
 
     // Safety check for pickup_days
     const safe_pickup_days = Array.isArray(pickup_days) ? pickup_days : [];
@@ -2599,9 +2638,9 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
       subResult = await client.query(
         `INSERT INTO esg_subscriptors 
           (sup_id, user_id, address_id, package_name, pickup_days, is_active, begin_sub, end_sub, max_weight, time_per_month)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         VALUES ($1, $2, $3, $4, $5, $6, timezone('Asia/Bangkok', CURRENT_TIMESTAMP), timezone('Asia/Bangkok', CURRENT_TIMESTAMP) + INTERVAL '1 year', $7, $8)
          RETURNING *`,
-        [sup_id, user_id, address_id, package_name, JSON.stringify(final_pickup_days), true, begin_sub, end_sub, max_weight, time_per_month]
+        [sup_id, user_id, address_id, package_name, JSON.stringify(final_pickup_days), true, max_weight, time_per_month]
       );
     } catch (insertError) {
       console.error('Database Error in /esg/subscribe (subscriptors):', insertError);
@@ -2614,13 +2653,25 @@ app.post('/esg/subscribe', authMiddleware, async (req, res) => {
       historyResult = await client.query(
         `INSERT INTO esg_package_history 
           (user_id, package_name, max_weight, max_dates_per_month, cost, total_cost, subscription_datetime)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         VALUES ($1, $2, $3, $4, $5, $6, timezone('Asia/Bangkok', CURRENT_TIMESTAMP))
          RETURNING *`,
-        [user_id, package_name, max_weight, time_per_month, cost, total_cost, begin_sub]
+        [user_id, package_name, max_weight, time_per_month, cost, total_cost]
       );
     } catch (historyError) {
       console.error('Database Error in /esg/subscribe (history):', historyError);
       throw new Error(`Failed to save package history: ${historyError.message}`);
+    }
+
+    // 5. Initialize esg_factors
+    try {
+      await client.query(
+        `INSERT INTO esg_factors (sub_id, paper, plastic, metal, glass)
+         VALUES ($1, 0, 0, 0, 0)`,
+        [sup_id]
+      );
+    } catch (factorError) {
+      console.error('Database Error in /esg/subscribe (factors):', factorError);
+      throw new Error(`Failed to initialize material tracking: ${factorError.message}`);
     }
 
     await client.query('COMMIT');
@@ -2647,7 +2698,7 @@ app.get('/esg/subscription/status', authMiddleware, async (req, res) => {
     const result = await pool.query(
       `SELECT sup_id, package_name, end_sub, pickup_days 
        FROM esg_subscriptors 
-       WHERE user_id = $1 AND is_active = true AND end_sub > CURRENT_TIMESTAMP 
+       WHERE user_id = $1 AND is_active = true AND end_sub > timezone('Asia/Bangkok', CURRENT_TIMESTAMP) 
        ORDER BY end_sub DESC 
        LIMIT 1`,
       [user_id]
@@ -2746,7 +2797,7 @@ app.post('/esg/driver/register', authMiddleware, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO esg_driver (driver_id, user_id, pickup_days)
        VALUES ($1, $2, $3)
-       ON CONFLICT (user_id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
+       ON CONFLICT (user_id) DO UPDATE SET updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        RETURNING *`,
       [driver_id, user_id, JSON.stringify(pickup_days)]
     );
@@ -2777,7 +2828,7 @@ app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
     const tasksRes = await pool.query(
       `SELECT COUNT(*) FROM esg_tasks 
        WHERE esg_driver_id = $1 
-         AND (date AT TIME ZONE 'Asia/Bangkok')::date > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date 
+         AND (date AT TIME ZONE 'Asia/Bangkok')::date > (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date 
          AND status != 'skipped'`,
       [driver.driver_id]
     );
@@ -2788,8 +2839,8 @@ app.get('/esg/driver/profile', authMiddleware, async (req, res) => {
       `SELECT COUNT(*) FROM esg_tasks 
        WHERE esg_driver_id = $1 
          AND (
-           (date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date 
-           OR (status IN ('waiting', 'pending') AND (date AT TIME ZONE 'Asia/Bangkok')::date < (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date)
+           (date AT TIME ZONE 'Asia/Bangkok')::date = (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date 
+           OR (status IN ('waiting', 'pending') AND (date AT TIME ZONE 'Asia/Bangkok')::date < (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date)
          )
          AND status != 'skipped'`,
       [driver.driver_id]
@@ -2919,7 +2970,7 @@ app.post('/esg/driver/contract', authMiddleware, async (req, res) => {
 
     // 5. Commit updates
     await client.query(
-      'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
+      `UPDATE esg_subscriptors SET pickup_days = $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE sup_id = $2`,
       [JSON.stringify(sub_pickup_days), sup_id]
     );
 
@@ -3009,17 +3060,28 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
     pickup_days[dayIndex].driver = [esg_driver_id]; // Only the confirmed driver remains
 
     await client.query(
-      'UPDATE esg_subscriptors SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE sup_id = $2',
+      `UPDATE esg_subscriptors SET pickup_days = $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE sup_id = $2`,
       [JSON.stringify(pickup_days), sup_id]
     );
 
     // 4. Create ESG Task
-    const now = new Date();
-    let taskDate = new Date(now.getFullYear(), now.getMonth(), parseInt(date), 8, 0, 0);
-    // If the provided day is before today's day, it means we are scheduling for the next month's occurrence of this day.
-    if (parseInt(date) < now.getDate()) {
-      taskDate.setMonth(taskDate.getMonth() + 1);
+    // 4. Create ESG Task
+    // Get current time in Bangkok (UTC+7)
+    const bangkokNow = getBangkokTime();
+
+    const nowDay = bangkokNow.getDate();
+    const nowMonth = bangkokNow.getMonth();
+    const nowYear = bangkokNow.getFullYear();
+    const targetDay = parseInt(date);
+
+    let taskYear = nowYear;
+    let taskMonth = nowMonth;
+    if (targetDay < nowDay) {
+      taskMonth += 1;
     }
+
+    // Setting task time to 08:00 nominal time for the database
+    let taskDate = new Date(taskYear, taskMonth, targetDay, 8, 0, 0);
 
     await client.query(
       `INSERT INTO esg_tasks (esg_subscriptor_id, esg_driver_id, date, status, chat_id) 
@@ -3034,7 +3096,7 @@ app.post('/esg/confirm-driver', authMiddleware, async (req, res) => {
       if (contractIdx !== -1) {
         dPickupDays[dDayIdx].contract_user[contractIdx].is_accept = true;
         await client.query(
-          'UPDATE esg_driver SET pickup_days = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2',
+          `UPDATE esg_driver SET pickup_days = $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE user_id = $2`,
           [JSON.stringify(dPickupDays), internal_driver_id]
         );
       }
@@ -3072,7 +3134,7 @@ app.get('/esg/tasks/driver/next', authMiddleware, async (req, res) => {
        JOIN users u ON s.user_id = u.id
        JOIN addresses a ON s.address_id = a.id
        WHERE t.esg_driver_id = $1 
-         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date > (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date
+         AND (t.date AT TIME ZONE 'Asia/Bangkok')::date > (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date
        ORDER BY t.date ASC`,
       [esg_driver_id]
     );
@@ -3114,8 +3176,8 @@ app.get('/esg/tasks/driver/today', authMiddleware, async (req, res) => {
        JOIN addresses a ON s.address_id = a.id
        WHERE t.esg_driver_id = $1 
          AND (
-           (t.date AT TIME ZONE 'Asia/Bangkok')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date
-           OR (t.status IN ('waiting', 'pending') AND (t.date AT TIME ZONE 'Asia/Bangkok')::date < (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Bangkok')::date)
+           (t.date AT TIME ZONE 'Asia/Bangkok')::date = (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date
+           OR (t.status IN ('waiting', 'pending') AND (t.date AT TIME ZONE 'Asia/Bangkok')::date < (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date)
          )
          AND t.status != 'skipped'
        ORDER BY t.date ASC`,
@@ -3132,34 +3194,36 @@ app.get('/esg/tasks/driver/today', authMiddleware, async (req, res) => {
 app.get('/esg/tasks/nearest', authMiddleware, async (req, res) => {
   try {
     const user_id = req.user.user_id;
-    // 1. Get sup_id for this user
+    // 1. Get sup_id and package_name for this user
     const subRes = await pool.query(
-      'SELECT sup_id FROM esg_subscriptors WHERE user_id = $1 AND is_active = true LIMIT 1',
+      'SELECT sup_id, package_name FROM esg_subscriptors WHERE user_id = $1 AND is_active = true LIMIT 1',
       [user_id]
     );
     if (subRes.rows.length === 0) {
       return res.status(404).json({ error: 'Active subscription not found' });
     }
-    const sup_id = subRes.rows[0].sup_id;
+    const { sup_id, package_name } = subRes.rows[0];
 
-    // 2. Find nearest task (exclude skipped, completed, or cancelled/failed if needed, but primarily skip per PR)
+    // 2. Find nearest task
     const taskRes = await pool.query(
-      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id
+      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar, ed.driver_id as esg_driver_id, u.id as driver_user_id,
+              ra.label as factory_name, ra.address as factory_address,
+              ra.lat as factory_lat, ra.lng as factory_lng, ra.phone as factory_phone
        FROM esg_tasks t
-       JOIN esg_driver ed ON t.esg_driver_id = ed.driver_id
-       JOIN users u ON ed.user_id = u.id
+       LEFT JOIN esg_driver ed ON t.esg_driver_id = ed.driver_id
+       LEFT JOIN users u ON ed.user_id = u.id
+       LEFT JOIN recycling_addresses ra ON t.recycling_center_addresss_id = ra.address_id
        WHERE t.esg_subscriptor_id = $1 
          AND t.status NOT IN ('skipped', 'completed')
-         AND t.date >= CURRENT_DATE - INTERVAL '6 hours'
+         AND t.date >= (timezone('Asia/Bangkok', CURRENT_TIMESTAMP))::date - INTERVAL '6 hours'
        ORDER BY t.date ASC LIMIT 1`,
       [sup_id]
     );
 
-    if (taskRes.rows.length === 0) {
-      return res.json({ task: null });
-    }
-
-    res.json({ task: taskRes.rows[0] });
+    res.json({
+      task: taskRes.rows[0] || null,
+      package_name: package_name // Direct from subscriptor table
+    });
   } catch (error) {
     console.error('Error fetching nearest ESG task:', error);
     res.status(500).json({ error: error.message });
@@ -3173,11 +3237,15 @@ app.get('/esg/tasks/:id', authMiddleware, async (req, res) => {
       `SELECT t.*, u.full_name as user_name, u.avatar_url as user_avatar,
               a.address as pickup_address, a.phone as pickup_phone,
               a.lat as pickup_lat, a.lng as pickup_lng,
-              s.package_name
+              s.package_name,
+              ra.label as factory_name, ra.address as factory_address,
+              ra.lat as factory_lat, ra.lng as factory_lng, ra.phone as factory_phone,
+              ra.note as factory_note, ra.images as factory_images
        FROM esg_tasks t
        JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
        JOIN users u ON s.user_id = u.id
        JOIN addresses a ON s.address_id = a.id
+       LEFT JOIN recycling_addresses ra ON t.recycling_center_addresss_id = ra.address_id
        WHERE t.tasks_id = $1`,
       [id]
     );
@@ -3199,24 +3267,30 @@ app.post('/esg/tasks/:id/complete', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { weight, carbon_reduce, recycling_center_addresss } = req.body;
+    const { weight, carbon_reduce, tree_equivalent, recycling_center_addresss_id } = req.body;
 
     await client.query('BEGIN');
 
-    // 1. Update task: status to pending, date to NOW (real time), weight, carbon_reduce, factory
+    // 1. Update task: status to pending, date to NOW (real time), weight, carbon_reduce, tree_equivalent, factory ID
     const updateTaskQuery = `
       UPDATE esg_tasks 
       SET 
         status = 'pending',
-        date = CURRENT_TIMESTAMP,
         weight = $1,
         carbon_reduce = $2,
-        recycling_center_addresss = $3,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE tasks_id = $4
+        tree_equivalent = $3,
+        recycling_center_addresss_id = $4,
+        complete_time = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+      WHERE tasks_id = $5
       RETURNING *
     `;
-    const taskRes = await client.query(updateTaskQuery, [JSON.stringify(weight), carbon_reduce, recycling_center_addresss, id]);
+    const taskRes = await client.query(updateTaskQuery, [
+      JSON.stringify(weight),
+      carbon_reduce,
+      tree_equivalent || 0,
+      recycling_center_addresss_id,
+      id
+    ]);
 
     if (taskRes.rows.length === 0) {
       await client.query('ROLLBACK');
@@ -3228,7 +3302,7 @@ app.post('/esg/tasks/:id/complete', authMiddleware, async (req, res) => {
     const driverId = taskRes.rows[0].esg_driver_id;
 
     await client.query(
-      'UPDATE esg_driver SET weight_accumulate = weight_accumulate + $1, updated_at = CURRENT_TIMESTAMP WHERE driver_id = $2',
+      `UPDATE esg_driver SET weight_accumulate = weight_accumulate + $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) WHERE driver_id = $2`,
       [totalWeight, driverId]
     );
 
@@ -3237,6 +3311,154 @@ app.post('/esg/tasks/:id/complete', authMiddleware, async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error completing ESG task:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+app.post('/esg/tasks/:id/finalize', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { evidences_images, receipt_images } = req.body;
+
+    // Check minimum requirements
+    if (!evidences_images || evidences_images.length < 3) {
+      return res.status(400).json({ error: 'Require at least 3 evidence images' });
+    }
+    if (!receipt_images || receipt_images.length < 1) {
+      return res.status(400).json({ error: 'Require at least 1 receipt image' });
+    }
+
+    await client.query('BEGIN');
+
+    // 1. Fetch Task and Subscriber Info
+    const taskRes = await client.query(
+      `SELECT t.*, s.package_name, s.sup_id 
+       FROM esg_tasks t
+       JOIN esg_subscriptors s ON t.esg_subscriptor_id = s.sup_id
+       WHERE t.tasks_id = $1`,
+      [id]
+    );
+
+    if (taskRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const task = taskRes.rows[0];
+    const { esg_driver_id, esg_subscriptor_id, weight, date, package_name, chat_id } = task;
+
+    // 2. Determine Coins
+    const coinsEarned = package_name?.toLowerCase().includes('enterprise') ? 20 : 10;
+    const totalWeight = Array.isArray(weight) ? weight.reduce((sum, item) => sum + parseFloat(item.weight || 0), 0) : 0;
+
+    // 3. Process and Upload Images to Minio
+    const uploadedEvidenceUrls = [];
+    if (evidences_images && Array.isArray(evidences_images)) {
+      for (let i = 0; i < evidences_images.length; i++) {
+        const base64Data = evidences_images[i];
+        if (base64Data.startsWith('http')) {
+          uploadedEvidenceUrls.push(base64Data);
+          continue;
+        }
+        const base64Image = base64Data.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `esg_tasks/evidences/${id}_${Date.now()}_${i}.jpg`;
+
+        await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+        uploadedEvidenceUrls.push(imageUrl);
+      }
+    }
+
+    const uploadedReceiptUrls = [];
+    if (receipt_images && Array.isArray(receipt_images)) {
+      for (let i = 0; i < receipt_images.length; i++) {
+        const base64Data = receipt_images[i];
+        if (base64Data.startsWith('http')) {
+          uploadedReceiptUrls.push(base64Data);
+          continue;
+        }
+        const base64Image = base64Data.split(';base64,').pop();
+        const buffer = Buffer.from(base64Image, 'base64');
+        const fileName = `esg_tasks/receipts/${id}_${Date.now()}_${i}.jpg`;
+
+        await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, {
+          'Content-Type': 'image/jpeg'
+        });
+
+        const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+        uploadedReceiptUrls.push(imageUrl);
+      }
+    }
+
+    // 4. Update Current Task
+    await client.query(
+      `UPDATE esg_tasks 
+       SET 
+         status = 'completed',
+         evidences_images = $1,
+         receipt_images = $2,
+         complete_time = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+       WHERE tasks_id = $3`,
+      [uploadedEvidenceUrls, uploadedReceiptUrls, id]
+    );
+
+    // 4. Update Driver Rewards
+    await client.query(
+      `UPDATE esg_driver 
+       SET 
+         coin = coin + $1, 
+         weight_accumulate = weight_accumulate + $2, 
+         updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) 
+       WHERE driver_id = $3`,
+      [coinsEarned, totalWeight, esg_driver_id]
+    );
+
+    // 5. Update ESG Factors for Subscriber
+    if (Array.isArray(weight)) {
+      for (const item of weight) {
+        const materialType = item.type?.toLowerCase(); // paper, plastic, metal, glass
+        const materialWeight = parseFloat(item.weight || 0);
+
+        if (['paper', 'plastic', 'metal', 'glass'].includes(materialType) && materialWeight > 0) {
+          await client.query(
+            `UPDATE esg_factors 
+             SET ${materialType} = ${materialType} + $1, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP) 
+             WHERE sub_id = $2`,
+            [materialWeight, esg_subscriptor_id]
+          );
+        }
+      }
+    }
+
+    // 6. Schedule Next Month's Task
+    const currentTaskDate = new Date(date);
+    const nextMonthDate = new Date(currentTaskDate);
+    nextMonthDate.setMonth(currentTaskDate.getMonth() + 1);
+
+    await client.query(
+      `INSERT INTO esg_tasks (esg_subscriptor_id, esg_driver_id, date, status, chat_id) 
+       VALUES ($1, $2, $3, 'waiting', $4)`,
+      [esg_subscriptor_id, esg_driver_id, nextMonthDate, chat_id]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      coinsEarned,
+      totalWeight,
+      status: 'completed'
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error finalizing ESG task:', error);
     res.status(500).json({ error: error.message });
   } finally {
     client.release();
@@ -3262,7 +3484,7 @@ app.patch('/esg/tasks/:id/status', authMiddleware, async (req, res) => {
     }
 
     await pool.query(
-      'UPDATE esg_tasks SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE tasks_id = $2',
+      `UPDATE esg_tasks SET status = $1, complete_time = CASE WHEN $1 = 'complete' THEN timezone('Asia/Bangkok', CURRENT_TIMESTAMP) ELSE complete_time END WHERE tasks_id = $2`,
       [status, id]
     );
 
@@ -3349,7 +3571,7 @@ app.put('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => {
     const { label, address, lat, lng, phone, note, province, district, images } = req.body;
     const result = await pool.query(
       `UPDATE recycling_addresses 
-       SET label = $1, address = $2, lat = $3, lng = $4, phone = $5, note = $6, province = $7, district = $8, images = $9, updated_at = CURRENT_TIMESTAMP
+       SET label = $1, address = $2, lat = $3, lng = $4, phone = $5, note = $6, province = $7, district = $8, images = $9, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
        WHERE address_id = $10
        RETURNING *`,
       [label, address, lat, lng, phone, note, province, district, images || [], id]

@@ -49,6 +49,19 @@ const LogoIcon = L.icon({
     className: 'driver-logo-marker'
 });
 
+const FactoryIcon = L.divIcon({
+    html: `
+    <div style="background: #22c55e; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2.5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        <svg viewBox="0 0 512 512" width="24" height="24" fill="white">
+            <path d="M0 480h512V192L256 64 0 192v288zm120-160h272v160H120V320z"/>
+        </svg>
+    </div>
+    `,
+    className: "factory-marker",
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
+});
+
 // Map tile configurations
 const MAP_TILES: Record<string, { url: string; label: string }> = {
     dark: {
@@ -84,9 +97,11 @@ interface MapSelectorProps {
     isReadOnly?: boolean;
     showGpsButton?: boolean;
     onGpsClick?: (lat: number, lng: number) => void;
+    isFactory?: boolean;
+    onMarkerClick?: () => void;
 }
 
-const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnabled }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void, isReadOnly?: boolean, setAutoBoundsEnabled: (enabled: boolean) => void }) => {
+const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnabled, isFactory, onMarkerClick }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void, isReadOnly?: boolean, setAutoBoundsEnabled: (enabled: boolean) => void, isFactory?: boolean, onMarkerClick?: () => void }) => {
     const map = useMapEvents({
         click(e) {
             if (isReadOnly) return;
@@ -105,12 +120,19 @@ const LocationMarker = ({ position, setPosition, isReadOnly, setAutoBoundsEnable
         }
     }, [position, map]);
 
-    // Use OrangePinIcon when adding/editing address (!isReadOnly), otherwise HomeIcon
-    const markerIcon = !isReadOnly ? OrangePinIcon : HomeIcon;
+    const markerIcon = isFactory ? FactoryIcon : (!isReadOnly ? OrangePinIcon : HomeIcon);
 
     return position === null ? null : (
-        <Marker position={position} icon={markerIcon}>
-            <Popup>{!isReadOnly ? 'Selected Location' : 'Pickup Location'}</Popup>
+        <Marker
+            position={position}
+            icon={markerIcon}
+            eventHandlers={{
+                click: () => {
+                    if (onMarkerClick) onMarkerClick();
+                }
+            }}
+        >
+            <Popup>{isFactory ? 'Recycling Factory' : (!isReadOnly ? 'Selected Location' : 'Pickup Location')}</Popup>
         </Marker>
     );
 };
@@ -157,7 +179,7 @@ const getSystemTheme = (): 'dark' | 'light' => {
     return 'dark';
 };
 
-export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, onGpsClick }: MapSelectorProps) {
+export default function MapSelector({ onLocationSelect, initialLat, initialLng, driverLat, driverLng, isReadOnly, showGpsButton, onGpsClick, isFactory, onMarkerClick }: MapSelectorProps) {
     const [position, setPosition] = useState<L.LatLng | null>(
         initialLat && initialLng ? new L.LatLng(initialLat, initialLng) : null
     );
@@ -167,6 +189,11 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
     const [autoBoundsEnabled, setAutoBoundsEnabled] = useState(true);
     const [triggerCenter, setTriggerCenter] = useState<L.LatLng | null>(null);
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [isLocationMarkerFactory, setIsLocationMarkerFactory] = useState(!!isFactory);
+
+    useEffect(() => {
+        setIsLocationMarkerFactory(!!isFactory);
+    }, [isFactory]);
 
     // Default to Bangkok if no location
     const center = initialLat && initialLng ? [initialLat, initialLng] : [13.7563, 100.5018];
@@ -377,7 +404,7 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                     url={MAP_TILES[mapTheme].url}
                 />
                 <MapController triggerCenter={triggerCenter} />
-                <LocationMarker position={position} setPosition={handlePositionChange} isReadOnly={isReadOnly} setAutoBoundsEnabled={setAutoBoundsEnabled} />
+                <LocationMarker position={position} setPosition={handlePositionChange} isReadOnly={isReadOnly} setAutoBoundsEnabled={setAutoBoundsEnabled} isFactory={isLocationMarkerFactory} onMarkerClick={onMarkerClick} />
 
                 {driverLat && driverLng && (
                     <Marker position={[driverLat, driverLng]} icon={LogoIcon}>

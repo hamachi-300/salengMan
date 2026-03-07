@@ -31,6 +31,16 @@
     margin: 0;
 }
 
+.maxWeightInfo {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255, 122, 48, 0.1);
+    border: 1px solid rgba(255, 122, 48, 0.2);
+    border-radius: 12px;
+    color: var(--orange-button);
+    font-size: 0.9rem;
+}
+
 .emptyStateContainer {
     display: flex;
     flex-direction: column;

@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     gender VARCHAR(20),
     avatar_url TEXT,
     default_address TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
     coin INTEGER DEFAULT 0,
     UNIQUE(email, role)
 );
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS notifies (
     notify_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     notify_header TEXT NOT NULL,
     notify_content TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    timestamp TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
     type VARCHAR(50),
     refer_id VARCHAR(255),
     contact_type VARCHAR(50)
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS addresses (
     district VARCHAR(100),
     sub_district VARCHAR(100),
     zipcode VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Old item posts table
@@ -56,8 +56,8 @@ CREATE TABLE IF NOT EXISTS old_item_posts (
     address_snapshot JSONB,
     pickup_time JSONB,
     status VARCHAR(50) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Orders table (for driver assignments)
@@ -70,12 +70,12 @@ CREATE TABLE IF NOT EXISTS orders (
     pickup_address JSONB,
     pickup_lat DECIMAL(10, 8),
     pickup_lng DECIMAL(11, 8),
-    estimated_pickup_time TIMESTAMP,
-    actual_pickup_time TIMESTAMP,
-    completed_at TIMESTAMP,
+    estimated_pickup_time TIMESTAMPTZ,
+    actual_pickup_time TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
     notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Driver locations table (for real-time tracking)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS driver_locations (
     lng DECIMAL(11, 8) NOT NULL,
     heading DECIMAL(5, 2),
     speed DECIMAL(6, 2),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Create spatial index for driver locations
@@ -99,8 +99,8 @@ ON driver_locations USING GIST (
 CREATE TABLE IF NOT EXISTS chats (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     messages JSONB DEFAULT '[]'::JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Contacts table
@@ -112,8 +112,8 @@ CREATE TABLE IF NOT EXISTS contacts (
     chat_id UUID REFERENCES chats(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'pending',
     type VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Add contacts JSONB to old_item_posts if not exists
@@ -143,12 +143,12 @@ CREATE TABLE IF NOT EXISTS esg_subscriptors (
     package_name TEXT,
     pickup_days JSONB DEFAULT '[]'::jsonb,
     is_active BOOLEAN DEFAULT true,
-    begin_sub TIMESTAMP,
-    end_sub TIMESTAMP,
+    begin_sub TIMESTAMPTZ,
+    end_sub TIMESTAMPTZ,
     max_weight DECIMAL(10, 2),
     time_per_month INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- ESG Driver table
@@ -158,8 +158,8 @@ CREATE TABLE IF NOT EXISTS esg_driver (
     coin NUMERIC DEFAULT 0,
     weight_accumulate NUMERIC DEFAULT 0,
     pickup_days JSONB DEFAULT '[]'::jsonb,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
     UNIQUE(user_id)
 );
 
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS esg_tasks (
     tasks_id SERIAL PRIMARY KEY,
     esg_subscriptor_id TEXT REFERENCES esg_subscriptors(sup_id) ON DELETE CASCADE,
     esg_driver_id TEXT REFERENCES esg_driver(driver_id) ON DELETE CASCADE,
-    date TIMESTAMP NOT NULL,
+    date TIMESTAMPTZ NOT NULL,
     weight JSONB DEFAULT '[]'::jsonb,
     carbon_reduce NUMERIC DEFAULT 0,
     status TEXT DEFAULT 'waiting',
@@ -176,15 +176,15 @@ CREATE TABLE IF NOT EXISTS esg_tasks (
     evidences_images TEXT[] DEFAULT '{}',
     receipt_images TEXT[] DEFAULT '{}',
     chat_id UUID REFERENCES chats(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Banned emails table
 CREATE TABLE IF NOT EXISTS banned_emails (
     email VARCHAR(255) PRIMARY KEY,
     reason TEXT,
-    banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    banned_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Recycling Addresses table
@@ -199,8 +199,8 @@ CREATE TABLE IF NOT EXISTS recycling_addresses (
     province VARCHAR(100),
     district VARCHAR(100),
     images TEXT[] DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Create indexes for common queries
@@ -223,8 +223,8 @@ CREATE TABLE IF NOT EXISTS old_item_post_scores (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     score DECIMAL(3,2) DEFAULT 0.0,
     reviewed_user_id JSONB DEFAULT '[]'::JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
 );
 
 -- Trigger function to automatically create a score record for new users

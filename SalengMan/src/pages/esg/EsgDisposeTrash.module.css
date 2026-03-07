@@ -112,6 +112,28 @@
     font-family: var(--font-thai-fun);
 }
 
+.packageBanner {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.packageName {
+    font-weight: 800;
+    color: var(--orange-button);
+}
+
+.maxWeight {
+    font-weight: 700;
+    opacity: 0.8;
+}
+
 .prepCard {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -385,6 +407,18 @@
     gap: 16px;
 }
 
+.todayIcon,
+.pendingIcon {
+    width: 48px;
+    height: 48px;
+    background-color: var(--orange-button);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
 .detailIcon {
     width: 44px;
     height: 44px;
@@ -541,14 +575,114 @@
 
 .onlineIndicator {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 16px;
-    height: 16px;
-    background-color: #22c55e;
-    border: 3px solid var(--color-bg-2);
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: #4CAF50;
+    border: 2px solid var(--color-bg-2);
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+}
+
+/* Impact Card for Pending Status */
+.impactCard {
+    background: var(--color-bg-2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.impactContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.impactMain {
+    display: flex;
+    flex-direction: column;
+}
+
+.impactValue {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--orange-button);
+}
+
+.impactUnit {
+    font-size: 0.8rem;
+    color: var(--color-text);
+    opacity: 0.6;
+}
+
+.impactSub {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.impactTree {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.impactTreeText {
+    font-size: 0.7rem;
+    color: var(--color-text);
+    opacity: 0.5;
+}
+
+/* Action Buttons */
+.actionButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.outlineBtn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.outlineBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btnLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btnIcon {
+    font-size: 1.2rem;
+}
+
+.btnTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.btnArrow {
+    width: 20px;
+    height: 20px;
+    color: var(--color-text);
+    opacity: 0.3;
 }
 
 .driverInfo {

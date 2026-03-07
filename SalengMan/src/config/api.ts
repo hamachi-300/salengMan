@@ -681,7 +681,7 @@ export const api = {
   },
 
   // Get nearest ESG task for the user
-  getNearestEsgTask: async (token: string): Promise<{ task: any | null }> => {
+  getNearestEsgTask: async (token: string): Promise<{ task: any | null, package_name?: string | null }> => {
     const res = await fetch(`${API_URL}/esg/tasks/nearest`, {
       method: 'GET',
       headers: {
@@ -710,6 +710,21 @@ export const api = {
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Failed to update task status');
+    }
+    return res.json();
+  },
+
+  // Get ESG Task by ID
+  getEsgTaskById: async (token: string, id: string): Promise<{ task: any }> => {
+    const res = await fetch(`${API_URL}/esg/tasks/${id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch ESG task');
     }
     return res.json();
   }

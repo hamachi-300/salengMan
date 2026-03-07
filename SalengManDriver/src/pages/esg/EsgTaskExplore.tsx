@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styles from "./EsgTaskExplore.module.css";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
@@ -11,6 +11,8 @@ import { useUser } from "../../context/UserContext";
 function EsgTaskExplore() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
+    const mode = searchParams.get('mode'); // 'factory' or null/customer
     const { initialLocation } = useUser();
     const [task, setTask] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -42,7 +44,14 @@ function EsgTaskExplore() {
 
         startTracking();
         return () => {
-            if (watchId !== null) clearWatch(watchId);
+            if (watchId !== null) {
+                const isTauri = !!(window as any).__TAURI_INTERNALS__;
+                if (isTauri) {
+                    clearWatch(watchId);
+                } else if ("geolocation" in navigator) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+            }
         };
     }, [id]);
 
@@ -77,19 +86,24 @@ function EsgTaskExplore() {
         );
     }
 
+    const isFactoryMode = mode === 'factory';
+    const destLat = isFactoryMode ? parseFloat(task.factory_lat) : parseFloat(task.pickup_lat);
+    const destLng = isFactoryMode ? parseFloat(task.factory_lng) : parseFloat(task.pickup_lng);
+
     return (
         <div className={styles.page}>
-            <PageHeader title="แผนที่นำทาง" onBack={() => navigate(-1)} />
+            <PageHeader title={isFactoryMode ? "เส้นทางไปโรงงาน" : "แผนที่นำทาง"} onBack={() => navigate(-1)} />
 
             <div className={styles.mapContainer}>
                 <MapSelector
                     onLocationSelect={() => { }}
-                    initialLat={parseFloat(task.pickup_lat)}
-                    initialLng={parseFloat(task.pickup_lng)}
+                    initialLat={destLat}
+                    initialLng={destLng}
                     driverLat={driverLocation?.lat}
                     driverLng={driverLocation?.lng}
                     isReadOnly={true}
-                    showGpsButton={true}
+                    showGpsButton={!isFactoryMode}
+                    showRecenterButton={isFactoryMode}
                     showRefreshButton={true}
                     onRefresh={fetchTaskDetails}
                     onGpsClick={(lat, lng) => setDriverLocation({ lat, lng })}

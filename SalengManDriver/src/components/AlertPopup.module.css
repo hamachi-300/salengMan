@@ -35,7 +35,8 @@
     color: #ef4444;
 }
 
-.modal p {
+.modal p,
+.messageContainer {
     margin: 0 0 24px 0;
     color: #ccc;
     font-family: var(--font-thai-polite), sans-serif;

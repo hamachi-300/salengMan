@@ -155,6 +155,8 @@ const EsgSubscriptorList: React.FC = () => {
                                                     </div>
                                                     <p className={styles.address}>
                                                         date : <span className={styles.dateDisplay}>{day.date}</span>
+                                                        {sub.package_name?.toLowerCase().includes('enterprise') && <span className={styles.maxWeightNextDate}> (Max 200kg)</span>}
+                                                        {sub.package_name?.toLowerCase().includes('standard') && <span className={styles.maxWeightNextDate}> (Max 50kg)</span>}
                                                     </p>
                                                     <div className={styles.tags}>
                                                         <span className={styles.packageTag}>{sub.package_name}</span>

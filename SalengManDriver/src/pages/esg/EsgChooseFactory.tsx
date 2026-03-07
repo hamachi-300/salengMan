@@ -14,10 +14,10 @@ import { getToken } from "../../services/auth";
 import AlertPopup from "../../components/AlertPopup";
 
 const CARBON_RATES: Record<string, number> = {
-    "กระดาษ": 0.8,
-    "พลาสติก": 1.5,
-    "โลหะและอลูมิเนียม": 2.5,
-    "แก้ว": 0.5
+    "กระดาษ": 1.05,
+    "พลาสติก": 1.30,
+    "โลหะและอลูมิเนียม": 6.50,
+    "แก้ว": 0.25
 };
 
 // Custom icons
@@ -145,11 +145,16 @@ function EsgChooseFactory() {
     };
 
     const calculateCarbonReduce = (trashList: any[]) => {
-        return trashList.reduce((total, item) => {
+        const totalCo2Saved = trashList.reduce((total, item) => {
             const rate = CARBON_RATES[item.type] || 0;
             const weight = parseFloat(item.weight) || 0;
             return total + (rate * weight);
         }, 0);
+
+        return {
+            totalCo2Saved: parseFloat(totalCo2Saved.toFixed(2)),
+            treeEquivalent: Math.floor(totalCo2Saved / 10)
+        };
     };
 
     const handleSelectFactory = async () => {
@@ -169,12 +174,13 @@ function EsgChooseFactory() {
             const { trashList } = JSON.parse(savedDataStr);
             if (!trashList || trashList.length === 0) throw new Error("กรุณาเพิ่มข้อมูลขยะก่อน");
 
-            const carbon_reduce = calculateCarbonReduce(trashList);
+            const { totalCo2Saved, treeEquivalent } = calculateCarbonReduce(trashList);
 
             await api.completeEsgTask(token, id, {
                 weight: trashList.map((t: any) => ({ type: t.type, weight: t.weight })),
-                carbon_reduce,
-                recycling_center_addresss: selectedFactory.label + " - " + selectedFactory.address
+                carbon_reduce: totalCo2Saved,
+                tree_equivalent: treeEquivalent,
+                recycling_center_addresss_id: selectedFactory.address_id
             });
 
             // Success!

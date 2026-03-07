@@ -11,6 +11,7 @@ import { getToken } from "../../services/auth";
 function EsgDisposeTrash() {
     const navigate = useNavigate();
     const [task, setTask] = useState<any>(null);
+    const [packageName, setPackageName] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [skipping, setSkipping] = useState(false);
     const [showConfirmSkip, setShowConfirmSkip] = useState(false);
@@ -29,6 +30,7 @@ function EsgDisposeTrash() {
         try {
             const data = await api.getNearestEsgTask(token);
             setTask(data.task);
+            setPackageName(data.package_name || null);
         } catch (err: any) {
             console.error("Failed to load task:", err);
         } finally {
@@ -106,6 +108,14 @@ function EsgDisposeTrash() {
                                             })}
                                         </div>
                                     </div>
+                                    {packageName && (
+                                        <div className={styles.packageBanner}>
+                                            <span className={styles.packageName}>{packageName}</span>
+                                            <span className={styles.maxWeight}>
+                                                Max: {packageName.toLowerCase().includes('enterprise') ? '200' : '50'}kg
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className={styles.prepCard}>
@@ -169,12 +179,105 @@ function EsgDisposeTrash() {
                                     </button>
                                 </div>
                             </div>
+                        ) : task.status === 'pending' ? (
+                            <div className={styles.todayContainer}>
+                                <div className={styles.todayHeader}>
+                                    <div className={styles.pendingIcon}>
+                                        <svg viewBox="-3 -3 30 30" fill="currentColor">
+                                            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm13.5-8.5l1.96 2.5H17V9.5h2.5zM18 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z" />
+                                        </svg>
+                                    </div>
+                                    <div className={styles.todayHeaderText}>
+                                        <h2>Pending Delivery</h2>
+                                        <p>Your trash is on its way to the recycling factory.</p>
+                                    </div>
+                                </div>
+
+                                <div className={styles.timelineSection}>
+                                    <span className={styles.sectionLabel}>TRASH PROGRESS</span>
+                                    <div className={styles.timeline}>
+                                        {[
+                                            { status: 'waiting', label: 'Waiting', icon: '📅' },
+                                            { status: 'pending', label: 'Pending', icon: '🚚' },
+                                            { status: 'complete', label: 'Completed', icon: '✅' }
+                                        ].map((step, index) => {
+                                            const statuses = ['waiting', 'pending', 'complete'];
+                                            let currentStatus = task.status;
+                                            if (currentStatus === 'completed') currentStatus = 'complete';
+                                            if (currentStatus === 'in-progress') currentStatus = 'pending';
+
+                                            const currentIndex = statuses.indexOf(currentStatus) === -1 ? 0 : statuses.indexOf(currentStatus);
+                                            const isActive = index <= currentIndex;
+                                            const isCurrent = index === currentIndex;
+
+                                            return (
+                                                <div key={step.status} className={`${styles.timelineStep} ${isActive ? styles.activeStep : ''} ${isCurrent ? styles.currentStep : ''}`}>
+                                                    <div className={styles.stepIcon}>{step.icon}</div>
+                                                    <span className={styles.stepLabel}>{step.label}</span>
+                                                    {index < 2 && <div className={styles.stepLine} />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Environmental Impact Summary */}
+                                <div className={styles.impactCard}>
+                                    <span className={styles.sectionLabel}>CARBON REDUCTION</span>
+                                    <div className={styles.impactContent}>
+                                        <div className={styles.impactMain}>
+                                            <span className={styles.impactValue}>{task.carbon_reduce || '0.00'}</span>
+                                            <span className={styles.impactUnit}>kg CO2 saved</span>
+                                        </div>
+                                        <div className={styles.impactSub}>
+                                            <span className={styles.impactTree}>{task.tree_equivalent || '0'} 🌳</span>
+                                            <span className={styles.impactTreeText}>Equivalent to trees planted</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={styles.actionButtons}>
+                                    <button className={styles.outlineBtn} onClick={() => navigate(`/esg/trash-type/${task.tasks_id}`)}>
+                                        <div className={styles.btnLeft}>
+                                            <span className={styles.btnIcon}>📦</span>
+                                            <span className={styles.btnTitle}>ประเภทและน้ำหนักขยะ</span>
+                                        </div>
+                                        <svg className={styles.btnArrow} viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className={styles.driverSection}>
+                                    <span className={styles.sectionLabel}>DRIVER IN CHARGE</span>
+                                    <div
+                                        className={styles.driverCard}
+                                        onClick={() => navigate(`/esg/driver-detail/${task.driver_user_id}`)}
+                                    >
+                                        <div className={styles.avatarContainer}>
+                                            <img
+                                                src={task.driver_avatar || profileLogo}
+                                                alt={task.driver_name}
+                                                className={styles.avatar}
+                                            />
+                                            <div className={styles.onlineIndicator} />
+                                        </div>
+                                        <div className={styles.driverInfo}>
+                                            <h3 className={styles.driverName}>{task.driver_name}</h3>
+                                            <span className={styles.driverStatus}>Delivering...</span>
+                                        </div>
+                                        <svg className={styles.chevronIcon} viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
                         ) : (
                             <div className={styles.todayContainer}>
                                 <div className={styles.todayHeader}>
                                     <div className={styles.todayIcon}>
                                         <svg viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+                                            <path d="M11.99 2C6.47 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-12-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                                             <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
                                         </svg>
                                     </div>
@@ -183,6 +286,14 @@ function EsgDisposeTrash() {
                                         <p>The driver will arrive at your location today.</p>
                                     </div>
                                 </div>
+                                {packageName && (
+                                    <div className={styles.packageBanner}>
+                                        <span className={styles.packageName}>{packageName}</span>
+                                        <span className={styles.maxWeight}>
+                                            Max: {packageName.toLowerCase().includes('enterprise') ? '200' : '50'}kg
+                                        </span>
+                                    </div>
+                                )}
 
                                 <div className={styles.timelineSection}>
                                     <span className={styles.sectionLabel}>TRASH PROGRESS</span>
@@ -290,7 +401,7 @@ function EsgDisposeTrash() {
                             Track Driver
                         </span>
                     )}
-                    onClick={() => navigate(`/esg/track-driver/${task.driver_user_id}/${task.tasks_id}`)}
+                    onClick={() => navigate(`/esg/track-driver/${task.driver_user_id}/${task.tasks_id}${task.status === 'pending' ? '?mode=factory' : ''}`)}
                     variant="orange"
                     showArrow={false}
                 />

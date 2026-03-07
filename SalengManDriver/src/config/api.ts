@@ -627,7 +627,7 @@ export const api = {
   },
 
   // Complete ESG task
-  completeEsgTask: async (token: string, id: string, data: { weight: any[]; carbon_reduce: number; recycling_center_addresss: string }): Promise<any> => {
+  completeEsgTask: async (token: string, id: string, data: { weight: any[]; carbon_reduce: number; tree_equivalent: number; recycling_center_addresss_id: string }): Promise<any> => {
     const res = await fetch(`${API_URL}/esg/tasks/${id}/complete`, {
       method: 'POST',
       headers: {
@@ -639,6 +639,23 @@ export const api = {
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Failed to complete ESG task');
+    }
+    return res.json();
+  },
+
+  // Finalize ESG task (complete status)
+  finalizeEsgTask: async (token: string, id: string, data: { evidences_images: string[]; receipt_images: string[] }): Promise<any> => {
+    const res = await fetch(`${API_URL}/esg/tasks/${id}/finalize`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to finalize ESG task');
     }
     return res.json();
   },
