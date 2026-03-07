@@ -3914,10 +3914,37 @@ app.get('/esg/user/stats', authMiddleware, async (req, res) => {
       WHERE sub_id = $1
     `, [supId]);
 
+    // 4. Get additional metrics for 56-1 Report
+    const totalTasksRes = await client.query('SELECT COUNT(*) as count FROM esg_tasks WHERE esg_subscriptor_id = $1', [supId]);
+
+    const subDaysRes = await client.query('SELECT pickup_days FROM esg_subscriptors WHERE sup_id = $1', [supId]);
+    const pickupDays = subDaysRes.rows[0]?.pickup_days || [];
+
+    const uniqueDriversSet = new Set();
+    if (Array.isArray(pickupDays)) {
+      pickupDays.forEach(day => {
+        if (day && day.confirmed_driver_id) {
+          uniqueDriversSet.add(day.confirmed_driver_id);
+        }
+      });
+    }
+    const uniqueDrivers = Array.from(uniqueDriversSet);
+
+    let representativeDriverCoin = 0;
+    if (uniqueDrivers.length > 0) {
+      const driverRes = await client.query('SELECT coin FROM esg_driver WHERE driver_id = $1', [uniqueDrivers[0]]);
+      if (driverRes.rows.length > 0) {
+        representativeDriverCoin = parseFloat(driverRes.rows[0].coin || 0);
+      }
+    }
+
     res.json({
       history: historyRes.rows,
       factors: factorsRes.rows[0] || { paper: 0, plastic: 0, metal: 0, glass: 0 },
-      subscription_date: subscriptionDate
+      subscription_date: subscriptionDate,
+      total_tasks_count: parseInt(totalTasksRes.rows[0].count),
+      unique_drivers_count: uniqueDrivers.length,
+      representative_driver_coin: representativeDriverCoin
     });
   } catch (err) {
     console.error('Error fetching user ESG stats:', err);
