@@ -4,7 +4,6 @@ import styles from './EsgDriverHome.module.css';
 import PageHeader from '../../components/PageHeader';
 import { api } from '../../config/api';
 import { getToken } from '../../services/auth';
-import BottomNav from '../../components/BottomNav';
 
 const EsgDriverHome: React.FC = () => {
     const navigate = useNavigate();
@@ -86,7 +85,6 @@ const EsgDriverHome: React.FC = () => {
                     </button>
                 </div>
             </div>
-            <BottomNav />
         </div>
     );
 };

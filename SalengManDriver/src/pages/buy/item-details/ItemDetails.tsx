@@ -37,7 +37,7 @@ interface Post {
 }
 
 function ItemDetails() {
-  const { initialLocation } = useUser();
+  const { currentLocation } = useUser();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
@@ -45,7 +45,7 @@ function ItemDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
   const [showAddressPrompt, setShowAddressPrompt] = useState(false);
 
   const [isInCart, setIsInCart] = useState(false);

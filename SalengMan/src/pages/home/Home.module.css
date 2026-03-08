@@ -21,7 +21,6 @@
 .homeContent {
   flex: 1;
   padding: 24px;
-  padding-top: calc(24px + var(--safe-area-top, 0px));
   padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -130,7 +129,7 @@
   transform: translateY(-50%);
   width: 150px;
   height: 150px;
-  background: radial-gradient(circle,  var(--color-bg-2), transparent 70%);
+  background: radial-gradient(circle, var(--color-bg-2), transparent 70%);
   border-radius: 50%;
 }
 

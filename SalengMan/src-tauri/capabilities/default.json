@@ -13,6 +13,18 @@
     "geolocation:allow-request-permissions",
     "geolocation:allow-get-current-position",
     "geolocation:allow-watch-position",
-    "notification:default"
+    "notification:default",
+    "fs:allow-write-file",
+    "fs:allow-exists",
+    "fs:allow-read-file",
+    "fs:default",
+    {
+      "identifier": "fs:allow-download-write",
+      "scope": [
+        "$DOWNLOAD/**"
+      ]
+    },
+    "dialog:default",
+    "dialog:allow-save"
   ]
 }

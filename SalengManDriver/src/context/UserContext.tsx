@@ -8,8 +8,8 @@ interface UserContextType {
   loading: boolean;
   refreshUser: () => Promise<void>;
   updateUserLocal: (updates: Partial<User>) => void;
-  initialLocation: { lat: number; lng: number } | null;
-  setInitialLocation: (loc: { lat: number; lng: number }) => void;
+  currentLocation: { lat: number; lng: number } | null;
+  setCurrentLocation: (loc: { lat: number; lng: number }) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -17,7 +17,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialLocation, setInitialLocationState] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocationState] = useState<{ lat: number; lng: number } | null>(null);
 
   // Fetch fresh user data from API
   const refreshUser = async () => {
@@ -52,8 +52,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const setInitialLocation = (loc: { lat: number; lng: number }) => {
-    setInitialLocationState(loc);
+  const setCurrentLocation = (loc: { lat: number; lng: number }) => {
+    setCurrentLocationState(loc);
   };
 
   // Real-time location tracking for backend sync
@@ -72,22 +72,51 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       const onUpdate = (lat: number, lng: number) => {
         lastKnownLocation = { lat, lng };
-        setInitialLocationState({ lat, lng });
+        setCurrentLocationState({ lat, lng });
+      };
+
+      const fallbackToIp = async () => {
+        console.log("Attempting IP-based location fallback (sync)...");
+        try {
+          const response = await fetch("https://ipapi.co/json/");
+          const data = await response.json();
+          if (data && data.latitude && data.longitude) {
+            onUpdate(data.latitude, data.longitude);
+          }
+        } catch (ipError) {
+          console.error("IP fallback failed in context:", ipError);
+        }
       };
 
       if (isTauri) {
         try {
+          // Explicitly request permissions
+          const { requestPermissions } = await import('@tauri-apps/plugin-geolocation');
+          await requestPermissions(['location']);
+
           watchId = await watchPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }, (pos, err) => {
-            if (err) console.error("Tauri location track error:", err);
+            if (err) {
+              console.error("Tauri location track error:", err);
+              // Only fallback to IP if we don't have a location yet or it's a critical error
+              if (!lastKnownLocation) fallbackToIp();
+            }
             if (pos) onUpdate(pos.coords.latitude, pos.coords.longitude);
           });
         } catch (e) {
           console.warn("Tauri watchPosition failed in context:", e);
+          fallbackToIp();
         }
       } else if ("geolocation" in navigator) {
-        watchId = navigator.geolocation.watchPosition((pos) => {
-          onUpdate(pos.coords.latitude, pos.coords.longitude);
-        }) as unknown as number;
+        watchId = navigator.geolocation.watchPosition(
+          (pos) => onUpdate(pos.coords.latitude, pos.coords.longitude),
+          (err) => {
+            console.error("Web watchPosition error:", err);
+            if (!lastKnownLocation) fallbackToIp();
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        ) as unknown as number;
+      } else {
+        fallbackToIp();
       }
 
       // Sync to database every 5 seconds
@@ -134,7 +163,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading, refreshUser, updateUserLocal, initialLocation, setInitialLocation }}>
+    <UserContext.Provider value={{ user, loading, refreshUser, updateUserLocal, currentLocation, setCurrentLocation }}>
       {children}
     </UserContext.Provider>
   );

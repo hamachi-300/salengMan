@@ -1331,6 +1331,7 @@ app.post('/old-item-posts/:id/cancel', authMiddleware, async (req, res) => {
         contact.buyer_id,
         "Post Old Item Cancelled From Seller",
         reason,
+        'cancelled contact',
         contact.id
       ]
     );

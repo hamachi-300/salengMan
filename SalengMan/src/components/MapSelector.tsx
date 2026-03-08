@@ -236,11 +236,43 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
 
         const isTauri = !!(window as any).__TAURI_INTERNALS__;
 
+        const fallbackToIp = async () => {
+            console.log("Attempting IP-based location fallback...");
+            try {
+                const response = await fetch("https://ipapi.co/json/");
+                const data = await response.json();
+                if (data && data.latitude && data.longitude) {
+                    const { latitude, longitude } = data;
+                    const newPos = new L.LatLng(latitude, longitude);
+
+                    if (!isReadOnly) {
+                        setPosition(newPos);
+                        extractAddress(latitude, longitude);
+                    } else {
+                        setAutoBoundsEnabled(true);
+                        setTriggerCenter(null);
+                        setLoading(false);
+                    }
+
+                    if (onGpsClick) {
+                        onGpsClick(latitude, longitude);
+                    }
+                    console.log("IP-based location found:", latitude, longitude);
+                } else {
+                    throw new Error("Invalid data from IP location service");
+                }
+            } catch (ipError) {
+                console.error("IP fallback failed:", ipError);
+                setAlertMessage("Could not get your location. Please select manually on the map.");
+                setLoading(false);
+            }
+        };
+
         if (isTauri) {
             try {
                 // Force a permission check/request before accessing location
                 await requestPermissions(['location']);
-                const pos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+                const pos = await getCurrentPosition({ enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
                 const { latitude, longitude } = pos.coords;
                 const newPos = new L.LatLng(latitude, longitude);
 
@@ -265,8 +297,8 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
         }
 
         if (!navigator.geolocation) {
-            setAlertMessage("Geolocation is not supported by your browser.");
-            setLoading(false);
+            console.warn("Geolocation API not available, falling back to IP...");
+            fallbackToIp();
             return;
         }
 
@@ -290,22 +322,10 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
             },
             (err) => {
                 console.error("Error getting location:", err.code, err.message);
-                setLoading(false);
-                switch (err.code) {
-                    case err.PERMISSION_DENIED:
-                        setAlertMessage("Location permission denied. Please allow location access.");
-                        break;
-                    case err.POSITION_UNAVAILABLE:
-                        setAlertMessage("Location unavailable. Please check if GPS is enabled.");
-                        break;
-                    case err.TIMEOUT:
-                        setAlertMessage("Location request timed out. Please try again.");
-                        break;
-                    default:
-                        setAlertMessage("Could not get your location. Please select manually on the map.");
-                }
+                // On any error (denied, unavailable, timeout), try IP fallback
+                fallbackToIp();
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
     };
 

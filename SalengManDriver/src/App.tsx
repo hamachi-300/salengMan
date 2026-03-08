@@ -105,7 +105,7 @@ function AppRoutes() {
 }
 
 function LocationGuard({ children }: { children: ReactNode }) {
-  const { setInitialLocation } = useUser();
+  const { setCurrentLocation } = useUser();
   const [locationReady, setLocationReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
@@ -138,7 +138,7 @@ function LocationGuard({ children }: { children: ReactNode }) {
         ]) as any;
 
         if (pos && pos.coords) {
-          setInitialLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setCurrentLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         }
 
         setLocationReady(true);
@@ -156,7 +156,7 @@ function LocationGuard({ children }: { children: ReactNode }) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
               console.log("Web Geolocation success:", position);
-              setInitialLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+              setCurrentLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
               setLocationReady(true);
               resolve();
             },
@@ -171,8 +171,19 @@ function LocationGuard({ children }: { children: ReactNode }) {
         throw new Error("Geolocation not supported on this device.");
       }
     } catch (webErr: any) {
-      console.error("All location checks failed:", webErr);
-      setError("Please enable GPS and allow location access to use the app.");
+      console.error("All location checks failed, trying last resort IP fallback:", webErr);
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+        if (data && data.latitude && data.longitude) {
+          setCurrentLocation({ lat: data.latitude, lng: data.longitude });
+          setLocationReady(true);
+        } else {
+          throw new Error("IP fallback failed");
+        }
+      } catch (ipErr) {
+        setError("Please enable GPS and allow location access to use the app.");
+      }
     } finally {
       setChecking(false);
     }

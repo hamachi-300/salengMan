@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styles from "./Chat.module.css";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
@@ -21,14 +21,8 @@ interface ChatData {
 }
 
 function Chat() {
-    const { id } = useParams<{ id: string }>();
-    const location = useLocation();
-    const { user } = useUser();
+    const { id } = useParams<{ id: string }>();    const { user } = useUser();
 
-    // Determine back path: post detail if backToDetail is present, otherwise buyer list or history
-    const postId = location.state?.postId;
-    const backToDetail = location.state?.backToDetail;
-    const backPath = backToDetail && postId ? `/history/${postId}` : (postId ? `/history/${postId}/buyers` : '/history');
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputMessage, setInputMessage] = useState("");

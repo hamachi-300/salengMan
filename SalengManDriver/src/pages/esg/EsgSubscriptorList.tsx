@@ -21,7 +21,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 const EsgSubscriptorList: React.FC = () => {
-    const { initialLocation } = useUser();
+    const { currentLocation } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -134,7 +134,7 @@ const EsgSubscriptorList: React.FC = () => {
                                 })
                                 .map((day: any) => {
                                     const loc = subLocations[sub.user_id];
-                                    const distance = initialLocation && loc ? calculateDistance(initialLocation.lat, initialLocation.lng, loc.lat, loc.lng) : null;
+                                    const distance = currentLocation && loc ? calculateDistance(currentLocation.lat, currentLocation.lng, loc.lat, loc.lng) : null;
 
                                     return (
                                         <div

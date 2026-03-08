@@ -91,8 +91,36 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
 
     const center = initialLat && initialLng ? [initialLat, initialLng] : [13.7563, 100.5018];
 
-    const handleGetCurrentLocation = () => {
+    const getIpLocation = async () => {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            if (data.latitude && data.longitude) {
+                return { lat: data.latitude, lng: data.longitude };
+            }
+        } catch (error) {
+            console.error("Error fetching IP location:", error);
+        }
+        return null;
+    };
+
+    const handleGetCurrentLocation = async () => {
         setLoading(true);
+
+        // Geolocation is restricted to secure contexts (HTTPS/localhost).
+        // If we are on http with an IP address, we use IP fallback immediately.
+        if (!window.isSecureContext && !navigator.geolocation) {
+            const ipLoc = await getIpLocation();
+            if (ipLoc) {
+                const newPos = new L.LatLng(ipLoc.lat, ipLoc.lng);
+                setPosition(newPos);
+                setTriggerCenter(newPos);
+                extractAddress(ipLoc.lat, ipLoc.lng);
+                setAlertMessage("GPS uses secure connection (HTTPS). Showing approximate location via IP.");
+                return;
+            }
+        }
+
         if (!navigator.geolocation) {
             setAlertMessage("Geolocation is not supported by your browser.");
             setLoading(false);
@@ -107,11 +135,21 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng }
                 setTriggerCenter(newPos);
                 extractAddress(latitude, longitude);
             },
-            (_err) => {
-                setLoading(false);
-                setAlertMessage("Could not get your location. Please select manually on the map.");
+            async (err) => {
+                console.warn("Geolocation failed, trying IP fallback...", err);
+                const ipLoc = await getIpLocation();
+                if (ipLoc) {
+                    const newPos = new L.LatLng(ipLoc.lat, ipLoc.lng);
+                    setPosition(newPos);
+                    setTriggerCenter(newPos);
+                    extractAddress(ipLoc.lat, ipLoc.lng);
+                    setAlertMessage("Could not access GPS. Showing approximate location via IP.");
+                } else {
+                    setLoading(false);
+                    setAlertMessage("Could not get your location. Please select manually on the map.");
+                }
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
     };
 

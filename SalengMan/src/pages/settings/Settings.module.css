@@ -22,7 +22,6 @@
 .settingsContent {
   flex: 1;
   padding: 24px;
-  padding-top: calc(24px + var(--safe-area-top, 0px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;

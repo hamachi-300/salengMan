@@ -13,6 +13,7 @@
 .content {
     flex: 1;
     padding: 24px 20px;
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
     overflow-y: auto;
     display: flex;
     flex-direction: column;

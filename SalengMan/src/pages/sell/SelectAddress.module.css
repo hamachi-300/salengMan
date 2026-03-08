@@ -33,7 +33,6 @@
   align-items: center;
   gap: 16px;
   padding: 16px 24px;
-  padding-top: calc(16px + var(--safe-area-top, 0px));
   border-bottom: 1px solid #333;
 }
 

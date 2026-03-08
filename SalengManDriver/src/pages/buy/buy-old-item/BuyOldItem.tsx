@@ -27,13 +27,13 @@ interface Post {
 }
 
 function BuyOldItem() {
-  const { initialLocation } = useUser();
+  const { currentLocation } = useUser();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [cartCount, setCartCount] = useState(0);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
   const [showAddressPrompt, setShowAddressPrompt] = useState(false);
 
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);

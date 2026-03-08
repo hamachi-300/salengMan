@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styles from "./EsgTaskExplore.module.css";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
 import MapSelector from "../../components/MapSelector";
-import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
 import { useUser } from "../../context/UserContext";
 
 function EsgTaskExplore() {
@@ -13,46 +12,12 @@ function EsgTaskExplore() {
     const { id } = useParams<{ id: string }>();
     const [searchParams] = useSearchParams();
     const mode = searchParams.get('mode'); // 'factory' or null/customer
-    const { initialLocation } = useUser();
+    const { currentLocation } = useUser();
     const [task, setTask] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
 
     useEffect(() => {
         fetchTaskDetails();
-
-        let watchId: number | null = null;
-        const startTracking = async () => {
-            const isTauri = !!(window as any).__TAURI_INTERNALS__;
-            if (isTauri) {
-                try {
-                    watchId = await watchPosition({ enableHighAccuracy: true, timeout: 60000, maximumAge: 5000 }, (pos, err) => {
-                        if (err) return;
-                        if (pos) setDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                    });
-                } catch (error) {
-                    console.warn("Tauri tracking error", error);
-                }
-            } else if ("geolocation" in navigator) {
-                navigator.geolocation.watchPosition(
-                    (pos) => setDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                    null,
-                    { enableHighAccuracy: true, timeout: 60000, maximumAge: 5000 }
-                );
-            }
-        };
-
-        startTracking();
-        return () => {
-            if (watchId !== null) {
-                const isTauri = !!(window as any).__TAURI_INTERNALS__;
-                if (isTauri) {
-                    clearWatch(watchId);
-                } else if ("geolocation" in navigator) {
-                    navigator.geolocation.clearWatch(watchId);
-                }
-            }
-        };
     }, [id]);
 
     const fetchTaskDetails = async () => {
@@ -99,14 +64,13 @@ function EsgTaskExplore() {
                     onLocationSelect={() => { }}
                     initialLat={destLat}
                     initialLng={destLng}
-                    driverLat={driverLocation?.lat}
-                    driverLng={driverLocation?.lng}
+                    driverLat={currentLocation?.lat}
+                    driverLng={currentLocation?.lng}
                     isReadOnly={true}
                     showGpsButton={!isFactoryMode}
                     showRecenterButton={isFactoryMode}
                     showRefreshButton={true}
                     onRefresh={fetchTaskDetails}
-                    onGpsClick={(lat, lng) => setDriverLocation({ lat, lng })}
                 />
             </div>
         </div>

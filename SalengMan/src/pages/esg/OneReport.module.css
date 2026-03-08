@@ -13,7 +13,7 @@
     flex: 1;
     overflow: auto;
     padding: 30px 20px;
-    padding-bottom: 100px;
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
     display: flex;
     flex-direction: column;
     align-items: center;

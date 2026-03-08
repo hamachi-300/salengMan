@@ -21,7 +21,7 @@
 .content {
     flex: 1;
     padding: 24px;
-    padding-top: calc(24px + var(--safe-area-top, 0px));
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }

@@ -10,8 +10,8 @@
     flex: 1;
     padding: 24px;
     overflow-y: auto;
-    padding-bottom: 120px;
-    /* Space for bottom nav */
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
+    /* Space for bottom content if any */
 }
 
 /* Section Title Styling */

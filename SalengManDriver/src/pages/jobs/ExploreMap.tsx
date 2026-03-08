@@ -22,10 +22,10 @@ function ExploreMap() {
     const navigate = useNavigate();
     const location = useLocation();
     const { id } = useParams<{ id: string }>();
-    const { initialLocation } = useUser();
+    const { currentLocation } = useUser();
     const [contact, setContact] = useState<Contact | null>(null);
     const [loading, setLoading] = useState(true);
-    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
 
     useEffect(() => {
         fetchContactDetails();

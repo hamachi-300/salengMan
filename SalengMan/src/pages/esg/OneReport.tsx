@@ -8,6 +8,7 @@ import styles from "./OneReport.module.css";
 import PageHeader from "../../components/PageHeader";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
+import { savePdf } from "../../services/pdfHelper";
 
 interface Task {
     id: number;
@@ -190,7 +191,7 @@ export default function OneReport() {
                 heightLeft -= pageHeight;
             }
 
-            pdf.save(`SalengMan_56-1_OneReport_${now.getFullYear()}.pdf`);
+            await savePdf(pdf, `SalengMan_56-1_OneReport_${now.getFullYear()}.pdf`);
         } catch (error) {
             console.error("PDF Export Error:", error);
         } finally {

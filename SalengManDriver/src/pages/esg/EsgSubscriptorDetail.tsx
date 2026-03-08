@@ -28,14 +28,14 @@ interface Subscriptor {
 }
 
 function EsgSubscriptorDetail() {
-    const { initialLocation } = useUser();
+    const { currentLocation } = useUser();
     const navigate = useNavigate();
     const { supId, date } = useParams<{ supId: string, date: string }>();
     const [subscriptor, setSubscriptor] = useState<Subscriptor | null>(null);
     const [loading, setLoading] = useState(true);
     const [signing, setSigning] = useState(false);
     const [showMap, setShowMap] = useState(false);
-    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
     const [subLocation, setSubLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [subAddressText, setSubAddressText] = useState("");
 

@@ -36,6 +36,7 @@ interface UserProfile {
 }
 
 import { getToken } from "../../services/auth";
+import { savePdf } from "../../services/pdfHelper";
 
 export default function AuditReport() {
     const navigate = useNavigate();
@@ -154,6 +155,7 @@ export default function AuditReport() {
             }
 
             pdf.save(`Waste_Management_Audit_Log_${new Date().toISOString().split('T')[0]}.pdf`);
+            await savePdf(pdf, `Waste_Management_Audit_Log_${new Date().toISOString().split('T')[0]}.pdf`);
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("เกิดข้อผิดพลาดในการสร้างไฟล์ PDF โปรดลองอีกครั้ง");

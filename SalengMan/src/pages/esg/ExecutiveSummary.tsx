@@ -8,6 +8,7 @@ import styles from "./ExecutiveSummary.module.css";
 import PageHeader from "../../components/PageHeader";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
+import { savePdf } from "../../services/pdfHelper";
 
 interface Factors {
     paper: number;
@@ -103,7 +104,7 @@ function ExecutiveSummary() {
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`ESG_Executive_Summary_${new Date().getFullYear()}.pdf`);
+            await savePdf(pdf, `ESG_Executive_Summary_${new Date().getFullYear()}.pdf`);
         } catch (err) {
             console.error("Error generating PDF:", err);
             alert("Failed to generate PDF. Please try again.");

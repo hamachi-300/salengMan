@@ -10,7 +10,7 @@
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    padding-bottom: 40px;
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
 }
 
 .sectionTitle {

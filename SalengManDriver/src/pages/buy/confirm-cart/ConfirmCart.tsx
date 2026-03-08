@@ -29,14 +29,14 @@ interface Post {
 
 function ConfirmCart() {
   const navigate = useNavigate();
-  const { initialLocation } = useUser();
+  const { currentLocation } = useUser();
   const [cartItems, setCartItems] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showAddressPrompt, setShowAddressPrompt] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
-  const [userLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+  const [userLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
 
   useEffect(() => {
     fetchCartItems();

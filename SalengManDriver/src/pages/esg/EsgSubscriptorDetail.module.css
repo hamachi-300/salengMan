@@ -74,7 +74,7 @@
 
 .content {
     flex: 1;
-    padding: 0 20px 40px;
+    padding: 0 20px calc(120px + var(--safe-area-bottom, 0px));
 }
 
 .sectionTitle {

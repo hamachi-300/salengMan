@@ -39,7 +39,7 @@ interface Contact {
 }
 
 function ContactDetail() {
-    const { initialLocation } = useUser();
+    const { currentLocation } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
     const { id } = useParams<{ id: string }>();
@@ -47,7 +47,7 @@ function ContactDetail() {
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showMap, setShowMap] = useState(false);
-    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
     const [cancelling, setCancelling] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [showCancelRequest, setShowCancelRequest] = useState(false);

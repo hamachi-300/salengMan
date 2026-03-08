@@ -88,9 +88,9 @@ function MapController({ center, trigger }: { center: [number, number] | null, t
 function EsgChooseFactory() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
-    const { initialLocation } = useUser();
+    const { currentLocation } = useUser();
     const [factories, setFactories] = useState<any[]>([]);
-    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
+    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(currentLocation);
     const [selectedFactory, setSelectedFactory] = useState<any | null>(null);
     const [mapTheme, setMapTheme] = useState<'light' | 'dark' | 'satellite'>('dark');
     const [currentImageIndex, setCurrentImageIndex] = useState(0);

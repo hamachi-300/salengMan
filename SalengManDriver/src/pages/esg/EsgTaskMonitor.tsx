@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from './EsgTaskMonitor.module.css';
 import PageHeader from '../../components/PageHeader';
@@ -6,15 +6,15 @@ import PageFooter from '../../components/PageFooter';
 import profileLogo from '../../assets/icon/profile.svg';
 import { api } from '../../config/api';
 import { getToken } from '../../services/auth';
-import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
+import { useUser } from '../../context/UserContext';
 import AlertPopup from '../../components/AlertPopup';
 
 const EsgTaskMonitor: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
+    const { currentLocation } = useUser();
     const [task, setTask] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [distance, setDistance] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -30,64 +30,25 @@ const EsgTaskMonitor: React.FC = () => {
     const [showPhotoOptions, setShowPhotoOptions] = useState(false);
     const [activePhotoSlot, setActivePhotoSlot] = useState<{ index: number; type: 'evidence' | 'receipt' } | null>(null);
 
-    const watchIdRef = useRef<number | null>(null);
-
     useEffect(() => {
         fetchTaskDetails();
 
         // Clear cached trash info
         const keysToRemove = Object.keys(localStorage).filter(key => key.startsWith('trash_info_'));
         keysToRemove.forEach(key => localStorage.removeItem(key));
-
-        // Start tracking
-        startTracking();
-
-        return () => {
-            if (watchIdRef.current !== null) {
-                const isTauri = !!(window as any).__TAURI_INTERNALS__;
-                if (isTauri) {
-                    clearWatch(watchIdRef.current);
-                } else if ("geolocation" in navigator) {
-                    navigator.geolocation.clearWatch(watchIdRef.current);
-                }
-            }
-        };
     }, [id]);
 
     useEffect(() => {
-        if (driverLocation && task?.factory_lat && task?.factory_lng) {
+        if (currentLocation && task?.factory_lat && task?.factory_lng) {
             const dist = calculateDistance(
-                driverLocation.lat,
-                driverLocation.lng,
+                currentLocation.lat,
+                currentLocation.lng,
                 parseFloat(task.factory_lat),
                 parseFloat(task.factory_lng)
             );
             setDistance(dist);
         }
-    }, [driverLocation, task]);
-
-    const startTracking = async () => {
-        const isTauri = !!(window as any).__TAURI_INTERNALS__;
-        if (isTauri) {
-            try {
-                watchIdRef.current = await watchPosition(
-                    { enableHighAccuracy: true, timeout: 60000, maximumAge: 5000 },
-                    (pos, err) => {
-                        if (err) return;
-                        if (pos) setDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                    }
-                );
-            } catch (err) {
-                console.warn("Tauri tracking error", err);
-            }
-        } else if ("geolocation" in navigator) {
-            watchIdRef.current = navigator.geolocation.watchPosition(
-                (pos) => setDriverLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                null,
-                { enableHighAccuracy: true, timeout: 60000, maximumAge: 5000 }
-            ) as unknown as number;
-        }
-    };
+    }, [currentLocation, task]);
 
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371e3; // metres

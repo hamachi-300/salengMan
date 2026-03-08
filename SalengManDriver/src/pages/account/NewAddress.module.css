@@ -21,7 +21,7 @@
 .content {
     flex: 1;
     padding: 24px;
-    padding-top: calc(24px + var(--safe-area-top, 0px));
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -277,7 +277,6 @@ input:checked+.slider:before {
 
 .mapHeader {
     padding: 16px;
-    padding-top: calc(16px + var(--safe-area-top, 0px));
     background-color: var(--color-bg);
     display: flex;
     align-items: center;
@@ -293,7 +292,7 @@ input:checked+.slider:before {
 /* Confirm Button Overlay in Map */
 .mapConfirmButton {
     position: absolute;
-    bottom: 32px;
+    bottom: calc(32px + var(--safe-area-bottom, 0px));
     left: 24px;
     right: 24px;
     z-index: 1001;
