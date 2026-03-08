@@ -139,6 +139,11 @@
     color: #22c55e;
 }
 
+.badge.warn {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
 .badge.locked {
     background-color: rgba(239, 68, 68, 0.15);
     color: #ef4444;

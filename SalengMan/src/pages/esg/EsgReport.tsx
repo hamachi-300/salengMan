@@ -4,15 +4,15 @@ import styles from "./EsgReport.module.css";
 import PageHeader from "../../components/PageHeader";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
-import AlertPopup from "../../components/AlertPopup";
-import { FileText, ClipboardList, ShieldCheck, ChevronRight, Lock } from "lucide-react";
+import ConfirmPopup from "../../components/ConfirmPopup";
+import { FileText, ClipboardList, ShieldCheck, ChevronRight } from "lucide-react";
 
 function EsgReport() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [monthsSubscribed, setMonthsSubscribed] = useState(0);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertConfig, setAlertConfig] = useState({ title: "", message: "" });
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmConfig, setConfirmConfig] = useState({ title: "", message: "", onConfirm: () => { } });
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -44,12 +44,25 @@ function EsgReport() {
                 navigate('/esg/report/executive');
                 break;
             case 'audit':
-                navigate('/esg/report/audit');
+                if (monthsSubscribed !== 1 && monthsSubscribed !== 3) {
+                    setConfirmConfig({
+                        title: "แนะนำความถี่รายงาน",
+                        message: "รายงาน Audit Report แนะนำให้ทำที่ 1 หรือ 3 เดือนเพื่อให้เห็นความเปลี่ยนแปลงที่ชัดเจน คุณต้องการดำเนินการต่อหรือไม่?",
+                        onConfirm: () => navigate('/esg/report/audit')
+                    });
+                    setShowConfirm(true);
+                } else {
+                    navigate('/esg/report/audit');
+                }
                 break;
             case '56-1':
                 if (monthsSubscribed < 3) {
-                    setAlertConfig({ title: "ยังไม่สามารถดาวน์โหลดได้", message: "คุณต้องเป็นสมาชิกมากกว่า 3 เดือนขึ้นไปจึงจะสามารถดาวน์โหลดรายงาน 56-1 One Report ได้" });
-                    setShowAlert(true);
+                    setConfirmConfig({
+                        title: "แนะนำอายุสมาชิก",
+                        message: "รายงาน 56-1 One Report แนะนำให้มีข้อมูลสมาชิกมากกว่า 3 เดือนเพื่อให้รายงานมีความสมบูรณ์ คุณต้องการดำเนินการต่อหรือไม่?",
+                        onConfirm: () => navigate('/esg/report/one')
+                    });
+                    setShowConfirm(true);
                 } else {
                     navigate('/esg/report/one');
                 }
@@ -96,7 +109,7 @@ function EsgReport() {
                             <div className={styles.cardContent}>
                                 <h3 className={styles.cardTitle}>Audit Report</h3>
                                 <p className={styles.cardDesc}>เป็นรายงานที่มีมาตรฐาน เหมาะสำหรับการตรวจสอบ</p>
-                                <span className={`${styles.badge} ${styles.recommend}`}>Recommend 1 month</span>
+                                <span className={`${styles.badge} ${styles.recommend}`}>Recommend 1, 3 months</span>
                             </div>
                             <ChevronRight size={20} className={styles.chevron} />
                         </button>
@@ -104,20 +117,17 @@ function EsgReport() {
                         {/* 56-1 One Report */}
                         <button
                             className={styles.reportCard}
-                            disabled={monthsSubscribed < 3}
                             onClick={() => handleReportClick('56-1')}
                         >
-                            <div className={`${styles.iconWrapper} ${monthsSubscribed < 3 ? styles.locked : ''}`}>
-                                {monthsSubscribed < 3 ? <Lock size={24} /> : <ShieldCheck size={24} />}
+                            <div className={styles.iconWrapper}>
+                                <ShieldCheck size={24} />
                             </div>
                             <div className={styles.cardContent}>
                                 <h3 className={styles.cardTitle}>56-1 One Report</h3>
                                 <p className={styles.cardDesc}>มีมาตรฐานตามที่หน่วยงานภาครัฐกำหนด</p>
-                                {monthsSubscribed < 3 && (
-                                    <div className={styles.lockedText}>
-                                        <span>จำเป็นต้องมีอายุสมาชิก มากกว่า 3 เดือน</span>
-                                    </div>
-                                )}
+                                <span className={`${styles.badge} ${monthsSubscribed >= 3 ? styles.recommend : styles.warn}`}>
+                                    {monthsSubscribed >= 3 ? "Recommend passed" : "Recommend 3 months"}
+                                </span>
                             </div>
                             <ChevronRight size={20} className={styles.chevron} />
                         </button>
@@ -125,11 +135,17 @@ function EsgReport() {
                 )}
             </div>
 
-            <AlertPopup
-                isOpen={showAlert}
-                title={alertConfig.title}
-                message={alertConfig.message}
-                onClose={() => setShowAlert(false)}
+            <ConfirmPopup
+                isOpen={showConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                onConfirm={() => {
+                    setShowConfirm(false);
+                    confirmConfig.onConfirm();
+                }}
+                onCancel={() => setShowConfirm(false)}
+                confirmText="ดำเนินการต่อ"
+                cancelText="ยกเลิก"
             />
         </div>
     );
