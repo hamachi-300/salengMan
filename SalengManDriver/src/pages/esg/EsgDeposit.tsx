@@ -83,7 +83,7 @@ const EsgDeposit: React.FC = () => {
                     <div className={styles.infoRow}>
                         <span className={styles.infoLabel}>ยอดเงินที่จะได้รับ</span>
                         <span className={styles.infoValue} style={{ color: '#22c55e', fontSize: '1.2rem' }}>
-                            ฿{(coinValue / 10).toLocaleString()}
+                            ฿{(coinValue).toLocaleString()}
                         </span>
                     </div>
                 </div>

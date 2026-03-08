@@ -130,7 +130,7 @@ function Chat() {
 
     return (
         <div className={styles.container}>
-            <PageHeader title="Chat" onBack={() => window.location.href = backPath} />
+            <PageHeader title="Chat" />
 
             <div className={styles.messageList}>
                 {messages.map((msg) => {

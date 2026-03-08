@@ -152,7 +152,7 @@ async function seedAdmin() {
     const adminCheck = await pool.query("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1");
     if (adminCheck.rows.length === 0) {
       const email = process.env.ADMIN_SEED_EMAIL || 'admin@salengman.com';
-      const username = process.env.ADMIN_SEED_USERNAME || 'pluem';
+      const username = process.env.ADMIN_SEED_USERNAME || 'admin';
       const password = process.env.ADMIN_SEED_PASSWORD || '12345678';
 
       console.log(`No admin found. Seeding default admin (${username})...`);
