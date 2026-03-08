@@ -431,7 +431,7 @@ function EsgChooseFactory() {
                 message="บันทึกข้อมูลการเก็บขยะเรียบร้อยแล้ว"
                 onClose={() => {
                     setShowSuccess(false);
-                    navigate(`/esg/task-monitor/${id}`);
+                    navigate(`/esg/today_tasks`);
                 }}
             />
 
