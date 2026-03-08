@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -11,6 +11,8 @@
 		0B8FDB8C2A7DF5A17820892C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CBAC10458069C16574B4A71A /* QuartzCore.framework */; };
 		11CB832C342466392AB56058 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEFB94071660133FD093444C /* WebKit.framework */; };
 		258CAB34A71F521292EDA8D2 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = B362A1E3DFEA877E291F00AB /* main.mm */; };
+		2949069EA8359DFED32F0F5F /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = 32B210867009606F17855010 /* libapp.a */; };
+		2CEA1880F3CA2478306A3AE5 /* libPods-salengmandriver_iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F4188FB5422816729446A71D /* libPods-salengmandriver_iOS.a */; };
 		79F059728E216A950C971F54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E691C024BD4BAAEE6E3DE998 /* Assets.xcassets */; };
 		A2B3C593F1C6C1802C881B99 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EE23D00B70460063F5F2A32 /* CoreGraphics.framework */; };
 		A8304E80D0AF8BBB22FC9125 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 54CE9B6F94829FE8DCDE1C51 /* libapp.a */; };
@@ -26,20 +28,24 @@
 		22956943E9B848D038C1DE29 /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
 		24D8399EB649A186EF50EF8B /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
 		2B257ECB86D63540672D0113 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		32B210867009606F17855010 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		349A6D01222E6F537BB71C51 /* main.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.rs; sourceTree = "<group>"; };
 		49D36017C13D17144EF1D255 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		4EE23D00B70460063F5F2A32 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		54CE9B6F94829FE8DCDE1C51 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		629DFC5A33497AB94F4A6312 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6CEC429BBC0ADFC435AABF31 /* Pods-salengmandriver_iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-salengmandriver_iOS.debug.xcconfig"; path = "Target Support Files/Pods-salengmandriver_iOS/Pods-salengmandriver_iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		6DDFF230F4E959664C2B7606 /* salengmandriver.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = salengmandriver.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		711E3458B5B528BDF8753579 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		A9AD2A259518C52DE29173BA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		B362A1E3DFEA877E291F00AB /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		B42C0B2879AE28525F059A99 /* salengmandriver_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = salengmandriver_iOS.entitlements; sourceTree = "<group>"; };
+		B766422ECEA81462A45E1D34 /* Pods-salengmandriver_iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-salengmandriver_iOS.release.xcconfig"; path = "Target Support Files/Pods-salengmandriver_iOS/Pods-salengmandriver_iOS.release.xcconfig"; sourceTree = "<group>"; };
 		CBAC10458069C16574B4A71A /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		E691C024BD4BAAEE6E3DE998 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E9B29A5221C719E5EC6845E7 /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
 		EEFB94071660133FD093444C /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		F4188FB5422816729446A71D /* libPods-salengmandriver_iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-salengmandriver_iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,12 +61,21 @@
 				DD0DDB34B07964AADA3195D9 /* Security.framework in Frameworks */,
 				FDFDF8DBC5FB8B87D78F6E3B /* UIKit.framework in Frameworks */,
 				11CB832C342466392AB56058 /* WebKit.framework in Frameworks */,
+				2CEA1880F3CA2478306A3AE5 /* libPods-salengmandriver_iOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0EB685C75A8CFF5E352E0F3B /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				32B210867009606F17855010 /* libapp.a */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
 		1A63CEF1D0F0E2F0BFDEF903 /* bindings */ = {
 			isa = PBXGroup;
 			children = (
@@ -88,6 +103,7 @@
 				49D36017C13D17144EF1D255 /* Security.framework */,
 				A9AD2A259518C52DE29173BA /* UIKit.framework */,
 				EEFB94071660133FD093444C /* WebKit.framework */,
+				F4188FB5422816729446A71D /* libPods-salengmandriver_iOS.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -110,11 +126,29 @@
 			path = ../../src;
 			sourceTree = "<group>";
 		};
+		54443DF11EAE5263A60FB95C /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				0EB685C75A8CFF5E352E0F3B /* debug */,
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
 		64BDFEFCD99CED5F33803962 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
+				54443DF11EAE5263A60FB95C /* arm64 */,
 			);
 			path = Externals;
+			sourceTree = "<group>";
+		};
+		B5F5D9536A3D94862158374C /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				6CEC429BBC0ADFC435AABF31 /* Pods-salengmandriver_iOS.debug.xcconfig */,
+				B766422ECEA81462A45E1D34 /* Pods-salengmandriver_iOS.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		BD3276ED94C978A8937CEF4C /* salengmandriver */ = {
@@ -147,6 +181,7 @@
 				45D9F4708DE9C3EDBACF602B /* src */,
 				426D43AFBE2A416204355A8E /* Frameworks */,
 				3CD70C0896BBC4C09FD46539 /* Products */,
+				B5F5D9536A3D94862158374C /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -157,6 +192,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8B7C2F0A716C6577152A1B2A /* Build configuration list for PBXNativeTarget "salengmandriver_iOS" */;
 			buildPhases = (
+				B580D38F903B8842E1FCBD02 /* [CP] Check Pods Manifest.lock */,
 				880BFCE98933F9D1A9BD0691 /* Build Rust Code */,
 				64796A97E7004607B8776092 /* Sources */,
 				4DAB590D6D3A81931038C742 /* Resources */,
@@ -167,8 +203,6 @@
 			dependencies = (
 			);
 			name = salengmandriver_iOS;
-			packageProductDependencies = (
-			);
 			productName = salengmandriver_iOS;
 			productReference = 6DDFF230F4E959664C2B7606 /* salengmandriver.app */;
 			productType = "com.apple.product-type.application";
@@ -183,7 +217,6 @@
 				LastUpgradeCheck = 1430;
 			};
 			buildConfigurationList = 8776632D8C219C22CEED941C /* Build configuration list for PBXProject "salengmandriver" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -192,6 +225,8 @@
 			);
 			mainGroup = DE3D6FD2039E086F66667F56;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3CD70C0896BBC4C09FD46539 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -208,6 +243,7 @@
 				79F059728E216A950C971F54 /* Assets.xcassets in Resources */,
 				F25E13DE9011F6F5EF4CC6C0 /* LaunchScreen.storyboard in Resources */,
 				AFFAFE6C28CCA90D783E47B4 /* assets in Resources */,
+				2949069EA8359DFED32F0F5F /* libapp.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,6 +271,28 @@
 			shellPath = /bin/sh;
 			shellScript = "npm run -- tauri ios xcode-script -v --platform ${PLATFORM_DISPLAY_NAME:?} --sdk-root ${SDKROOT:?} --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration ${CONFIGURATION:?} ${FORCE_COLOR} ${ARCHS:?}";
 		};
+		B580D38F903B8842E1FCBD02 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-salengmandriver_iOS-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -251,6 +309,7 @@
 /* Begin XCBuildConfiguration section */
 		13B28720D9C665FD40DE33A8 /* debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6CEC429BBC0ADFC435AABF31 /* Pods-salengmandriver_iOS.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = arm64;
@@ -284,7 +343,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sirawut.salengmandriver;
-				PRODUCT_NAME = "salengmandriver";
+				PRODUCT_NAME = salengmandriver;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
@@ -293,6 +352,7 @@
 		};
 		3DB3C093800241DC5F65215D /* release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B766422ECEA81462A45E1D34 /* Pods-salengmandriver_iOS.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = arm64;
@@ -326,7 +386,7 @@
 					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sirawut.salengmandriver;
-				PRODUCT_NAME = "salengmandriver";
+				PRODUCT_NAME = salengmandriver;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
