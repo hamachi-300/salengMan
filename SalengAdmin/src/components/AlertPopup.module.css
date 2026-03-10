@@ -1,0 +1,82 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #eee;
+}
+
+.modal h3 {
+    margin: 0 0 12px 0;
+    color: #111;
+    font-size: 1.25rem;
+}
+
+.modal h3.errorTitle {
+    color: #ef4444;
+}
+
+.modal p {
+    margin: 0 0 24px 0;
+    color: #555;
+    font-size: 1rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.okButton {
+    background-color: #FF7433;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.okButton:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.okButton:active {
+    transform: scale(0.98);
+}
+
+@media (prefers-color-scheme: dark) {
+    .modal {
+        background-color: #1a1c20;
+        border: 1px solid #333;
+    }
+
+    .modal h3 {
+        color: white;
+    }
+
+    .modal p {
+        color: #ccc;
+    }
+}

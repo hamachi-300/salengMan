@@ -47,14 +47,33 @@ const UsersManagement = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
+
             const data = await response.json();
-            if (activeTab === 'banned') {
-                setBannedEmails(data);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(data.error || 'Failed to fetch users');
+            }
+
+            if (Array.isArray(data)) {
+                if (activeTab === 'banned') {
+                    setBannedEmails(data);
+                } else {
+                    setUsers(data);
+                }
             } else {
-                setUsers(data);
+                console.error('Expected array but received:', data);
+                if (activeTab === 'banned') setBannedEmails([]);
+                else setUsers([]);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
+            if (activeTab === 'banned') setBannedEmails([]);
+            else setUsers([]);
         } finally {
             setLoading(false);
         }

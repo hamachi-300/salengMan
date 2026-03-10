@@ -93,7 +93,7 @@ export interface Notification {
   notify_content: string;
   timestamp: string;
   type: string;
-  refer_id?: number | string;
+  refer_id?: number;
 }
 
 export const api = {
@@ -314,6 +314,20 @@ export const api = {
     return res.json();
   },
 
+  // Get Trash Posts
+  getTrashPosts: async (token: string): Promise<any[]> => {
+    console.log("Fetching trash posts from API...");
+    const res = await fetch(`${API_URL}/trash-posts`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch trash posts');
+    }
+
+    return res.json();
+  },
+
   getPostById: async (token: string, id: string): Promise<any> => {
     try {
       const res = await fetch(`${API_URL}/old-item-posts/${id}`, {
@@ -334,6 +348,26 @@ export const api = {
     }
   },
 
+  getTrashPostById: async (token: string, id: string): Promise<any> => {
+    try {
+      const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch trash post');
+      }
+
+      return res.json();
+    } catch (error) {
+      console.error("Error fetching trash post:", error);
+      throw error;
+    }
+  },
+
   deletePost: async (token: string, id: number): Promise<void> => {
     const res = await fetch(`${API_URL}/old-item-posts/${id}`, {
       method: 'DELETE',
@@ -345,6 +379,20 @@ export const api = {
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || 'Failed to delete post');
+    }
+  },
+
+  deleteTrashPost: async (token: string, id: number): Promise<void> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to delete trash post');
     }
   },
 
@@ -360,6 +408,30 @@ export const api = {
 
     if (!res.ok) {
       let errorMessage = 'Failed to update post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
+
+  updateTrashPost: async (token: string, id: string | number, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to update trash post';
       try {
         const error = await res.json();
         errorMessage = error.error || errorMessage;
@@ -406,53 +478,6 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to fetch user profile');
-    }
-
-    return res.json();
-  },
-
-  // Get user score
-  getUserScore: async (token: string, userId: string): Promise<any> => {
-    const res = await fetch(`${API_URL}/users/${userId}/score`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to fetch user score');
-    }
-
-    return res.json();
-  },
-
-  // Submit a review
-  reviewUser: async (token: string, userId: string, score: number, postId: number): Promise<any> => {
-    const res = await fetch(`${API_URL}/users/${userId}/review`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ score, postId }),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to submit review');
-    }
-
-    return res.json();
-  },
-
-  // Check review status
-  checkReviewStatus: async (token: string, userId: string, postId: number): Promise<{ hasReviewed: boolean }> => {
-    const res = await fetch(`${API_URL}/users/${userId}/review/check?postId=${postId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to check review status');
     }
 
     return res.json();
@@ -539,18 +564,6 @@ export const api = {
     return res.json();
   },
 
-  // Clear all notifications
-  clearNotifications: async (token: string): Promise<void> => {
-    const res = await fetch(`${API_URL}/notifications`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to clear notifications');
-    }
-  },
-
   // Get driver real-time location
   getDriverLocation: async (token: string, driverId: string): Promise<any> => {
     const res = await fetch(`${API_URL}/driver-location/${driverId}`, {
@@ -564,39 +577,27 @@ export const api = {
     return res.json();
   },
 
-  // Submit problem report
-  submitProblemReport: async (token: string, header: string, content: string, image?: string): Promise<any> => {
-    const res = await fetch(`${API_URL}/reports/problem`, {
+  // Create Trash Post
+  createTrashPost: async (token: string, data: any): Promise<any> => {
+    console.log("Trash post data in API:", data);
+    const res = await fetch(`${API_URL}/trash-posts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ header, content, image }),
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || 'Failed to submit problem report');
-    }
-
-    return res.json();
-  },
-
-  // Submit user report
-  submitUserReport: async (token: string, reported_user_id: string, header: string, content: string, image?: string): Promise<any> => {
-    const res = await fetch(`${API_URL}/reports/user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ reported_user_id, header, content, image }),
-    });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || 'Failed to submit user report');
+      let errorMessage = 'Failed to create trash post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     return res.json();

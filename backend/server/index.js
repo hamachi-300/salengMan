@@ -3422,6 +3422,20 @@ async function start() {
     );
   `).catch(err => console.error('Migration error (notifies):', err.message));
 
+  // Migration: drop FK constraint on contacts.post_id so trash post ids can be stored
+  await pool.query(`
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM information_schema.table_constraints
+            WHERE constraint_name = 'contacts_post_id_fkey'
+            AND table_name = 'contacts'
+        ) THEN
+            ALTER TABLE contacts DROP CONSTRAINT contacts_post_id_fkey;
+        END IF;
+    END $$;
+  `).catch(err => console.error('Migration error (drop contacts FK):', err.message));
+
   // Migration for existing tables
   await pool.query(`
     DO $$
