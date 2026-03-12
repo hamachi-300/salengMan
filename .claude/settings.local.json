@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd D:\\\\III_yrs\\\\2ndsem\\\\SE\\\\salengMan - Copy\\\\backend:*)"
+      "Bash(cd D:\\\\III_yrs\\\\2ndsem\\\\SE\\\\salengMan - Copy\\\\backend:*)",
+      "Bash(netstat -ano | grep \":9000\" 2>/dev/null; echo \"---\"; lsof -i :9000 2>/dev/null || echo \"lsof not available\")",
+      "Bash(powershell.exe -Command \"netstat -ano | Select-String ':9000'\")",
+      "Bash(echo $HOME && whoami)",
+      "Bash(docker info:*)",
+      "Bash(docker context:*)",
+      "Read(//mnt/wsl/docker-desktop/**)",
+      "Read(//mnt/**)"
     ]
   }
 }

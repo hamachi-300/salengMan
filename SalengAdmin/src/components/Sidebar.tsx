@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, LogOut, MapPin, X, FileText, Mail } from 'lucide-react';
+import { Users, LogOut, MapPin, X, FileText, Mail, Trash2 } from 'lucide-react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -61,7 +61,16 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                     <MapPin size={20} />
                     <span>Recycling Factories</span>
                 </NavLink>
+                <NavLink
+                    to="/trash-bins"
+                    onClick={onClose}
+                    className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+                >
+                    <Trash2 size={20} />
+                    <span>Trash Bin Addresses</span>
+                </NavLink>
                 <div style={{ flex: 1 }} />
+
                 <button
                     className="nav-item"
                     onClick={handleLogout}

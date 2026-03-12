@@ -556,12 +556,13 @@ export const api = {
 
   // Get all trash bin locations
   getTrashBins: async (token: string): Promise<any[]> => {
-    const res = await fetch(`${API_URL}/trash-bins`, {
+    const res = await fetch(`${API_URL}/trash-bin-addresses`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to fetch trash bins');
     return res.json();
   },
+
 
   // Driver confirms disposal at a trash bin (validates 100m proximity)
   disposeContact: async (token: string, contactId: string, location: { lat: number; lng: number }): Promise<any> => {
@@ -575,6 +576,7 @@ export const api = {
     });
     if (!res.ok) {
       const error = await res.json();
+      console.log("asd")
       throw new Error(error.error || 'Failed to confirm disposal');
     }
     return res.json();

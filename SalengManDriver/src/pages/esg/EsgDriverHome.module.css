@@ -1,0 +1,231 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
+    /* Space for bottom content if any */
+}
+
+/* Section Title Styling */
+.sectionLabel {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 16px;
+    display: block;
+    opacity: 0.8;
+}
+
+/* Stats Section */
+.statsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.statCard {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.statCard:hover {
+    transform: translateY(-4px);
+    background-color: #3a3a3a;
+}
+
+.statCard:active {
+    transform: scale(0.98);
+}
+
+.statIconWrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.moneyIcon {
+    background: rgba(255, 122, 48, 0.15);
+    color: #FF7A30;
+}
+
+.weightIcon {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #aaa;
+    line-height: 1.2;
+}
+
+.statValue {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Primary Action Card (Start Job - Matching Home.tsx style) */
+.wideServiceCard {
+    background-color: #3a3a3a;
+    border-radius: 24px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    margin-bottom: 32px;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.wideServiceCard:hover {
+    transform: translateY(-2px);
+    background-color: #444;
+}
+
+.wideServiceCard:active {
+    transform: scale(0.99);
+}
+
+.wideServiceIconWrapper {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: var(--orange-button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(255, 122, 48, 0.4);
+}
+
+.serviceIcon {
+    width: 32px;
+    height: 32px;
+    color: white;
+}
+
+.wideServiceTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    text-align: center;
+}
+
+.wideServiceSubtitle {
+    font-size: 0.9rem;
+    color: var(--color-text);
+    opacity: 0.6;
+    margin: 0;
+    text-align: center;
+}
+
+.disabled {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.wideServiceContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.arrowIcon {
+    margin-top: 12px;
+    font-size: 1.5rem;
+    color: var(--orange-button);
+    opacity: 0.7;
+}
+
+/* Secondary Actions */
+.actionGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tomorrowJobButton {
+    background-color: #22c55e;
+    color: #fff;
+    padding: 20px 24px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.tomorrowJobButton:hover {
+    background-color: #16a34a;
+}
+
+.countBadge {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.menuButton {
+    background-color: #2a2a2a;
+    color: #fff;
+    padding: 20px 24px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.menuButton:hover {
+    background-color: #333;
+}
+
+.menuIcon {
+    opacity: 0.4;
+    font-size: 1.2rem;
+}
+
+.tomorrowJobButton:active,
+.menuButton:active {
+    transform: scale(0.98);
+}

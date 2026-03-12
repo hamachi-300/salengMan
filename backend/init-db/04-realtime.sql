@@ -29,6 +29,12 @@ BEGIN
     EXCEPTION WHEN duplicate_object THEN
         NULL;
     END;
+
+    BEGIN
+        ALTER PUBLICATION supabase_realtime ADD TABLE esg_subscriptors;
+    EXCEPTION WHEN duplicate_object THEN
+        NULL;
+    END;
 END
 $$;
 
@@ -57,6 +63,12 @@ CREATE TRIGGER update_old_item_posts_updated_at
 DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 CREATE TRIGGER update_orders_updated_at
     BEFORE UPDATE ON orders
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_esg_subscriptors_updated_at ON esg_subscriptors;
+CREATE TRIGGER update_esg_subscriptors_updated_at
+    BEFORE UPDATE ON esg_subscriptors
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -101,5 +113,12 @@ CREATE TRIGGER order_realtime
 DROP TRIGGER IF EXISTS old_item_posts_realtime ON old_item_posts;
 CREATE TRIGGER old_item_posts_realtime
     AFTER INSERT OR UPDATE OR DELETE ON old_item_posts
+    FOR EACH ROW
+    EXECUTE FUNCTION notify_realtime_changes();
+
+-- Trigger for esg_subscriptors
+DROP TRIGGER IF EXISTS esg_subscriptors_realtime ON esg_subscriptors;
+CREATE TRIGGER esg_subscriptors_realtime
+    AFTER INSERT OR UPDATE OR DELETE ON esg_subscriptors
     FOR EACH ROW
     EXECUTE FUNCTION notify_realtime_changes();

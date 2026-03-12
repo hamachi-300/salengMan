@@ -272,8 +272,28 @@ export default function MapSelector({ onLocationSelect, initialLat, initialLng, 
                         setAlertMessage("Location unavailable. Please check if GPS is enabled.");
                         break;
                     case err.TIMEOUT:
-                        setAlertMessage("Location request timed out. Please try again.");
-                        break;
+                        // Retry with low accuracy (works on desktops without GPS)
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => {
+                                const { latitude, longitude } = pos.coords;
+                                const newPos = new L.LatLng(latitude, longitude);
+                                if (!isReadOnly) {
+                                    setPosition(newPos);
+                                    extractAddress(latitude, longitude);
+                                } else {
+                                    setAutoBoundsEnabled(true);
+                                    setTriggerCenter(null);
+                                    setLoading(false);
+                                }
+                                if (onGpsClick) onGpsClick(latitude, longitude);
+                            },
+                            () => {
+                                setLoading(false);
+                                setAlertMessage("Location request timed out. Please select manually on the map.");
+                            },
+                            { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+                        );
+                        return;
                     default:
                         setAlertMessage("Could not get your location. Please select manually on the map.");
                 }

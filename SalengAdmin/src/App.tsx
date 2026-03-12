@@ -6,6 +6,7 @@ import ReportDetailView from './pages/ReportDetailView';
 import UsersManagement from './pages/UsersManagement';
 import NotifyUsers from './pages/NotifyUsers';
 import RecyclingAddresses from './pages/RecyclingAddresses';
+import TrashBinAddresses from './pages/TrashBinAddresses';
 import Login from './pages/Login';
 import './App.css';
 
@@ -31,6 +32,7 @@ function App() {
           <Route path="users" element={<UsersManagement />} />
           <Route path="notify" element={<NotifyUsers />} />
           <Route path="recycling" element={<RecyclingAddresses />} />
+          <Route path="trash-bins" element={<TrashBinAddresses />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:type/:id" element={<ReportDetailView />} />
         </Route>
@@ -38,5 +40,6 @@ function App() {
     </BrowserRouter>
   );
 }
+
 
 export default App;

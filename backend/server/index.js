@@ -1545,6 +1545,28 @@ app.get('/trash-posts', authMiddleware, async (req, res) => {
   }
 });
 
+// Get all available trash posts (for drivers)
+app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'driver') {
+      return res.status(403).json({ error: 'Only drivers can view available trash posts' });
+    }
+
+    const result = await pool.query(
+      `SELECT tp.*, u.id as user_uuid, u.full_name as user_name, u.phone as user_phone, u.avatar_url as user_avatar
+       FROM trash_posts tp
+       JOIN users u ON tp.user_id = u.id
+       WHERE tp.status = 'waiting'
+       AND (tp.waiting_status = 'wait' OR tp.waiting_status IS NULL)
+       ORDER BY tp.created_at DESC`,
+      []
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Get single trash post by ID
 app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
   const client = await pool.connect();
@@ -1595,32 +1617,6 @@ app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
     client.release();
   }
 });
-
-
-
-// Get all available trash posts (for drivers)
-app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
-  try {
-    if (req.user.role !== 'driver') {
-      return res.status(403).json({ error: 'Only drivers can view available trash posts' });
-    }
-
-    const result = await pool.query(
-      `SELECT tp.*, u.id as user_uuid, u.full_name as user_name, u.phone as user_phone, u.avatar_url as user_avatar
-       FROM trash_posts tp
-       JOIN users u ON tp.user_id = u.id
-       WHERE tp.status = 'waiting'
-       AND (tp.waiting_status = 'wait' OR tp.waiting_status IS NULL)
-       ORDER BY tp.created_at DESC`,
-      []
-    );
-    res.json(result.rows);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-
 
 // Delete all notifications for a user
 app.delete('/notifications', authMiddleware, async (req, res) => {
@@ -2558,11 +2554,19 @@ app.get('/contacts/:id', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT c.*,
-              oip.images, oip.categories, oip.remarks, oip.status as post_status, oip.address_snapshot,
+              COALESCE(oip.images, tp.images) as images,
+              oip.categories,
+              COALESCE(oip.remarks, tp.remarks) as remarks,
+              CASE WHEN c.status = 'cancelled' THEN c.status
+                   ELSE COALESCE(oip.status, tp.status)
+              END as post_status,
+              COALESCE(oip.address_snapshot, tp.address_snapshot) as address_snapshot,
+              tp.waiting_status,
               seller.full_name as seller_name, seller.phone as seller_phone, seller.avatar_url as seller_avatar,
               buyer.full_name as buyer_name, buyer.phone as buyer_phone, buyer.avatar_url as buyer_avatar
        FROM contacts c
-       JOIN old_item_posts oip ON c.post_id = oip.id
+       LEFT JOIN old_item_posts oip ON c.post_id = oip.id AND c.type = 'old_item_posts'
+       LEFT JOIN trash_posts tp ON c.post_id = tp.id AND (c.type = 'trash_posts' OR c.type = 'anytime')
        JOIN users seller ON c.seller_id = seller.id
        JOIN users buyer ON c.buyer_id = buyer.id
        WHERE c.id = $1 AND (c.seller_id = $2 OR c.buyer_id = $2)`,
@@ -3332,7 +3336,7 @@ app.post('/contacts/:id/dispose', authMiddleware, async (req, res) => {
     if (contactResult.rows.length === 0) return res.status(404).json({ error: 'Contact not found' });
     const contact = contactResult.rows[0];
 
-    if (contact.buyer_id !== req.user.id) return res.status(403).json({ error: 'Not your contact' });
+    if (contact.buyer_id !== req.user.user_id) return res.status(403).json({ error: 'Not your contact' });
     if (contact.status !== 'recieved') return res.status(400).json({ error: 'Contact is not in recieved status' });
 
     // Haversine distance helper
@@ -3342,12 +3346,12 @@ app.post('/contacts/:id/dispose', authMiddleware, async (req, res) => {
       const φ2 = lat2 * Math.PI / 180;
       const Δφ = (lat2 - lat1) * Math.PI / 180;
       const Δλ = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
     // Check proximity to any trash bin
-    const binsResult = await pool.query('SELECT id, name, lat, lng FROM trash_bins');
+    const binsResult = await pool.query('SELECT address_id, label, lat, lng FROM trash_bin_addresses');
     const bins = binsResult.rows;
     if (bins.length === 0) return res.status(400).json({ error: 'No trash bins configured' });
 
@@ -3505,7 +3509,23 @@ async function start() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     CREATE INDEX IF NOT EXISTS idx_trash_bins_location ON trash_bins(lat, lng);
-  `).catch(err => console.error('Migration error (trash_bins):', err.message));
+
+    CREATE TABLE IF NOT EXISTS trash_bin_addresses (
+        address_id TEXT PRIMARY KEY,
+        label VARCHAR(255) NOT NULL,
+        address TEXT NOT NULL,
+        lat DECIMAL(10, 8),
+        lng DECIMAL(11, 8),
+        note TEXT,
+        province VARCHAR(100),
+        district VARCHAR(100),
+        images TEXT[] DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+        updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+    );
+    CREATE INDEX IF NOT EXISTS idx_trash_bin_addresses_location ON trash_bin_addresses(lat, lng);
+  `).catch(err => console.error('Migration error (trash_bin_addresses):', err.message));
+
 
   // Start background jobs
   setInterval(checkExpiredPosts, 60000); // Check every 60 seconds
@@ -3519,4 +3539,215 @@ async function start() {
 start().catch(err => {
   console.error('Failed to start server:', err);
   process.exit(1);
+});
+
+// ============================================
+// FACTORY IMAGE UPLOAD
+// ============================================
+app.post('/upload/factory-image', adminAuthMiddleware, async (req, res) => {
+  try {
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const file = req.files.image;
+    const fileName = `recycling-factories/${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+
+    await minioClient.putObject(BUCKET_NAME, fileName, file.data, file.size, {
+      'Content-Type': file.mimetype
+    });
+
+    const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+    res.json({ url: imageUrl });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// TRASH BIN IMAGE UPLOAD
+app.post('/upload/trash-bin-image', adminAuthMiddleware, async (req, res) => {
+  try {
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const file = req.files.image;
+    const fileName = `trash-bins/${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+
+    await minioClient.putObject(BUCKET_NAME, fileName, file.data, file.size, {
+      'Content-Type': file.mimetype
+    });
+
+    const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+    res.json({ url: imageUrl });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+// Recycling Addresses CRUD
+app.get('/recycling-addresses', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM recycling_addresses ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching recycling addresses:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/recycling-addresses/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM recycling_addresses WHERE address_id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recycling address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/recycling-addresses', adminAuthMiddleware, async (req, res) => {
+  try {
+    let { address_id, label, address, lat, lng, phone, note, province, district, images } = req.body;
+    console.log("123")
+    // Auto-generate ID if not provided
+    if (!address_id) {
+      address_id = `FACTORY-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
+
+    console.log("ABC")
+    const result = await pool.query(
+      `INSERT INTO recycling_addresses (address_id, label, address, lat, lng, phone, note, province, district, images)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [address_id, label, address, lat, lng, phone, note, province, district, images || []]
+    );
+    console.log("DEF")
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { label, address, lat, lng, phone, note, province, district, images } = req.body;
+    const result = await pool.query(
+      `UPDATE recycling_addresses 
+       SET label = $1, address = $2, lat = $3, lng = $4, phone = $5, note = $6, province = $7, district = $8, images = $9, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+       WHERE address_id = $10
+       RETURNING *`,
+      [label, address, lat, lng, phone, note, province, district, images || [], id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recycling address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM recycling_addresses WHERE address_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Recycling address not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Trash Bin Addresses CRUD
+app.get('/trash-bin-addresses', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM trash_bin_addresses ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching trash bin addresses:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/trash-bin-addresses/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM trash_bin_addresses WHERE address_id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash bin address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/trash-bin-addresses', adminAuthMiddleware, async (req, res) => {
+  try {
+    let { address_id, label, address, lat, lng, note, province, district, images } = req.body;
+
+    // Auto-generate ID if not provided
+    if (!address_id) {
+      address_id = `TRASH-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
+
+    const result = await pool.query(
+      `INSERT INTO trash_bin_addresses (address_id, label, address, lat, lng, note, province, district, images)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [address_id, label, address, lat, lng, note, province, district, images || []]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/trash-bin-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { label, address, lat, lng, note, province, district, images } = req.body;
+    const result = await pool.query(
+      `UPDATE trash_bin_addresses 
+       SET label = $1, address = $2, lat = $3, lng = $4, note = $5, province = $6, district = $7, images = $8, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+       WHERE address_id = $9
+       RETURNING *`,
+      [label, address, lat, lng, note, province, district, images || [], id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash bin address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/trash-bin-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM trash_bin_addresses WHERE address_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash bin address not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
 });

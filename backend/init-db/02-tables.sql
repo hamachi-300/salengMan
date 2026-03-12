@@ -143,6 +143,74 @@ BEGIN
     END IF;
 END $$;
 
+-- ESG Subscriptions table
+CREATE TABLE IF NOT EXISTS esg_subscriptors (
+    sup_id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    address_id INTEGER REFERENCES addresses(id) ON DELETE CASCADE,
+    package_name TEXT,
+    pickup_days JSONB DEFAULT '[]'::jsonb,
+    is_active BOOLEAN DEFAULT true,
+    begin_sub TIMESTAMPTZ,
+    end_sub TIMESTAMPTZ,
+    max_weight DECIMAL(10, 2),
+    time_per_month INTEGER,
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+);
+
+-- ESG Driver table
+CREATE TABLE IF NOT EXISTS esg_driver (
+    driver_id TEXT PRIMARY KEY,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    coin NUMERIC DEFAULT 0,
+    weight_accumulate NUMERIC DEFAULT 0,
+    pickup_days JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    UNIQUE(user_id)
+);
+
+-- ESG Tasks table
+CREATE TABLE IF NOT EXISTS esg_tasks (
+    tasks_id SERIAL PRIMARY KEY,
+    esg_subscriptor_id TEXT REFERENCES esg_subscriptors(sup_id) ON DELETE CASCADE,
+    esg_driver_id TEXT REFERENCES esg_driver(driver_id) ON DELETE CASCADE,
+    date TIMESTAMPTZ NOT NULL,
+    weight JSONB DEFAULT '[]'::jsonb,
+    carbon_reduce NUMERIC DEFAULT 0,
+    status TEXT DEFAULT 'waiting',
+    recycling_center_addresss TEXT DEFAULT '',
+    evidences_images TEXT[] DEFAULT '{}',
+    receipt_images TEXT[] DEFAULT '{}',
+    chat_id UUID REFERENCES chats(id),
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+);
+
+-- Banned emails table
+CREATE TABLE IF NOT EXISTS banned_emails (
+    email VARCHAR(255) PRIMARY KEY,
+    reason TEXT,
+    banned_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+);
+
+-- Recycling Addresses table
+CREATE TABLE IF NOT EXISTS recycling_addresses (
+    address_id TEXT PRIMARY KEY,
+    label VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
+    phone VARCHAR(20),
+    note TEXT,
+    province VARCHAR(100),
+    district VARCHAR(100),
+    images TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+);
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
 CREATE INDEX IF NOT EXISTS idx_old_item_posts_user_id ON old_item_posts(user_id);
@@ -179,3 +247,19 @@ DROP TRIGGER IF EXISTS on_user_created_score ON public.users;
 CREATE TRIGGER on_user_created_score
     AFTER INSERT ON public.users
     FOR EACH ROW EXECUTE FUNCTION public.create_user_score_record();
+
+-- Recycling Addresses table
+CREATE TABLE IF NOT EXISTS recycling_addresses (
+    address_id TEXT PRIMARY KEY,
+    label VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    lat DECIMAL(10, 8),
+    lng DECIMAL(11, 8),
+    phone VARCHAR(20),
+    note TEXT,
+    province VARCHAR(100),
+    district VARCHAR(100),
+    images TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+);

@@ -1,0 +1,95 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    padding-bottom: calc(120px + var(--safe-area-bottom, 0px));
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--color-text);
+    opacity: 0.8;
+}
+
+.dateGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.dateCard {
+    background-color: #333;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dateCard:hover {
+    background-color: #444;
+}
+
+.dateCard:active {
+    transform: scale(0.95);
+}
+
+.dateNumber {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--orange-button);
+}
+
+.dateLabel {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+.actionArea {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.searchAllButton {
+    width: 100%;
+    padding: 16px;
+    background-color: #3a3a3a;
+    color: var(--color-text);
+    border: 1px solid #555;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.searchAllButton:active {
+    background-color: #444;
+}
+
+.acceptedCard {
+    background-color: var(--orange-button) !important;
+}
+
+.acceptedNumber {
+    color: #000 !important;
+}
+
+.acceptedLabel {
+    color: rgba(0, 0, 0, 0.6) !important;
+}

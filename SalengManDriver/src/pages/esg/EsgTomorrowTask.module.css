@@ -1,0 +1,209 @@
+.page {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg, #1a1a1a);
+    color: var(--color-text, #ffffff);
+    overflow: hidden;
+}
+
+.dateHeader {
+    padding: 12px 20px;
+    background-color: rgba(255, 122, 48, 0.1);
+    border-bottom: 1px solid rgba(255, 122, 48, 0.2);
+}
+
+.dateLabel {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+}
+
+.content {
+    flex: 1;
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.loadingContainer,
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text);
+    opacity: 0.6;
+    text-align: center;
+    gap: 16px;
+}
+
+.spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(255, 122, 48, 0.1);
+    border-top-color: var(--orange-button, #ff7a30);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.emptyIcon {
+    font-size: 64px;
+    margin-bottom: 8px;
+}
+
+.groupedContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.dateGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.groupHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.groupHeaderText {
+    font-size: 1rem;
+    font-weight: 800;
+    color: white;
+    white-space: nowrap;
+}
+
+.divider {
+    flex: 1;
+    height: 1px;
+    background-color: var(--orange-button);
+    opacity: 0.2;
+}
+
+.taskList {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 20px;
+}
+
+.taskCard {
+    background-color: var(--color-bg-2, #2a2a2a);
+    border-radius: 24px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.taskCard:active {
+    transform: scale(0.98);
+}
+
+.skippedCard {
+    opacity: 0.6;
+    filter: grayscale(0.5);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dateInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.day {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1;
+}
+
+.monthYear {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.month {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--orange-button, #ff7a30);
+}
+
+.year {
+    font-size: 0.8rem;
+    opacity: 0.4;
+    font-weight: 600;
+}
+
+.statusBadge {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
+}
+
+.infoLabel {
+    font-size: 0.9rem;
+    opacity: 0.5;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.infoValue {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

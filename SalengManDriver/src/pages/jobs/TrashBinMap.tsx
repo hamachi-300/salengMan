@@ -11,11 +11,13 @@ import PageHeader from '../../components/PageHeader';
 import styles from './TrashBinMap.module.css';
 
 interface TrashBin {
-  id: number;
-  name: string;
+  address_id: string;
+  label: string;
   lat: number;
   lng: number;
-  address?: string;
+  address: string;
+  note?: string;
+  images?: string[];
 }
 
 // Green trash bin marker icon
@@ -115,7 +117,11 @@ export default function TrashBinMap() {
     if (!token) { navigate('/signin'); return; }
 
     api.getTrashBins(token)
-      .then(data => setBins(data.map((b: any) => ({ ...b, lat: parseFloat(b.lat), lng: parseFloat(b.lng) }))))
+      .then(data => setBins(data.map((b: any) => ({ 
+        ...b, 
+        lat: parseFloat(b.lat), 
+        lng: parseFloat(b.lng) 
+      }))))
       .catch(() => setError('Failed to load trash bins'))
       .finally(() => setLoading(false));
   }, []);
@@ -218,15 +224,16 @@ export default function TrashBinMap() {
               {/* Trash bin markers */}
               {binsWithDistance.map((bin, idx) => (
                 <Marker
-                  key={bin.id}
+                  key={bin.address_id}
                   position={[bin.lat, bin.lng]}
                   icon={idx === 0 ? TrashBinNearestIcon : TrashBinIcon}
                 >
-                  <Popup>
-                    <strong>{bin.name}</strong>
+                  <Popup className={styles.binPopup}>
+                    <strong>{bin.label}</strong>
                     {idx === 0 && <span className={styles.nearestTag}> ★ Nearest</span>}
                     <br />
-                    {bin.address && <span>{bin.address}<br /></span>}
+                    <span style={{ fontSize: '12px' }}>{bin.address}</span>
+                    <br />
                     <span>
                       {bin.distance === Infinity
                         ? '—'
@@ -234,6 +241,14 @@ export default function TrashBinMap() {
                           ? `${Math.round(bin.distance)}m away`
                           : `${(bin.distance / 1000).toFixed(1)}km away`}
                     </span>
+                    {bin.note && <span className={styles.binNote}>{bin.note}</span>}
+                    {bin.images && bin.images.length > 0 && (
+                      <div className={styles.binImages}>
+                        {bin.images.map((img, i) => (
+                          <img key={i} src={img} alt="Bin" className={styles.binImage} />
+                        ))}
+                      </div>
+                    )}
                   </Popup>
                 </Marker>
               ))}
@@ -245,7 +260,7 @@ export default function TrashBinMap() {
             <div className={styles.infoPanel}>
               <div className={styles.nearestInfo}>
                 <span className={styles.nearestLabel}>Nearest bin:</span>
-                <span className={styles.nearestName}>{nearestBin.name}</span>
+                <span className={styles.nearestName}>{nearestBin.label}</span>
                 <span className={styles.nearestDist}>
                   {nearestBin.distance === Infinity
                     ? '—'
