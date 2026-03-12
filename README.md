@@ -22,7 +22,6 @@ A waste collection and recycling management application built with React, TypeSc
 | Node.js | Runtime environment |
 | Express | Web framework |
 | PostgreSQL | Relational database |
-| PostgREST | Auto-generated REST API |
 | JWT | Authentication tokens |
 | bcrypt | Password hashing |
 
@@ -32,15 +31,13 @@ A waste collection and recycling management application built with React, TypeSc
 |------------|-------------|
 | Docker | Container platform |
 | Docker Compose | Multi-container orchestration |
-| PM2 | Node.js process manager |
-| Azure VM | Cloud hosting |
 
-### Storage & Realtime
+
+### Storage & Geospatial
 
 | Technology | Description |
 |------------|-------------|
 | MinIO | S3-compatible file storage |
-| Supabase Realtime | WebSocket for live updates |
 | PostGIS | Geospatial database extension |
 
 ### Architecture Diagram
@@ -48,44 +45,39 @@ A waste collection and recycling management application built with React, TypeSc
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Client (React + TypeScript)                                │
-│  - Authentication UI                                        │
-│  - Order management                                         │
-│  - Real-time tracking                                       │
+│  - Salengman App                                            │
+│  - Salengman Driver                                         │
+│  - Salengman Admin Web                                      │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  Azure VM (Ubuntu)                                          │
 │                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐                   │
-│  │ Node.js Backend │  │ PostgREST       │                   │
-│  │ Port 3000       │  │ Port 3001       │                   │
-│  │ - Auth (JWT)    │  │ - Auto REST API │                   │
-│  │ - Business logic│  │ - CRUD ops      │                   │
-│  └────────┬────────┘  └────────┬────────┘                   │
-│           │                    │                            │
-│           └──────────┬─────────┘                            │
-│                      ▼                                      │
-│  ┌─────────────────────────────────────────┐                │
-│  │ PostgreSQL + PostGIS                    │                │
-│  │ Port 5432                               │                │
-│  │ - Users, Orders, Driver locations       │                │
-│  └─────────────────────────────────────────┘                │
-│                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐                   │
-│  │ Supabase        │  │ MinIO           │                   │
-│  │ Realtime        │  │ Port 9000/9001  │                   │
-│  │ Port 4000       │  │ - File uploads  │                   │
-│  │ - WebSocket     │  │ - Image storage │                   │
-│  └─────────────────┘  └─────────────────┘                   │
+│            ┌───────────────────────────┐                    │
+│            │      Node.js Backend      │                    │
+│            │         Port 3000         │                    │
+│            │  - Auth & Business Logic  │                    │
+│            └────────┬──────────┬───────┘                    │
+│                     │          │                            │
+│                     ▼          ▼                            │
+│  ┌────────────────────┐      ┌────────────────────┐         │
+│  │ PostgreSQL+PostGIS │      │        MinIO       │         │
+│  │     Port 5432      │      │    Port 9000/9001  │         │
+│  │  - Main Data Store │      │    - Image Storage │         │
+│  └────────────────────┘      └────────────────────┘         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Recommended IDE Setup
+## Frontend Services
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+The project consists of three main frontend applications:
 
----
+| Service | Port | Description |
+|---------|------|-------------|
+| Salengman App | 1421 | User application (Tauri) |
+| Salengman Driver | 1420 | Driver application (Tauri) |
+| Salengman Admin | 5173 | Admin Web Console (Vite) |
 
 ## Backend Services
 
@@ -93,50 +85,11 @@ The app connects to the following backend services:
 
 | Service | Port | Description |
 |---------|------|-------------|
-| Node.js API | 3000 | Authentication & business logic |
-| PostgREST | 3001 | Auto-generated REST API |
-| Supabase Realtime | 4000 | WebSocket connections |
+| Node.js API | 3000 | **Primary API** |
 | PostgreSQL | 5432 | Database with PostGIS |
-| MinIO API | 9000 | S3-compatible file storage |
+| MinIO API | 9000 | S3 File storage |
 | MinIO Console | 9001 | File management UI |
 
-## API Endpoints
-
-### Authentication (Node.js - Port 3000)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/auth/register` | Create new user |
-| POST | `/auth/login` | Login, returns JWT |
-| GET | `/auth/me` | Get current user (requires token) |
-| POST | `/upload` | Upload image (requires token) |
-
-### Database (PostgREST - Port 3001)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users` | List all users |
-| GET | `/orders` | List all orders |
-| POST | `/orders` | Create order |
-| PATCH | `/orders?id=eq.{id}` | Update order |
-
-## Project Structure
-
-```
-SalengMan/
-├── src/
-│   ├── assets/          # Images, icons
-│   ├── config/          # API configuration
-│   ├── pages/           # Page components
-│   ├── services/        # Auth & API services
-│   ├── App.tsx          # Main app component
-│   └── main.tsx         # Entry point
-├── src-tauri/           # Tauri (desktop) config
-├── .env.example         # Environment template
-├── package.json
-└── README.md
-```
 
 ## Quick Start (App)
 ### 1. add .env
@@ -175,22 +128,30 @@ nano .env
 ```
 # PostgreSQL Configuration
 POSTGRES_USER=salengman
-POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_PASSWORD=your_password
 POSTGRES_DB=salengman
+DATABASE_URL=postgres://salengman:your_password@localhost:5432/salengman
 
 # JWT Secret (min 32 characters)
-JWT_SECRET=your_super_secret_jwt_key_min_32_chars
+JWT_SECRET=your_jwt_secret_at_least_32_chars
 
 # MinIO Configuration
 MINIO_ROOT_USER=admin
-MINIO_ROOT_PASSWORD=your_minio_password_here
+MINIO_ROOT_PASSWORD=your_minio_password
 
 # Supabase Realtime
-SECRET_KEY_BASE=your_secret_key_base_for_realtime_min_64_chars_recommended
+SECRET_KEY_BASE=your_secret_key_base
 
-# Optional: Public URLs (for production)
-# MINIO_PUBLIC_URL=http://your-server-ip:9000
-# API_URL=http://your-server-ip:3000
+# Public URL for MinIO (REQUIRED: change to your server IP)
+# This URL is returned to clients for accessing uploaded images
+MINIO_PUBLIC_URL=http://your_server_ip:9000
+
+# Admin Seed Credentials (used for initial database setup)
+ADMIN_SEED_EMAIL=your_admin_email
+ADMIN_SEED_USERNAME=your_admin_username
+ADMIN_SEED_PASSWORD=your_admin_password
+
+VITE_API_URL=http://your_server_ip:3000
 ```
 
 #### POSTGRES_PASSWORD and MINIO_ROOT_PASSWORD
@@ -211,6 +172,11 @@ openssl rand -hex 64 | tr -d '\n'
 #### MINIO_PUBLIC_URL
 ```
 MINIO_PUBLIC_URL=http://your-server-ip:9000
+```
+
+#### VITE_API_URL
+```
+VITE_API_URL=http://your_server_ip:3000
 ```
 
 #### ADMIN_SEED_EMAIL
