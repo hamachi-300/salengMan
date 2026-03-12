@@ -229,7 +229,7 @@ function DisposeTrash() {
                     <input
                         type="range"
                         min={10}
-                        max={100}
+                        max={20}
                         value={distanceFilter}
                         onChange={(e) => setDistanceFilter(Number(e.target.value))}
                         className={styles.slider}
@@ -239,7 +239,7 @@ function DisposeTrash() {
                     />
                     <div className={styles.sliderTicks}>
                         <span>10 km</span>
-                        <span>100 km</span>
+                        <span>20 km</span>
                     </div>
                 </div>
             </div>

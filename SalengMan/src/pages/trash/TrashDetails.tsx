@@ -87,7 +87,6 @@ function TrashDetails() {
                         <div className={styles['stepper-row']}>
                             <button
                                 className={styles['stepper-btn']}
-                                style={{ backgroundColor: '#FF9800', color: 'white', border: 'none' }}
                                 onClick={() => {
                                     const nextCoins = Math.max(1, trashData.coins - 1);
                                     setCoins(nextCoins);
@@ -104,7 +103,6 @@ function TrashDetails() {
                             </span>
                             <button
                                 className={styles['stepper-btn']}
-                                style={{ backgroundColor: '#FF9800', color: 'white', border: 'none' }}
                                 onClick={() => {
                                     const neededCoins = Math.ceil(trashData.bagCount / 3);
                                     if (trashData.coins >= neededCoins && trashData.coins < 2) {

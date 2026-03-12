@@ -1,13 +1,15 @@
 .pageContainer {
   min-height: 100vh;
-  background-color: #f8f9fa;
-  padding-bottom: 80px;
+  background-color: var(--color-bg);
+  padding-bottom: calc(100px + var(--safe-area-bottom, 0px));
+  font-family: var(--font-family);
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .titleSection {
   padding: 16px;
-  background-color: white;
-  border-bottom: 1px solid #eee;
+  background-color: transparent;
+  border-bottom: 1px solid #333;
 }
 
 .titleRow {
@@ -21,14 +23,15 @@
   align-items: center;
   gap: 12px;
   margin-top: 12px;
-  background-color: #f5f5f5;
+  background-color: #3a3a3a;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .sortLabel {
+  font-family: var(--font-eng-fun);
   font-size: 14px;
-  color: #555;
+  color: var(--color-text);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -39,11 +42,12 @@
 }
 
 .sortButton {
+  font-family: var(--font-eng-fun);
   padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background-color: white;
-  color: #333;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #2a2a2a;
+  color: var(--color-text);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -52,9 +56,9 @@
 }
 
 .sortButtonActive {
-  background-color: #f15835;
-  color: white;
-  border-color: #e54d2e;
+  background-color: var(--orange-button);
+  color: var(--orange-button-text);
+  border-color: var(--orange-button);
 }
 
 .sortOrderToggle {
@@ -62,10 +66,10 @@
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #333;
-  background-color: white;
-  color: #333;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background-color: #2a2a2a;
+  color: var(--color-text);
   font-size: 13px;
   outline: none;
   cursor: pointer;
@@ -73,12 +77,14 @@
 }
 
 .sortOrderToggle:focus {
-  border-color: #f15835;
-  box-shadow: 0 0 0 1px rgba(241, 88, 53, 0.2);
+  border-color: var(--orange-button);
+  box-shadow: 0 0 0 1px rgba(255, 122, 48, 0.2);
 }
 
 .subtitle {
-  color: #666;
+  font-family: var(--font-eng-fun);
+  color: var(--color-text);
+  opacity: 0.6;
   font-size: 14px;
   margin: 0;
 }
@@ -95,15 +101,18 @@
 }
 
 .sliderLabel {
+  font-family: var(--font-eng-fun);
   font-size: 13px;
-  color: #555;
+  color: var(--color-text);
+  opacity: 0.8;
   font-weight: 500;
 }
 
 .sliderValue {
-  font-size: 14px;
+  font-family: var(--font-eng-fun);
+  font-size: 15px;
   font-weight: bold;
-  color: #FF9800;
+  color: var(--orange-button);
   min-width: 48px;
   text-align: right;
 }
@@ -145,7 +154,7 @@
   justify-content: space-between;
   margin-top: 4px;
   font-size: 11px;
-  color: #aaa;
+  color: #888;
 }
 
 .postsList {
@@ -157,22 +166,30 @@
 
 
 .postCard {
-  background: white;
-  border-radius: 12px;
+  background: #3a3a3a;
+  border: 1px solid #444;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.postCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--orange-button);
 }
 
 .imageContainer {
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
+  background-color: #2a2a2a;
+  border-right: 1px solid #444;
 }
 
 .postImage {
@@ -184,7 +201,7 @@
 .iconWrapper {
   width: 40px;
   height: 40px;
-  color: #FF9800;
+  color: var(--orange-button);
 }
 
 .cardContent {
@@ -205,17 +222,18 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background-color: #FFF3E0;
-  color: #E65100;
-  padding: 4px 8px;
+  background-color: rgba(255, 122, 48, 0.15);
+  color: var(--orange-button);
+  padding: 4px 10px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
 }
 
 .bagInfo {
-  font-size: 12px;
-  color: #666;
+  font-family: var(--font-eng-fun);
+  font-size: 13px;
+  color: #aaa;
   margin-top: 4px;
 }
 
@@ -227,8 +245,9 @@
 }
 
 .postDescription {
+  font-family: var(--font-family);
   font-size: 14px;
-  color: #333;
+  color: var(--color-text);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -237,50 +256,57 @@
 }
 
 .distanceText {
-  font-size: 12px;
-  color: #FF9800;
+  font-family: var(--font-eng-fun);
+  font-size: 13px;
+  color: var(--orange-button);
   font-weight: bold;
   white-space: nowrap;
   margin-left: 8px;
 }
 
 .emptyState {
+  font-family: var(--font-eng-fun);
   text-align: center;
   padding: 40px;
-  color: #999;
+  color: var(--color-text);
+  opacity: 0.6;
 }
 
 .loadingState {
+  font-family: var(--font-eng-fun);
   text-align: center;
   padding: 20px;
-  color: #666;
+  color: var(--color-text);
+  opacity: 0.6;
 }
 
 .nearbyBadge {
-  background-color: #E8F5E9;
-  color: #2E7D32;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #A5D6A7;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
   margin-top: 4px;
   display: inline-block;
+  font-family: var(--font-family);
 }
 
 .locationRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
 .districtBadge {
-  background-color: #E3F2FD;
-  color: #1976D2;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background-color: rgba(33, 150, 243, 0.15);
+  color: #90CAF9;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  font-family: var(--font-family);
 }

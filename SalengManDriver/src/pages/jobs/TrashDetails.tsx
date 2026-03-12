@@ -8,7 +8,6 @@ import MapSelector from "../../components/MapSelector";
 import { watchPosition, clearWatch } from '@tauri-apps/plugin-geolocation';
 import { useUser } from "../../context/UserContext";
 import profileLogo from "../../assets/icon/profile.svg";
-import ConfirmPopup from "../../components/ConfirmPopup";
 import ImageViewer from "../../components/ImageViewer";
 
 interface TrashPost {
@@ -101,10 +100,12 @@ function TrashDetails() {
         try {
             await api.createContacts(token, [{ id: Number(post?.id), type: post?.post_type || 'anytime' }]);
             setShowSuccessModal(true);
+            setTimeout(() => {
+                navigate(-1);
+            }, 1500);
         } catch (error) {
             console.error("Failed to pick up trash:", error);
             alert("Failed to pick up trash. Please try again.");
-        } finally {
             setIsPickingUp(false);
         }
     };
@@ -184,7 +185,7 @@ function TrashDetails() {
                     <div className={styles.locationRow}>
                         <div className={styles.locationBox}>
                             {post.address_snapshot?.district && (
-                                <div style={{ fontWeight: 'bold', color: '#FF9800', marginBottom: '4px' }}>
+                                <div style={{ fontWeight: 'bold', color: 'var(--orange-button)', marginBottom: '4px' }}>
                                     📍 {post.address_snapshot.district}
                                 </div>
                             )}
@@ -216,19 +217,20 @@ function TrashDetails() {
                 <button
                     className={styles.pickupButton}
                     onClick={handlePickUp}
-                    disabled={isPickingUp}
+                    disabled={isPickingUp || showSuccessModal}
                 >
                     {isPickingUp ? 'Processing...' : 'Pick Up This Trash'}
                 </button>
             </div>
 
-            <ConfirmPopup
-                isOpen={showSuccessModal}
-                title="Success!"
-                message="You have accepted this trash pickup request. You can now chat with the customer in your jobs list."
-                onConfirm={() => navigate('/jobs/contacts')}
-                confirmText="Go to Jobs"
-            />
+            {showSuccessModal && (
+                <div className={styles.successOverlay}>
+                    <div className={styles.successCard}>
+                        <div className={styles.successIcon}>✓</div>
+                        <h2>Success!</h2>
+                    </div>
+                </div>
+            )}
 
             {viewerImages.length > 0 && (
                 <ImageViewer

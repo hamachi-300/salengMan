@@ -582,6 +582,21 @@ export const api = {
     return res.json();
   },
 
+  // Driver arrives at seller for a trash job
+  confirmArrival: async (token: string, contactId: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/contacts/${contactId}/arrive`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to confirm arrival');
+    }
+    return res.json();
+  },
+
   // Create contacts (driver initiates contact with sellers - supports both old items and trash)
   createContacts: async (token: string, postItems: (number | { id: number, type: string })[]): Promise<any[]> => {
     const res = await fetch(`${API_URL}/contacts`, {

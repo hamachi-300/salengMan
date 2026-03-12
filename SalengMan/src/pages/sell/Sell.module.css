@@ -82,6 +82,74 @@
     margin-bottom: 24px;
 }
 
+/* Stepper UI */
+.stepper-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #2a2a2a;
+    padding: 24px 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stepper-label {
+    font-family: var(--font-eng-fun);
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--color-text);
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.stepper-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+.stepper-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: none;
+    background-color: var(--orange-button);
+    color: var(--orange-button-text, #fff);
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(255, 122, 48, 0.4);
+}
+
+.stepper-btn:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+    box-shadow: 0 1px 4px rgba(255, 122, 48, 0.4);
+}
+
+.stepper-btn:disabled {
+    background-color: #555;
+    color: #888;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.stepper-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--color-text);
+    min-width: 48px;
+    text-align: center;
+}
+
 .label-row {
     display: flex;
     justify-content: space-between;
@@ -511,6 +579,11 @@
 
 /* Light Mode */
 @media (prefers-color-scheme: light) {
+    .stepper-section {
+        background-color: #f5f0ec;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
     .post-header {
         border-bottom: 1px solid #ddd;
     }
@@ -742,8 +815,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .loader {

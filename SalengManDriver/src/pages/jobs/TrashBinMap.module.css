@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f8f9fa;
+  background: var(--color-bg);
   overflow: hidden;
 }
 
@@ -11,7 +11,9 @@
   justify-content: center;
   align-items: center;
   flex: 1;
-  color: #666;
+  color: var(--color-text);
+  opacity: 0.6;
+  font-family: var(--font-eng-fun);
   font-size: 16px;
 }
 
@@ -21,12 +23,12 @@
 }
 
 .infoPanel {
-  background: #fff;
-  padding: 12px 16px;
-  border-top: 1px solid #eee;
+  background: var(--color-bg);
+  padding: 16px;
+  border-top: 1px solid #333;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .nearestInfo {
@@ -37,25 +39,30 @@
 }
 
 .nearestLabel {
-  font-size: 13px;
-  color: #888;
+  font-family: var(--font-eng-fun);
+  font-size: 14px;
+  color: var(--color-text);
+  opacity: 0.8;
 }
 
 .nearestName {
-  font-size: 14px;
+  font-family: var(--font-eng-fun);
+  font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--orange-button);
   flex: 1;
 }
 
 .nearestDist {
-  font-size: 14px;
+  font-family: var(--font-eng-fun);
+  font-size: 15px;
   font-weight: 700;
   color: #4CAF50;
 }
 
 .withinRange {
-  font-size: 13px;
+  font-family: var(--font-eng-fun);
+  font-size: 14px;
   color: #4CAF50;
   font-weight: 600;
 }
@@ -66,46 +73,51 @@
 }
 
 .errorBanner {
-  background: #ffebee;
-  color: #c62828;
-  padding: 10px 16px;
-  font-size: 13px;
-  border-top: 1px solid #ffcdd2;
+  background: rgba(198, 40, 40, 0.1);
+  color: #ff5252;
+  padding: 12px 16px;
+  font-size: 14px;
+  border-top: 1px solid rgba(255, 82, 82, 0.2);
+  font-family: var(--font-eng-fun);
 }
 
 .bottomBar {
-  padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #eee;
+  padding: 16px;
+  background: var(--color-bg);
+  border-top: 1px solid #333;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .confirmBtn {
   width: 100%;
-  padding: 14px;
+  padding: 16px;
   background: #4CAF50;
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 25px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+  font-family: var(--font-eng-fun);
 }
 
 .confirmBtn:disabled {
-  background: #a5d6a7;
+  background: #333;
+  color: #666;
   cursor: not-allowed;
 }
 
 .confirmBtn:not(:disabled):active {
   background: #388E3C;
+  transform: scale(0.98);
 }
 
 /* Success overlay */
 .successOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -113,50 +125,61 @@
 }
 
 .successCard {
-  background: white;
-  border-radius: 16px;
+  background: #2a2a2a;
+  border-radius: 20px;
   padding: 32px 24px;
   text-align: center;
-  max-width: 300px;
+  max-width: 320px;
   width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .successIcon {
   font-size: 48px;
   color: #4CAF50;
-  margin-bottom: 12px;
-  width: 72px;
-  height: 72px;
-  background: #e8f5e9;
+  margin-bottom: 16px;
+  width: 80px;
+  height: 80px;
+  background: rgba(76, 175, 80, 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
+  margin: 0 auto 20px;
 }
 
 .successCard h2 {
-  font-size: 20px;
-  color: #333;
-  margin: 0 0 8px;
+  font-family: var(--font-eng-fun);
+  font-size: 22px;
+  color: var(--color-text);
+  margin: 0 0 12px;
 }
 
 .successCard p {
-  color: #666;
-  font-size: 14px;
-  margin: 0 0 20px;
+  font-family: var(--font-eng-fun);
+  color: var(--color-text);
+  opacity: 0.8;
+  font-size: 15px;
+  margin: 0 0 24px;
 }
 
 .successBtn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   background: #4CAF50;
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 16px;
+  font-family: var(--font-eng-fun);
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.successBtn:active {
+  background: #388E3C;
+  transform: scale(0.98);
 }
 
 .binPopup {
@@ -165,28 +188,30 @@
 
 .binImages {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
-  margin-top: 10px;
-  padding-bottom: 4px;
+  margin-top: 12px;
+  padding-bottom: 8px;
 }
 
 .binImage {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #eee;
+  border-radius: 8px;
+  border: 1px solid #444;
 }
 
 .binNote {
   display: block;
-  font-size: 12px;
-  color: #666;
-  background: #f5f5f5;
-  padding: 6px 8px;
-  border-radius: 6px;
-  margin-top: 8px;
-  line-height: 1.4;
+  font-family: var(--font-family);
+  font-size: 13px;
+  color: var(--color-text);
+  background: #1a1a1a;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-top: 12px;
+  line-height: 1.5;
+  border: 1px solid #333;
 }
 

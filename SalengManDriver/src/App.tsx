@@ -23,7 +23,8 @@ import Settings from "./pages/settings/Settings";
 import HelpSupport from "./pages/settings/HelpSupport";
 import UserReport from "./pages/account/UserReport";
 import ContactList from "./pages/jobs/contact_list/ContactList";
-import ExploreMap from "./pages/jobs/ExploreMap";
+import ExploreMap from "./pages/jobs/ExploreMapOldItem";
+import ExploreMapTrash from "./pages/jobs/ExploreMapTrash";
 import DisposeTrash from "./pages/jobs/DisposeTrash";
 import TrashDetails from "./pages/jobs/TrashDetails";
 import TrashBinMap from "./pages/jobs/TrashBinMap";
@@ -72,6 +73,7 @@ function AppRoutes() {
         <Route path="/user-report" element={<UserReport />} />
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
+        <Route path="/jobs/explore-trash/:id" element={<ExploreMapTrash />} />
         <Route path="/dispose-trash" element={<DisposeTrash />} />
         <Route path="/trash-details/:id" element={<TrashDetails />} />
         <Route path="/trash-bin-map/:contactId" element={<TrashBinMap />} />

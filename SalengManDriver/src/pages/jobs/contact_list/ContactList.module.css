@@ -26,6 +26,64 @@
     letter-spacing: 0.5px;
 }
 
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.filter-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--orange-button);
+    background-color: transparent;
+    color: var(--orange-button);
+    font-family: var(--font-eng-fun);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-tab.active {
+    background-color: var(--orange-button);
+    color: #fff;
+}
+
+/* Sub-filter Tabs for Trash */
+.sub-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 0 16px;
+    /* slightly indent if desired */
+}
+
+.sub-filter-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 12px;
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    /* very subtle back */
+    color: #8E8E93;
+    font-family: var(--font-eng-fun);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.sub-filter-tab.subActive {
+    background-color: rgba(255, 153, 0, 0.1);
+    color: var(--orange-button);
+    border: 1px solid var(--orange-button);
+}
+
 /* List Style from History */
 .posts-list {
     display: flex;
@@ -174,6 +232,26 @@
     font-size: 11px;
     font-weight: 600;
     color: #8E8E93;
+}
+
+.type-tag {
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-family: var(--font-eng-fun);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+}
+
+.type-trash {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #F44336;
+}
+
+.type-old-item {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
 }
 
 /* Empty State */

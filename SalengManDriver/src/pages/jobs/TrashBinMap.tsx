@@ -117,10 +117,10 @@ export default function TrashBinMap() {
     if (!token) { navigate('/signin'); return; }
 
     api.getTrashBins(token)
-      .then(data => setBins(data.map((b: any) => ({ 
-        ...b, 
-        lat: parseFloat(b.lat), 
-        lng: parseFloat(b.lng) 
+      .then(data => setBins(data.map((b: any) => ({
+        ...b,
+        lat: parseFloat(b.lat),
+        lng: parseFloat(b.lng)
       }))))
       .catch(() => setError('Failed to load trash bins'))
       .finally(() => setLoading(false));
@@ -196,7 +196,7 @@ export default function TrashBinMap() {
 
   return (
     <div className={styles.pageContainer}>
-      <PageHeader title="Find Trash Bin" backTo="/history" />
+      <PageHeader title="Find Trash Bin" backTo="/jobs/contacts" />
 
       {loading ? (
         <div className={styles.loadingState}>Loading trash bins...</div>
@@ -210,7 +210,7 @@ export default function TrashBinMap() {
               attributionControl={false}
               style={{ height: '100%', width: '100%' }}
             >
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
               <MapFitBounds points={mapPoints} />
 
@@ -269,8 +269,8 @@ export default function TrashBinMap() {
                       : `${(nearestBin.distance / 1000).toFixed(1)}km`}
                 </span>
               </div>
-              {nearestBin.distance <= 100 && (
-                <div className={styles.withinRange}>✓ Within 100m — ready to confirm</div>
+              {nearestBin.distance <= 50 && (
+                <div className={styles.withinRange}>✓ Within 50m — ready to confirm</div>
               )}
             </div>
           )}

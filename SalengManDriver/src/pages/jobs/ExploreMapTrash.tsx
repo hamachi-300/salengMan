@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import styles from "./ExploreMap.module.css";
+import styles from "./ExploreMapTrash.module.css";
 import { api } from "../../config/api";
 import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
@@ -95,14 +95,24 @@ function ExploreMap() {
         }
     };
 
-    const handleViewContact = () => {
-        if (id) {
-            navigate(`/contact/${id}`, {
-                state: {
-                    fromExplore: true,
-                    filter: location.state?.filter
-                }
+    const handleConfirmArrival = async () => {
+        if (!id) return;
+        const token = getToken();
+        if (!token) return;
+
+        try {
+            // New endpoint in api.ts added previously
+            await api.confirmArrival(token, id);
+            
+            // Navigate back to contact list, maintaining trash posts selection.
+            // Because the default sub-filter is 'unarrive', giving them a clean path back.
+            navigate('/jobs/contacts', {
+                state: { filter: 'trash_posts' }
             });
+        } catch (error) {
+            console.error("Failed to confirm arrival:", error);
+            
+            alert("Failed to confirm arrival. Please try again.");
         }
     };
 
@@ -147,8 +157,8 @@ function ExploreMap() {
             </div>
 
             <PageFooter
-                title="Contact Detail"
-                onClick={handleViewContact}
+                title="Confirm Arrival"
+                onClick={handleConfirmArrival}
                 showArrow={true}
             />
         </div>

@@ -1,6 +1,6 @@
 .pageContainer {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: var(--color-bg);
     padding-bottom: 100px;
 }
 
@@ -10,7 +10,8 @@
     justify-content: center;
     align-items: center;
     height: 200px;
-    color: #666;
+    color: var(--color-text);
+    opacity: 0.6;
 }
 
 .content {
@@ -18,10 +19,11 @@
 }
 
 .imageSection {
-    background-color: #f5f5f5;
+    background-color: #3a3a3a;
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .imagePreview {
@@ -30,7 +32,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ddd;
+    background-color: #2a2a2a;
 }
 
 .itemImage {
@@ -40,7 +42,7 @@
 }
 
 .imagePlaceholder {
-    color: #999;
+    color: #888;
 }
 
 .thumbnailStrip {
@@ -48,7 +50,7 @@
     gap: 8px;
     padding: 8px;
     overflow-x: auto;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #444;
 }
 
 .thumbnail {
@@ -61,7 +63,7 @@
 }
 
 .thumbnail.active {
-    border-color: #FF9800;
+    border-color: var(--orange-button);
 }
 
 .thumbnail img {
@@ -78,45 +80,46 @@
 
 .infoCard {
     flex: 1;
-    background: white;
+    background: #3a3a3a;
     padding: 12px;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .infoLabel {
-    font-size: 12px;
-    color: #666;
+    font-size: 13px;
+    color: var(--color-text);
+    opacity: 0.8;
 }
 
 .infoValue {
     font-size: 18px;
     font-weight: bold;
-    color: #FF9800;
+    color: var(--orange-button);
 }
 
 .section {
     margin-bottom: 16px;
-    background: white;
+    background: #3a3a3a;
     padding: 12px;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .sectionLabel {
     font-size: 14px;
     font-weight: bold;
-    color: #333;
+    color: var(--color-text);
     margin-bottom: 8px;
     display: block;
 }
 
 .modeBadge {
-    background-color: #FFF3E0;
-    color: #E65100;
+    background-color: rgba(255, 122, 48, 0.15);
+    color: var(--orange-button);
     display: inline-block;
     padding: 4px 12px;
     border-radius: 8px;
@@ -131,17 +134,17 @@
 
 .locationBox {
     flex: 1;
-    background-color: #f9f9f9;
+    background-color: #2a2a2a;
     padding: 10px;
     border-radius: 8px;
     font-size: 14px;
-    color: #444;
+    color: var(--color-text);
 }
 
 .mapButton {
     width: 44px;
     height: 44px;
-    background-color: #FF9800;
+    background-color: var(--orange-button);
     border-radius: 8px;
     border: none;
     color: white;
@@ -152,11 +155,11 @@
 }
 
 .remarksBox {
-    background-color: #f9f9f9;
+    background-color: #2a2a2a;
     padding: 12px;
     border-radius: 8px;
     font-size: 14px;
-    color: #333;
+    color: var(--color-text);
     min-height: 60px;
 }
 
@@ -171,16 +174,19 @@
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
+    background-color: #2a2a2a;
 }
 
 .sellerName {
     font-weight: bold;
     font-size: 16px;
+    color: var(--color-text);
     display: block;
 }
 
 .sellerPhone {
-    color: #666;
+    color: var(--color-text);
+    opacity: 0.8;
     font-size: 14px;
 }
 
@@ -189,31 +195,31 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: #2a2a2a;
     padding: 16px;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .pickupButton {
     width: 100%;
-    background-color: #FF9800;
-    color: white;
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
     border: none;
     padding: 14px;
     border-radius: 25px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.1s ease, background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .pickupButton:active {
     transform: scale(0.98);
-    background-color: #F57C00;
 }
 
 .pickupButton:disabled {
-    background-color: #ccc;
+    background-color: #555;
+    color: #888;
     cursor: not-allowed;
 }
 
@@ -223,7 +229,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: white;
+    background: var(--color-bg);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -231,4 +237,52 @@
 
 .mapContent {
     flex: 1;
+}
+
+/* Success Overlay */
+.successOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.successCard {
+    background: #2a2a2a;
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.successIcon {
+    font-size: 48px;
+    color: #4CAF50;
+    margin-bottom: 16px;
+    width: 80px;
+    height: 80px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.successCard h2 {
+    font-family: var(--font-eng-fun);
+    font-size: 22px;
+    color: var(--color-text);
+    margin: 0;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }

@@ -2583,6 +2583,52 @@ app.get('/contacts/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Driver arrives at seller for a trash job
+app.post('/contacts/:id/arrive', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const contactId = req.params.id;
+
+    await client.query('BEGIN');
+
+    // Verify contact exists and user is the driver (buyer)
+    const currentContact = await client.query(
+      `SELECT c.id, c.buyer_id, c.post_id, c.type, tp.waiting_status
+       FROM contacts c
+       JOIN trash_posts tp ON c.post_id = tp.id AND (c.type = 'trash_posts' OR c.type = 'anytime')
+       WHERE c.id = $1`,
+      [contactId]
+    );
+
+    if (currentContact.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Trash contact not found' });
+    }
+
+    const contact = currentContact.rows[0];
+
+    if (contact.buyer_id !== req.user.user_id) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'Only the assigned driver can mark arrival' });
+    }
+
+    // Update the waiting status to arrived
+    await client.query(
+      `UPDATE trash_posts SET waiting_status = 'arrived', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [contact.post_id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error marking arrival:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Update contact status
 app.patch('/contacts/:id/status', authMiddleware, async (req, res) => {
   const client = await pool.connect();
