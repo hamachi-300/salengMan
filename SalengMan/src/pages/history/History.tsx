@@ -31,15 +31,28 @@ function History() {
   }, []);
 
   const fetchPosts = async () => {
-    const token = getToken();
-    if (!token) {
-      navigate("/signin");
-      return;
-    }
-
     try {
-      const data = await api.getPosts(token);
-      setPosts(data);
+      const token = getToken();
+      if (!token) {
+        navigate("/signin");
+        return;
+      }
+
+      const [oldItemPosts, trashPosts] = await Promise.all([
+        api.getPosts(token),
+        api.getTrashPosts(token)
+      ]);
+
+      // Combine and add post_type if missing
+      const combined = [
+        ...oldItemPosts.map((p: any) => ({ ...p, post_type: p.post_type || 'old_item' })),
+        ...trashPosts.map((p: any) => ({ ...p, post_type: p.post_type || 'trash_disposal' }))
+      ];
+
+      // Sort by date descending
+      combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setPosts(combined);
     } catch (error) {
       console.error("Failed to fetch posts:", error);
     } finally {
@@ -94,7 +107,7 @@ function History() {
     return postType === 'trash_disposal' ? 'ทิ้งขยะ' : 'ขายของเก่า';
   };
 
-  const tabs = ["All", "Pending", "Waiting", "Completed", "Cancelled"];
+  const tabs = ["All", "Waiting", "Pending", "Completed", "Cancelled"];
 
   const filteredPosts = posts.filter((post) => {
     if (activeTab === "All") return true;

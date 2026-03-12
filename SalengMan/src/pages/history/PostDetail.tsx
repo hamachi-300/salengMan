@@ -72,8 +72,15 @@ function PostDetail() {
         if (!id) return;
 
         try {
-            const data = await api.getPostById(token, id);
-            setPost(data);
+            // First try to get as old item post
+            try {
+                const data = await api.getPostById(token, id);
+                setPost({ ...data, post_type: data.post_type || 'old_item' });
+            } catch (err) {
+                // If failed, try as trash post
+                const data = await api.getTrashPostById(token, id);
+                setPost({ ...data, post_type: data.post_type || 'trash_disposal' });
+            }
         } catch (err: any) {
             console.error("Failed to load post:", err);
             setError("Failed to load post details");
@@ -99,7 +106,11 @@ function PostDetail() {
         if (!token || !post) return;
 
         try {
-            await api.deletePost(token, post.id);
+            if (post.post_type === 'trash_disposal') {
+                await api.deleteTrashPost(token, post.id);
+            } else {
+                await api.deletePost(token, post.id);
+            }
             navigate("/history");
         } catch (err: any) {
             console.error("Failed to delete post:", err);

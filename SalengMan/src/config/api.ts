@@ -372,6 +372,103 @@ export const api = {
     return res.json();
   },
 
+
+  // Create Trash Post
+  createTrashPost: async (token: string, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to create trash post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
+
+  // Get Trash Posts
+  getTrashPosts: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-posts`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch trash posts');
+    }
+
+    return res.json();
+  },
+
+  getTrashPostById: async (token: string, id: string): Promise<any> => {
+    try {
+      const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch trash post');
+      }
+
+      return res.json();
+    } catch (error) {
+      console.error("Error fetching trash post:", error);
+      throw error;
+    }
+  },
+
+  deleteTrashPost: async (token: string, id: number): Promise<void> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to delete trash post');
+    }
+  },
+
+  updateTrashPost: async (token: string, id: number, data: any): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Failed to update trash post';
+      try {
+        const error = await res.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        errorMessage = `Server Error: ${res.status} ${res.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  },
+
   // Get Contacts
   getContacts: async (token: string): Promise<Contact[]> => {
     const res = await fetch(`${API_URL}/contacts`, {
@@ -765,5 +862,18 @@ export const api = {
       throw new Error('Failed to fetch user ESG stats');
     }
     return res.json();
-  }
+  },
+
+  // Get coin balance
+  getCoinBalance: async (token: string): Promise<{ balance: number }> => {
+    const res = await fetch(`${API_URL}/api/coins/balance`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch coin balance');
+    }
+
+    return res.json();
+  },
 };

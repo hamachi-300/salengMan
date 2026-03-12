@@ -256,6 +256,19 @@ export const api = {
     return res.json();
   },
 
+  // Get all available trash posts (for drivers)
+  getAvailableTrashPosts: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-posts/available/all`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch available trash posts');
+    }
+
+    return res.json();
+  },
+
   // Get public user profile
   getPublicProfile: async (token: string, userId: string): Promise<UserResponse> => {
     const res = await fetch(`${API_URL}/users/${userId}/public`, {

@@ -10,6 +10,8 @@ import SelectAddress from "./pages/sell/SelectAddress";
 import SelectTime from "./pages/sell/SelectTime";
 import ConfirmPost from "./pages/sell/ConfirmPost";
 import PostTrash from "./pages/trash/PostTrash";
+import SelectAddressTrash from "./pages/trash/SelectAddressTrash";
+
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
 import TrackDriver from "./pages/history/TrackDriver";
@@ -28,6 +30,8 @@ import UserReport from "./pages/account/UserReport";
 import HistoryCoin from "./pages/trash/coin/HistoryCoin";
 import { UserProvider, useUser } from "./context/UserContext";
 import { SellProvider } from "./context/SellContext";
+import { TrashProvider } from "./context/TrashContext";
+
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 import Coin from "./pages/trash/coin/Coin";
 import ConfirmBuyCoin from "./pages/trash/coin/ConfirmBuyCoin";
@@ -78,6 +82,8 @@ function AppRoutes() {
         <Route path="/sell/select-time" element={<SelectTime />} />
         <Route path="/sell/confirm" element={<ConfirmPost />} />
         <Route path="/trash" element={<PostTrash />} />
+        <Route path="/trash/select-address" element={<SelectAddressTrash />} />
+
         <Route path="/esg/trash" element={<EsgTrash />} />
         <Route path="/esg/subscription" element={<Subscription />} />
         <Route path="/esg/select-address" element={<SelectEsgAddress />} />
@@ -132,7 +138,9 @@ function App() {
     <BrowserRouter>
       <UserProvider>
         <SellProvider>
-          <AppRoutes />
+          <TrashProvider>
+            <AppRoutes />
+          </TrashProvider>
         </SellProvider>
       </UserProvider>
     </BrowserRouter>

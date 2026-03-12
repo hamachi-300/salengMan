@@ -39,6 +39,7 @@ import EsgTrashType from "./pages/esg/EsgTrashType";
 import EsgDriverTaskHistory from "./pages/esg/EsgDriverTaskHistory";
 import EsgDeposit from "./pages/esg/EsgDeposit";
 import EsgWeightStats from "./pages/esg/EsgWeightStats";
+import ExploreTrash from "./pages/jobs/ExploreTrash";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -82,6 +83,7 @@ function AppRoutes() {
         <Route path="/user-report" element={<UserReport />} />
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
+        <Route path="/jobs/explore-trash" element={<ExploreTrash />} />
 
         {/* ESG Driver Routes */}
         <Route path="/esg/register" element={<EsgRegister />} />

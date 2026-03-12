@@ -763,3 +763,97 @@
     box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
     filter: brightness(1.1);
 }
+
+.counter-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-top: 8px;
+}
+
+.counter-label {
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.counter-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.counter-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--orange-button);
+    background-color: transparent;
+    color: var(--orange-button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.2s ease;
+}
+
+.counter-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #666;
+    color: #666;
+}
+
+.counter-button:hover:not(:disabled) {
+    background-color: var(--orange-button);
+    color: white;
+}
+
+.counter-value {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+}
+
+.coin-summary {
+    background-color: rgba(255, 122, 48, 0.1);
+    border: 1px dashed var(--orange-button);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.coin-icon {
+    font-size: 24px;
+}
+
+.coin-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.coin-info-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--orange-button);
+}
+
+.coin-info-desc {
+    font-size: 11px;
+    color: var(--color-text);
+    opacity: 0.7;
+}
+
+@media (prefers-color-scheme: light) {
+    .counter-container {
+        background-color: #f5f0ec;
+    }
+}

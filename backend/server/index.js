@@ -1388,6 +1388,103 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ============================================
+// TRASH POSTS ENDPOINTS
+// ============================================
+
+app.post('/trash-posts', authMiddleware, async (req, res) => {
+  try {
+    const { images, categories, remarks, address, pickupTime } = req.body;
+    const userId = req.user.user_id;
+
+    const uploadedImageUrls = [];
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        if (img.startsWith('data:')) {
+          const base64Image = img.split(';base64,').pop();
+          const buffer = Buffer.from(base64Image, 'base64');
+          const fileName = `trash_posts/${userId}_${Date.now()}_${i}.jpg`;
+          await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, { 'Content-Type': 'image/jpeg' });
+          uploadedImageUrls.push(`${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`);
+        } else {
+          uploadedImageUrls.push(img);
+        }
+      }
+    }
+
+    const result = await pool.query(
+      `INSERT INTO trash_posts (user_id, images, remarks, address_snapshot, contact_snapshot, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [userId, uploadedImageUrls, remarks, JSON.stringify(address), JSON.stringify(pickupTime), 'waiting']
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating trash post:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/trash-posts', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM trash_posts WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM trash_posts WHERE id = $1',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/trash-posts/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const check = await pool.query('SELECT * FROM trash_posts WHERE id = $1 AND user_id = $2', [id, req.user.user_id]);
+    if (check.rows.length === 0) return res.status(404).json({ error: 'Post not found or unauthorized' });
+    
+    const post = check.rows[0];
+    if (post.images) {
+      for (const imgUrl of post.images) {
+        const objectName = imgUrl.split(`${BUCKET_NAME}/`)[1];
+        if (objectName) await minioClient.removeObject(BUCKET_NAME, objectName);
+      }
+    }
+
+    await pool.query('DELETE FROM trash_posts WHERE id = $1', [id]);
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM trash_posts WHERE status = 'waiting' AND user_id != $1 ORDER BY created_at DESC",
+      [req.user.user_id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // (Obsolete endpoints removed during refactor)
 
 // Get nearby drivers (using PostGIS)

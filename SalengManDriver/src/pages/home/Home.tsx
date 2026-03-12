@@ -107,14 +107,14 @@ function Home() {
               <h3 className={styles.serviceTitle}>Buy Old Item</h3>
               <p className={styles.serviceSubtitle}>Buy Old Item</p>
             </div>
-            <div className={styles.serviceCard} onClick={() => navigate("/dispose-trash")}>
+            <div className={styles.serviceCard} onClick={() => navigate("/jobs/explore-trash")}>
               <div className={styles.serviceIconWrapper}>
                 <svg className={styles.serviceIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
                 </svg>
               </div>
-              <h3 className={styles.serviceTitle}>Dispose Trash</h3>
-              <p className={styles.serviceSubtitle}>Dispose Trash</p>
+              <h3 className={styles.serviceTitle}>Pick Up Trash</h3>
+              <p className={styles.serviceSubtitle}>รับเก็บขยะ</p>
             </div>
           </div>
           <div className={styles.wideServiceCard} onClick={() => navigate("/jobs/contacts", { state: { filter: "pending" } })}>
