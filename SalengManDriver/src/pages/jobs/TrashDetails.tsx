@@ -226,7 +226,12 @@ function TrashDetails() {
             {showSuccessModal && (
                 <div className={styles.successOverlay}>
                     <div className={styles.successCard}>
-                        <div className={styles.successIcon}>✓</div>
+                        <div className={styles.successIcon}>
+                          <svg viewBox="0 0 72 72" width="72" height="72">
+                            <circle cx="36" cy="36" r="36" fill="#4CAF50" />
+                            <path d="M20 38 L30 48 L52 24" stroke="white" strokeWidth="7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
                         <h2>Success!</h2>
                     </div>
                 </div>

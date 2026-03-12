@@ -51,10 +51,6 @@
 
 /* Success Icon */
 .iconWrapper {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: #22c55e;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -74,12 +70,6 @@
     to {
         transform: scale(1);
     }
-}
-
-.iconWrapper svg {
-    width: 36px;
-    height: 36px;
-    color: white;
 }
 
 .modal h3 {

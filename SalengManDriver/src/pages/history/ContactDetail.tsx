@@ -282,6 +282,21 @@ function ContactDetail() {
     const isTrashContact = contact?.categories?.includes('ทิ้งขยะ');
     const canConfirmArrival = isTrashContact && contact?.post_status === 'waiting' && contact?.waiting_status === 'accepted' && contact?.status !== 'recieved';
 
+    const handleConfirmArrival = async () => {
+        if (!contact) return;
+        const token = getToken();
+        if (!token) return;
+
+        try {
+            await api.confirmArrival(token, contact.id);
+            setAlertMessage("Arrival confirmed successfully!");
+            await fetchContactDetails();
+        } catch (error: any) {
+            console.error("Failed to confirm arrival:", error);
+            setAlertMessage(error.message || "Failed to confirm arrival. Please try again.");
+        }
+    };
+
 
     const renderChatIcon = () => (
         <div className={styles.chatRoomIcon} onClick={handleChat}>
