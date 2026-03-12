@@ -100,16 +100,14 @@ function History() {
     })}, ${timeStr}`;
   };
 
-  const getStatusClass = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return styles["status-pending"];
-      case "waiting":
-        return styles["status-waiting"];
-      case "recieved":
-        return styles["status-recieved"];
-      case "completed":
-        return styles["status-completed"];
+    const getStatusClass = (status: string) => {
+        switch (status.toLowerCase()) {
+            case "pending":
+                return styles["status-pending"];
+            case "waiting":
+                return styles["status-waiting"];
+            case "completed":
+                return styles["status-completed"];
       case "cancelled":
         return styles["status-cancelled"];
       default:
@@ -122,7 +120,7 @@ function History() {
   };
 
   const tabs = postTypeFilter === "trash_disposal"
-    ? ["All", "Waiting", "Recieved", "Completed", "Cancelled"]
+    ? ["All", "Waiting", "Completed", "Cancelled"]
     : ["All", "Pending", "Waiting", "Completed", "Cancelled"];
 
   const filteredPosts = posts.filter((post) => {
@@ -201,9 +199,7 @@ function History() {
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                     <span className={`${styles["status-badge"]} ${getStatusClass(post.status)}`}>
-                      {post.post_type === 'trash_disposal' && post.status.toLowerCase() === 'recieved'
-                        ? 'Driver recieved'
-                        : post.status}
+                      {post.status}
                     </span>
                     {post.post_type === 'trash_disposal' && (
                       <span style={{

@@ -22,6 +22,7 @@ function DriverProfile() {
     const [driver, setDriver] = useState<Driver | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const backPath = (location.state as any)?.backPath || "/history";
 
     useEffect(() => {
         fetchDriverProfile();
@@ -63,7 +64,7 @@ function DriverProfile() {
     if (error || !driver) {
         return (
             <div className={styles.pageContainer}>
-                <PageHeader title="Driver Profile" />
+                <PageHeader title="Driver Profile" backTo={backPath} />
                 <div className={styles.errorState}>{error || "Driver not found"}</div>
             </div>
         );
@@ -71,7 +72,7 @@ function DriverProfile() {
 
     return (
         <div className={styles.pageContainer}>
-            <PageHeader title="Driver Profile" />
+            <PageHeader title="Driver Profile" backTo={backPath} />
 
             <div className={styles.profileHeader}>
                 <div className={styles.avatarWrapper}>

@@ -2612,10 +2612,16 @@ app.post('/contacts/:id/arrive', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Only the assigned driver can mark arrival' });
     }
 
-    // Update the waiting status to arrived
+    // Update the waiting status to arrived, and set overall status to completed for the post
     await client.query(
-      `UPDATE trash_posts SET waiting_status = 'arrived', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      `UPDATE trash_posts SET waiting_status = 'arrived', status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
       [contact.post_id]
+    );
+
+    // Update the contact status to completed
+    await client.query(
+      `UPDATE contacts SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [contactId]
     );
 
     await client.query('COMMIT');
@@ -3383,7 +3389,7 @@ app.post('/contacts/:id/dispose', authMiddleware, async (req, res) => {
     const contact = contactResult.rows[0];
 
     if (contact.buyer_id !== req.user.user_id) return res.status(403).json({ error: 'Not your contact' });
-    if (contact.status !== 'recieved') return res.status(400).json({ error: 'Contact is not in recieved status' });
+    if (contact.status === 'cancelled') return res.status(400).json({ error: 'Contact is cancelled' });
 
     // Haversine distance helper
     const haversine = (lat1, lng1, lat2, lng2) => {
@@ -3426,7 +3432,7 @@ app.post('/contacts/:id/dispose', authMiddleware, async (req, res) => {
     );
 
     await pool.query(
-      "UPDATE trash_posts SET status='completed', updated_at=NOW() WHERE id=$1",
+      "UPDATE trash_posts SET status='completed', waiting_status='disposed', updated_at=NOW() WHERE id=$1",
       [contact.post_id]
     );
 

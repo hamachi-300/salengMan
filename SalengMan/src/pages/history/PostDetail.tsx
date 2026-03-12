@@ -465,7 +465,10 @@ function PostDetail() {
                         <div
                             className={styles['driverCard']}
                             onClick={() => navigate(`/driver-profile/${post.contacts![0].driver_id}`, {
-                                state: { driverValues: { phone: post.contacts![0].driver_phone } }
+                                state: { 
+                                    driverValues: { phone: post.contacts![0].driver_phone },
+                                    backPath: `/history/${post.id}`
+                                }
                             })}
                         >
                             <div className={styles['driverAvatar']}>

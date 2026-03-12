@@ -611,6 +611,18 @@ export const api = {
     return res.json();
   },
 
+  // Clear all notifications
+  clearNotifications: async (token: string): Promise<void> => {
+    const res = await fetch(`${API_URL}/notifications`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to clear notifications');
+    }
+  },
+
   // Get driver real-time location
   getDriverLocation: async (token: string, driverId: string): Promise<any> => {
     const res = await fetch(`${API_URL}/driver-location/${driverId}`, {
@@ -619,6 +631,44 @@ export const api = {
 
     if (!res.ok) {
       throw new Error('Failed to fetch driver location');
+    }
+
+    return res.json();
+  },
+
+  // Submit problem report
+  submitProblemReport: async (token: string, header: string, content: string, image?: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/reports/problem`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ header, content, image }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to submit problem report');
+    }
+
+    return res.json();
+  },
+
+  // Submit user report
+  submitUserReport: async (token: string, reported_user_id: string, header: string, content: string, image?: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/reports/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ reported_user_id, header, content, image }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to submit user report');
     }
 
     return res.json();

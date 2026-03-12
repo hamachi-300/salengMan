@@ -49,10 +49,20 @@ function ContactList() {
 
         try {
             const data = await api.getContacts(token);
-            // Filter for active contacts (not completed or cancelled)
-            let activeContacts = data.filter((c: any) =>
-                c.post_status.toLowerCase() !== 'completed' && c.post_status.toLowerCase() !== 'cancelled'
-            );
+            // Filter for active contacts
+            // Keep items that are NOT completed/cancelled OR are trash posts resting in "arrived" status
+            let activeContacts = data.filter((c: any) => {
+                const isCompleted = c.post_status.toLowerCase() === 'completed';
+                const isCancelled = c.post_status.toLowerCase() === 'cancelled';
+                
+                if (!isCompleted && !isCancelled) return true;
+                
+                // If it's a completed trash post, keep it if it's waiting to be disposed (arrived status)
+                const isTrash = c.type === 'trash_posts' || c.type === 'anytime';
+                if (isCompleted && isTrash && c.waiting_status === 'arrived') return true;
+                
+                return false;
+            });
 
             // Filter if "pending" is requested via navigation state
             const state = location.state as { filter?: string } | null;
