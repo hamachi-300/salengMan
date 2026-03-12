@@ -102,7 +102,7 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
 export default function TrashBinMap() {
   const { contactId } = useParams<{ contactId: string }>();
   const navigate = useNavigate();
-  const { initialLocation } = useUser();
+  const { initialLocation, refreshUser } = useUser();
 
   const [bins, setBins] = useState<TrashBin[]>([]);
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(initialLocation);
@@ -110,6 +110,7 @@ export default function TrashBinMap() {
   const [disposing, setDisposing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [coinsAwarded, setCoinsAwarded] = useState(0);
 
   // Fetch bins on mount
   useEffect(() => {
@@ -179,7 +180,9 @@ export default function TrashBinMap() {
     setDisposing(true);
     setError(null);
     try {
-      await api.disposeContact(token, contactId, driverLocation);
+      const result = await api.disposeContact(token, contactId, driverLocation);
+      setCoinsAwarded(result.coins_awarded || 0);
+      await refreshUser(); // Update coins in context
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Failed to confirm disposal');
@@ -269,8 +272,8 @@ export default function TrashBinMap() {
                       : `${(nearestBin.distance / 1000).toFixed(1)}km`}
                 </span>
               </div>
-              {nearestBin.distance <= 100 && (
-                <div className={styles.withinRange}>✓ Within 100m — ready to confirm</div>
+              {nearestBin.distance <= 50 && (
+                <div className={styles.withinRange}>✓ Within 50m — ready to confirm</div>
               )}
             </div>
           )}
@@ -296,6 +299,11 @@ export default function TrashBinMap() {
             <div className={styles.successIcon}>✓</div>
             <h2>Disposal Confirmed!</h2>
             <p>Job marked as completed.</p>
+            {coinsAwarded > 0 && (
+              <p style={{ fontSize: '18px', fontWeight: 700, color: '#f5a623' }}>
+                🪙 +{coinsAwarded} coins earned!
+              </p>
+            )}
             <button className={styles.successBtn} onClick={() => navigate('/history')}>
               Back to History
             </button>

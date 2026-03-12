@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Trash2 as TrashIcon, Plus, Edit2, MapPin, Image as ImageIcon, X, Upload, Loader2, Search, Trash } from 'lucide-react';
+import { Trash2 as TrashIcon, Plus, Edit2, MapPin, Image as ImageIcon, X, Upload, Loader2, Search } from 'lucide-react';
 import styles from './TrashBinAddresses.module.css';
 import { API_URL } from '../config';
 import MapSelector from '../components/MapSelector';
@@ -9,7 +9,7 @@ interface TrashBinAddress {
     label: string;
     address: string;
     lat?: number;
-    lng?: number;
+    lng?: number;p
     note?: string;
     province?: string;
     district?: string;
@@ -313,7 +313,7 @@ const TrashBinAddresses = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        
+
                                         <td data-label="Details">
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem' }}>
                                                 {addr.lat && <span>Lat: {Number(addr.lat).toFixed(6)}</span>}
@@ -435,7 +435,7 @@ const TrashBinAddresses = () => {
                                         required
                                     />
                                 </div>
-                                
+
                                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                                     <label>Note / Special Instructions</label>
                                     <textarea

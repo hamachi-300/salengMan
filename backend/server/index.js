@@ -3373,18 +3373,43 @@ app.post('/contacts/:id/dispose', authMiddleware, async (req, res) => {
       });
     }
 
-    // Mark contact and trash post as completed
-    const updatedContact = await pool.query(
-      "UPDATE contacts SET status='completed', updated_at=NOW() WHERE id=$1 RETURNING *",
-      [req.params.id]
-    );
+    // Mark contact and trash post as completed and AWARD COINS to driver
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    await pool.query(
-      "UPDATE trash_posts SET status='completed', updated_at=NOW() WHERE id=$1",
-      [contact.post_id]
-    );
+      // 1. Get coins from the post
+      const postResult = await client.query('SELECT coins_selected FROM trash_posts WHERE id = $1', [contact.post_id]);
+      const coinsToAward = postResult.rows[0]?.coins_selected || 0;
 
-    res.json(updatedContact.rows[0]);
+      // 2. Award coins to driver
+      if (coinsToAward > 0) {
+        await client.query(
+          'UPDATE users SET coin = COALESCE(coin, 0) + $1 WHERE id = $2',
+          [coinsToAward, contact.buyer_id]
+        );
+        console.log(`Awarded ${coinsToAward} coins to driver ${contact.buyer_id} for disposing contact ${req.params.id}`);
+      }
+
+      // 3. Mark contact and trash post as completed
+      const updatedContactResult = await client.query(
+        "UPDATE contacts SET status='completed', updated_at=NOW() WHERE id=$1 RETURNING *",
+        [req.params.id]
+      );
+
+      await client.query(
+        "UPDATE trash_posts SET status='completed', updated_at=NOW() WHERE id=$1",
+        [contact.post_id]
+      );
+
+      await client.query('COMMIT');
+      res.json({ ...updatedContactResult.rows[0], coins_awarded: coinsToAward });
+    } catch (dbErr) {
+      await client.query('ROLLBACK');
+      throw dbErr;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

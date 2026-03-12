@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./PostDetail.module.css";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
@@ -12,6 +12,7 @@ import AlertPopup from "../../components/AlertPopup";
 import ReviewPopup from "../../components/ReviewPopup";
 import ImageViewer from "../../components/ImageViewer";
 import { useSell } from "../../context/SellContext";
+import { useTrash } from "../../context/TrashContext";
 import profileLogo from "../../assets/icon/profile.svg";
 
 interface Post {
@@ -24,6 +25,10 @@ interface Post {
     address_snapshot: any;
     pickup_time: any;
     post_type?: 'old_item' | 'trash_disposal';
+    waiting_status?: 'wait' | 'accepted'; // trash only
+    trash_bag_amount?: number;
+    coins_selected?: number;
+    trash_post_type?: 'anytime' | 'fast';
     contacts?: {
         contact_id: string;
         driver_id: string;
@@ -37,7 +42,12 @@ interface Post {
 function PostDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { setEditingPost, discardEdit } = useSell();
+    const { 
+        setMode, setImages, setBagCount, setCoins, 
+        setRemarks, setAddress, setEditingPostId 
+    } = useTrash();
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -56,7 +66,7 @@ function PostDetail() {
     const [viewerImages, setViewerImages] = useState<string[]>([]);
     const [viewerIndex, setViewerIndex] = useState(0);
 
-    const isEditable = post?.status === 'waiting';
+    const isEditable = post?.status === 'waiting' && post?.post_type !== 'trash_disposal';
 
     useEffect(() => {
         discardEdit(); // Clear edit mode data if user navigated back here
@@ -71,11 +81,30 @@ function PostDetail() {
         }
         if (!id) return;
 
+        const postType = (location.state as any)?.post_type;
+        console.log("Fetching post with type:", postType);
+
         try {
-            const data = await api.getPostById(token, id);
+            let data;
+            if (postType === 'trash_disposal') {
+                data = await api.getTrashPostById(token, id);
+                // Ensure post_type is set for the component logic
+                data = { 
+                    ...data, 
+                    post_type: 'trash_disposal', 
+                    trash_post_type: data.post_type,
+                    categories: data.categories || ['ทิ้งขยะ'] 
+                };
+            } else {
+                // Default to old item post
+                data = await api.getPostById(token, id);
+                data = { ...data, post_type: 'old_item' };
+            }
             setPost(data);
         } catch (err: any) {
             console.error("Failed to load post:", err);
+            // If it failed and we didn't have a postType, maybe try the other as fallback?
+            // But usually post_type should be there from History
             setError("Failed to load post details");
         } finally {
             setLoading(false);
@@ -99,7 +128,11 @@ function PostDetail() {
         if (!token || !post) return;
 
         try {
-            await api.deletePost(token, post.id);
+            if (post.post_type === 'trash_disposal') {
+                await api.deleteTrashPost(token, post.id);
+            } else {
+                await api.deletePost(token, post.id);
+            }
             navigate("/history");
         } catch (err: any) {
             console.error("Failed to delete post:", err);
@@ -143,11 +176,7 @@ function PostDetail() {
             ? JSON.parse(post.address_snapshot)
             : post.address_snapshot;
 
-        const pickupTime = typeof post.pickup_time === 'string'
-            ? JSON.parse(post.pickup_time)
-            : post.pickup_time;
-
-        // Convert address to the format expected by SellContext
+        // Common address conversion
         const addressData: Address | null = address ? {
             id: address.id || 0,
             label: address.label || '',
@@ -159,19 +188,44 @@ function PostDetail() {
             lng: address.lng,
         } : null;
 
-        setEditingPost(post.id, {
-            images: post.images || [],
-            categories: post.categories || [],
-            remarks: post.remarks || '',
-            address: addressData,
-            pickupTime: pickupTime ? {
-                date: pickupTime.date,
-                startTime: pickupTime.startTime,
-                endTime: pickupTime.endTime,
-            } : null,
-        });
+        if (post.post_type === 'trash_disposal') {
+            // Handle Trash Edit
+            setEditingPostId(post.id);
+            setMode(post.trash_post_type || 'anytime');
+            setImages(post.images || []);
+            setBagCount(post.trash_bag_amount || 1);
+            setCoins(post.coins_selected || 1);
+            setRemarks(post.remarks || '');
+            setAddress(addressData);
 
-        navigate(targetPage);
+            // Determine target trash page
+            let trashTarget = '/trash';
+            if (targetPage.includes('select-address')) {
+                trashTarget = '/trash/select-address';
+            }
+            // Add other mappings if needed
+            
+            navigate(trashTarget);
+        } else {
+            // Handle Old Item Edit
+            const pickupTime = typeof post.pickup_time === 'string'
+                ? JSON.parse(post.pickup_time)
+                : post.pickup_time;
+
+            setEditingPost(post.id, {
+                images: post.images || [],
+                categories: post.categories || [],
+                remarks: post.remarks || '',
+                address: addressData,
+                pickupTime: pickupTime ? {
+                    date: pickupTime.date,
+                    startTime: pickupTime.startTime,
+                    endTime: pickupTime.endTime,
+                } : null,
+            });
+
+            navigate(targetPage);
+        }
     };
 
     const handleChat = () => {
@@ -338,6 +392,55 @@ function PostDetail() {
                     <span className={styles['post-type-label']}>{getPostTypeLabel(post.post_type)}</span>
                 </div>
 
+                {/* Driver Acceptance Status (FOR TRASH ONLY) */}
+                {post.post_type === 'trash_disposal' && (
+                    <div style={{ marginBottom: '16px', padding: '0 20px' }}>
+                        <span style={{
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            padding: '4px 12px',
+                            borderRadius: '16px',
+                            backgroundColor: post.waiting_status === 'accepted' ? '#d4edda' : '#fff3cd',
+                            color: post.waiting_status === 'accepted' ? '#155724' : '#856404',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                        }}>
+                            {post.waiting_status === 'accepted' ? '✅ Driver Accepted' : '⏳ Waiting for Driver'}
+                        </span>
+                    </div>
+                )}
+
+                {/* Trash Details Card (FOR TRASH ONLY) */}
+                {post.post_type === 'trash_disposal' && (
+                    <div className={styles['card']}>
+                        <div className={styles['card-title']}>
+                            <span>Trash Details</span>
+                        </div>
+                        <div className={styles['detail-row']}>
+                            <div className={styles['detail-content']}>
+                                <span className={styles['detail-label']}>Number of Bags</span>
+                                <span className={styles['detail-value']}>{post.trash_bag_amount || 0} Bags</span>
+                            </div>
+                        </div>
+                        <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
+                            <div className={styles['detail-content']}>
+                                <span className={styles['detail-label']}>Coins Used</span>
+                                <span className={styles['detail-value']}>{post.coins_selected || 0} Coins</span>
+                            </div>
+                        </div>
+                        <div className={styles['detail-row']} style={{ marginTop: '12px' }}>
+                            <div className={styles['detail-content']}>
+                                <span className={styles['detail-label']}>Service Type</span>
+                                <span className={styles['detail-value']} style={{ textTransform: 'capitalize' }}>
+                                    {post.trash_post_type === 'anytime' ? 'Anytime' : 'Fast'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Images Card */}
                 {post.images && post.images.length > 0 && (
                     <div className={styles['card']}>
@@ -437,26 +540,24 @@ function PostDetail() {
                         </div>
                     </div>
 
-                    {/* Time Row */}
-                    <div className={styles['detail-row']} style={{ marginTop: '16px' }}>
-                        <svg className={styles['detail-icon']} viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                        </svg>
-                        <div className={styles['detail-content']}>
-                            <div className={styles['detail-header']}>
-                                <span className={styles['detail-label']}>Pickup Time</span>
-                                {isEditable && (
-                                    <span className={styles['change-link']} onClick={() => handleEdit('/sell/select-time')}>Change</span>
-                                )}
+                    {/* Time Row - ONLY FOR OLD ITEMS */}
+                    {post.post_type !== 'trash_disposal' && pickupTime && (
+                        <div className={styles['detail-row']} style={{ marginTop: '16px' }}>
+                            <svg className={styles['detail-icon']} viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                            </svg>
+                            <div className={styles['detail-content']}>
+                                <div className={styles['detail-header']}>
+                                    <span className={styles['detail-label']}>Pickup Time</span>
+                                    {isEditable && (
+                                        <span className={styles['change-link']} onClick={() => handleEdit('/sell/select-time')}>Change</span>
+                                    )}
+                                </div>
+                                <span className={styles['detail-value']}>{formatDate(pickupTime.date)}</span>
+                                <span className={styles['detail-value']}>{pickupTime.startTime} - {pickupTime.endTime}</span>
                             </div>
-                            {pickupTime && (
-                                <>
-                                    <span className={styles['detail-value']}>{formatDate(pickupTime.date)}</span>
-                                    <span className={styles['detail-value']}>{pickupTime.startTime} - {pickupTime.endTime}</span>
-                                </>
-                            )}
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Driver */}
@@ -496,7 +597,7 @@ function PostDetail() {
                                 </button>
                             </>
                         ) : (
-                            post.status !== 'cancelled' && (
+                            post.status !== 'cancelled' && post.post_type !== 'trash_disposal' && (
                                 <button
                                     className={styles['view-buyers-btn']}
                                     onClick={() => navigate(`/history/${post.id}/buyers`)}
