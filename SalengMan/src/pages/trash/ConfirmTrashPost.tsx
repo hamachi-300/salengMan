@@ -110,7 +110,12 @@ function ConfirmTrashPost() {
         return (
             <div className={styles['loading-overlay']}>
                 <div className={styles['success-modal']}>
-                    <div style={{ fontSize: '64px', marginBottom: '16px' }}>✅</div>
+                    <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 72 72" width="72" height="72">
+                        <circle cx="36" cy="36" r="36" fill="#4CAF50" />
+                        <path d="M20 38 L30 48 L52 24" stroke="white" strokeWidth="7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
                     <h2 className={styles['success-title']}>Success!</h2>
                     <p className={styles['success-message']}>Your trash disposal request has been {trashData.editingPostId ? 'updated' : 'posted'}.</p>
                     <button className={styles['btn-home']} onClick={() => {
@@ -140,7 +145,12 @@ function ConfirmTrashPost() {
             {error && (
                 <div className={styles['loading-overlay']} onClick={() => setError(null)}>
                     <div className={styles['success-modal']} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
+                        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+                          <svg viewBox="0 0 72 72" width="72" height="72">
+                            <circle cx="36" cy="36" r="36" fill="#D32F2F" />
+                            <path d="M24 24 L48 48 M48 24 L24 48" stroke="white" strokeWidth="7" strokeLinecap="round" />
+                          </svg>
+                        </div>
                         <h2 className={styles['success-title']}>Error</h2>
                         <p className={styles['success-message']}>{error}</p>
                         <button className={styles['btn-home']} style={{ backgroundColor: '#ff4d4d' }} onClick={() => setError(null)}>Close</button>

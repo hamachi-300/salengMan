@@ -27,7 +27,7 @@ function ContactList() {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [filterType, setFilterType] = useState<'all' | 'trash_posts' | 'old_item_posts'>('all');
+    const [filterType, setFilterType] = useState<'trash_posts' | 'old_item_posts'>('trash_posts');
     const [trashFilter, setTrashFilter] = useState<'unarrive' | 'arrive'>('unarrive');
 
     useEffect(() => {
@@ -127,7 +127,6 @@ function ContactList() {
     };
 
     const isMatchFilter = (c: Contact) => {
-        if (filterType === 'all') return true;
         if (filterType === 'old_item_posts' && c.type === 'old_item_posts') return true;
         if (filterType === 'trash_posts' && (c.type === 'trash_posts' || c.type === 'anytime')) {
             if (trashFilter === 'unarrive' && c.waiting_status !== 'arrived') return true;
@@ -146,12 +145,6 @@ function ContactList() {
                 </div>
 
                 <div className={styles["filter-tabs"]}>
-                    <button
-                        className={`${styles["filter-tab"]} ${filterType === 'all' ? styles.active : ''}`}
-                        onClick={() => { setFilterType('all'); setSelectedContactId(null); }}
-                    >
-                        All
-                    </button>
                     <button
                         className={`${styles["filter-tab"]} ${filterType === 'trash_posts' ? styles.active : ''}`}
                         onClick={() => { setFilterType('trash_posts'); setSelectedContactId(null); }}
@@ -185,7 +178,7 @@ function ContactList() {
 
                 {loading ? (
                     <p className={styles.loading}>Loading contacts...</p>
-                ) : contacts.filter(c => filterType === 'all' || c.type === filterType || (filterType === 'trash_posts' && c.type === 'anytime')).length === 0 ? (
+                ) : contacts.filter(c => c.type === filterType || (filterType === 'trash_posts' && c.type === 'anytime')).length === 0 ? (
                     <p className={styles["empty-state"]}>No active contacts found.</p>
                 ) : (
                     <div className={styles["posts-list"]}>

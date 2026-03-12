@@ -140,7 +140,12 @@ export default function Coin() {
       className={`${styles.package} ${selectedPackage === pkg.id ? styles.selected : ''}`}
       onClick={() => handlePackageSelect(pkg.id)}
     >
-      <div className={styles.checkmark}>✓</div>
+      <div className={styles.checkmark}>
+        <svg viewBox="0 0 72 72" width="24" height="24">
+          <circle cx="36" cy="36" r="36" fill="#4CAF50" />
+          <path d="M20 38 L30 48 L52 24" stroke="white" strokeWidth="7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
       <div className={styles.packageName}>{pkg.name}</div>
       <div className={styles.packageCoins}>{pkg.coins} coins</div>
       <div className={styles.packagePrice}>{pkg.price}{pkg.currency}</div>
