@@ -86,6 +86,9 @@ async function initBucket() {
 async function runMigrations() {
   try {
     await pool.query('ALTER TABLE esg_tasks ADD COLUMN IF NOT EXISTS chat_id UUID REFERENCES chats(id)');
+    await pool.query('ALTER TABLE trash_posts ADD COLUMN IF NOT EXISTS driver_id UUID REFERENCES users(id) ON DELETE SET NULL');
+    await pool.query("ALTER TABLE trash_posts ADD COLUMN IF NOT EXISTS waiting_status VARCHAR(20) DEFAULT 'wait'");
+    await pool.query("UPDATE trash_posts SET waiting_status = 'wait' WHERE waiting_status IS NULL");
     // Backfill chat_id from esg_subscriptors if missing
     await pool.query(`
       UPDATE esg_tasks t
@@ -1393,10 +1396,21 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
 // ============================================
 
 app.post('/trash-posts', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { images, categories, remarks, address, pickupTime } = req.body;
+    const { images, remarks, address, pickupTime, coins, bags } = req.body;
     const userId = req.user.user_id;
 
+    await client.query('BEGIN');
+
+    // 1. Check if user has enough coins
+    const userResult = await client.query('SELECT coin FROM users WHERE id = $1', [userId]);
+    const currentBalance = userResult.rows[0]?.coin || 0;
+    if (currentBalance < (coins || 0)) {
+      throw new Error('Insufficient coins');
+    }
+
+    // 2. Upload images
     const uploadedImageUrls = [];
     if (images && Array.isArray(images)) {
       for (let i = 0; i < images.length; i++) {
@@ -1413,17 +1427,127 @@ app.post('/trash-posts', authMiddleware, async (req, res) => {
       }
     }
 
-    const result = await pool.query(
-      `INSERT INTO trash_posts (user_id, images, remarks, address_snapshot, contact_snapshot, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+    // 3. Deduct coins and record transaction if coins > 0
+    if (coins && coins > 0) {
+      await client.query('UPDATE users SET coin = coin - $1 WHERE id = $2', [coins, userId]);
+      await client.query(
+        "INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'use')",
+        [userId, coins]
+      );
+    }
+
+    // 4. Create trash post
+    const result = await client.query(
+      `INSERT INTO trash_posts (user_id, images, remarks, address_snapshot, contact_snapshot, status, waiting_status, coins_selected, trash_bag_amount, user_coin_snapshot)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [userId, uploadedImageUrls, remarks, JSON.stringify(address), JSON.stringify(pickupTime), 'waiting']
+      [userId, uploadedImageUrls, remarks, JSON.stringify(address), JSON.stringify(pickupTime), 'waiting', 'wait', coins || 0, bags || 1, currentBalance]
     );
 
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating trash post:', error);
     res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+app.put('/trash-posts/:id', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { images, remarks, address, pickupTime, coins, bags } = req.body;
+    const userId = req.user.user_id;
+
+    await client.query('BEGIN');
+
+    // 1. Check ownership and status
+    const postResult = await client.query(
+      'SELECT * FROM trash_posts WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+
+    if (postResult.rows.length === 0) {
+      throw new Error('Post not found or unauthorized');
+    }
+
+    const post = postResult.rows[0];
+    if (post.status !== 'waiting') {
+      throw new Error('Only waiting posts can be edited');
+    }
+
+    // 2. Handle coins (only if they changed, for simplicity we assume the amount is the same or handled by front end logic if they change coins they buy more)
+    // NOTE: In a real system you'd calculate difference and refund/charge.
+    // For now we'll update the record, assuming front end handled balance check.
+    // BUT since we skipped complex coin handling for edit flow, we'll just update the metadata.
+    // If coins increased from old value, charge user.
+    const oldCoins = post.coins_selected || 0;
+    const newCoins = coins || 0;
+    if (newCoins > oldCoins) {
+      const diff = newCoins - oldCoins;
+      const userResult = await client.query('SELECT coin FROM users WHERE id = $1', [userId]);
+      if ((userResult.rows[0]?.coin || 0) < diff) throw new Error('Insufficient coins for update');
+      await client.query('UPDATE users SET coin = coin - $1 WHERE id = $2', [diff, userId]);
+      await client.query("INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'use')", [userId, diff]);
+    } else if (newCoins < oldCoins) {
+      const diff = oldCoins - newCoins;
+      await client.query('UPDATE users SET coin = coin + $1 WHERE id = $2', [diff, userId]);
+      await client.query("INSERT INTO coin_transactions (user_id, amount, type) VALUES ($1, $2, 'refund')", [userId, diff]);
+    }
+
+    // 3. Handle images
+    const uploadedImageUrls = [];
+    if (images && Array.isArray(images)) {
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        if (img.startsWith('data:')) {
+          const base64Image = img.split(';base64,').pop();
+          const buffer = Buffer.from(base64Image, 'base64');
+          const fileName = `trash_posts/${userId}_${Date.now()}_${i}.jpg`;
+          await minioClient.putObject(BUCKET_NAME, fileName, buffer, buffer.length, { 'Content-Type': 'image/jpeg' });
+          uploadedImageUrls.push(`${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`);
+        } else {
+          uploadedImageUrls.push(img);
+        }
+      }
+    }
+
+    // Cleanup old images not in the new list
+    if (post.images) {
+      for (const oldImg of post.images) {
+        if (!uploadedImageUrls.includes(oldImg)) {
+          const objectName = oldImg.split(`${BUCKET_NAME}/`)[1];
+          if (objectName) await minioClient.removeObject(BUCKET_NAME, objectName).catch(() => {});
+        }
+      }
+    }
+
+    // 4. Update post
+    const result = await client.query(
+      `UPDATE trash_posts
+       SET images = $1,
+           remarks = $2,
+           address_snapshot = $3,
+           contact_snapshot = $4,
+           coins_selected = $5,
+           trash_bag_amount = $6,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7 AND user_id = $8
+       RETURNING *`,
+      [uploadedImageUrls, remarks, JSON.stringify(address), JSON.stringify(pickupTime), newCoins, bags || 1, id, userId]
+    );
+
+    await client.query('COMMIT');
+    res.json(result.rows[0]);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error updating trash post:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -1476,10 +1600,88 @@ app.delete('/trash-posts/:id', authMiddleware, async (req, res) => {
 app.get('/trash-posts/available/all', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM trash_posts WHERE status = 'waiting' AND user_id != $1 ORDER BY created_at DESC",
-      [req.user.user_id]
+      "SELECT * FROM trash_posts WHERE status = 'waiting' AND waiting_status = 'wait' ORDER BY created_at DESC"
     );
     res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/trash-posts/:id/accept', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const driverId = req.user.user_id;
+
+    await client.query('BEGIN');
+
+    // 1. Check if post is still available
+    const postResult = await client.query(
+      "SELECT * FROM trash_posts WHERE id = $1 AND status = 'waiting' AND waiting_status = 'wait' FOR UPDATE",
+      [id]
+    );
+
+    if (postResult.rows.length === 0) {
+      throw new Error('Post no longer available or already accepted');
+    }
+
+    // 2. Update post status
+    await client.query(
+      "UPDATE trash_posts SET waiting_status = 'accepted', driver_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+      [driverId, id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ message: 'Job accepted successfully' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error accepting trash post:', error);
+    res.status(400).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/trash-posts/status/received', authMiddleware, async (req, res) => {
+  try {
+    const driverId = req.user.user_id;
+    const result = await pool.query(
+      "SELECT * FROM trash_posts WHERE status = 'received' AND waiting_status = 'accepted' AND driver_id = $1 ORDER BY updated_at DESC",
+      [driverId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/trash-posts/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM trash_posts WHERE id = $1', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Post not found' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.patch('/trash-posts/:id/receive', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const driverId = req.user.user_id;
+
+    const result = await pool.query(
+      "UPDATE trash_posts SET status = 'received', updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND driver_id = $2 RETURNING *",
+      [id, driverId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'Post not found or not accepted by you' });
+    }
+
+    res.json({ message: 'Post marked as received', post: result.rows[0] });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

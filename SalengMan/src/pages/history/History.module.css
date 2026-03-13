@@ -10,6 +10,35 @@
 
 
 
+/* Type Selector */
+.type-selector {
+    display: flex;
+    background-color: var(--color-bg-2);
+    margin: 16px;
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.type-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    font-family: var(--font-eng-fun);
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.type-btn.active {
+    background-color: var(--orange-button);
+    color: var(--orange-button-text);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
 /* Filters */
 .filters-scroll {
     display: flex;

@@ -1,0 +1,92 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #000000;
+}
+
+.mapContainer {
+    flex: 1;
+    position: relative;
+    background-color: #121212;
+}
+
+.loading, .empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 60px);
+    color: #888;
+    background-color: #000;
+    font-size: 1.1rem;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 24px;
+}
+
+.modal {
+    background: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modalTitle {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.modalMessage {
+    color: #a1a1aa;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+}
+
+.modalActions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selectJobButton, .receivedOrderButton {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.selectJobButton {
+    background: #444;
+    color: #fff;
+}
+
+.receivedOrderButton {
+    background: #FF7A30;
+    color: #fff;
+}
+
+.selectJobButton:active, .receivedOrderButton:active {
+    transform: scale(0.98);
+}

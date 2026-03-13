@@ -1,0 +1,90 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #000;
+}
+
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+}
+
+.successIcon {
+    color: #4caf50;
+    margin-bottom: 24px;
+}
+
+.title {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    font-family: var(--font-eng-fun);
+}
+
+.message {
+    color: #a1a1aa;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 32px;
+}
+
+.jobBrief {
+    background: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.briefItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.label {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.value {
+    color: #fff;
+    font-weight: 700;
+    font-family: var(--font-eng-fun);
+}
+
+.jobList {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.empty {
+    color: #666;
+    font-style: italic;
+    margin-top: 20px;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #888;
+}

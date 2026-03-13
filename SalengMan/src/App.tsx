@@ -14,6 +14,7 @@ import SelectAddressTrash from "./pages/trash/SelectAddressTrash";
 
 import History from "./pages/history/History";
 import PostDetail from "./pages/history/PostDetail";
+import TrashPostDetail from "./pages/history/TrashPostDetail";
 import TrackDriver from "./pages/history/TrackDriver";
 import PostBuyerList from "./pages/history/PostBuyerList";
 import ConfirmBuyer from "./pages/history/ConfirmBuyer";
@@ -107,6 +108,7 @@ function AppRoutes() {
         <Route path="/coin/history" element={<HistoryCoin />} />
         <Route path="/history" element={<History />} />
         <Route path="/history/:id" element={<PostDetail />} />
+        <Route path="/history/trash/:id" element={<TrashPostDetail />} />
         <Route path="/history/:id/track" element={<TrackDriver />} />
         <Route path="/history/:id/buyers" element={<PostBuyerList />} />
         <Route path="/history/buyer/:contactId" element={<ConfirmBuyer />} />

@@ -23,7 +23,8 @@ function History() {
   const { discardEdit } = useSell();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Waiting");
+  const [activeType, setActiveType] = useState<"Old Item" | "Trash">("Old Item");
 
   useEffect(() => {
     discardEdit(); // Clear edit mode data if user was editing
@@ -107,10 +108,26 @@ function History() {
     return postType === 'trash_disposal' ? 'ทิ้งขยะ' : 'ขายของเก่า';
   };
 
-  const tabs = ["All", "Waiting", "Pending", "Completed", "Cancelled"];
+  const getTabs = () => {
+    if (activeType === "Old Item") {
+      return ["Waiting", "Pending", "Completed", "Cancelled"];
+    } else {
+      return ["Waiting", "Completed"];
+    }
+  };
+
+  const tabs = getTabs();
 
   const filteredPosts = posts.filter((post) => {
-    if (activeTab === "All") return true;
+    // Filter by type
+    const matchesType = activeType === "Old Item" 
+      ? post.post_type === 'old_item' 
+      : post.post_type === 'trash_disposal';
+    
+    if (!matchesType) return false;
+
+    // Filter by status
+    // if (activeTab === "All") return true;
     return post.status.toLowerCase() === activeTab.toLowerCase();
   });
 
@@ -118,7 +135,29 @@ function History() {
     <div className={styles["page-container"]}>
       <PageHeader title="History" backTo="/home" />
 
-      {/* Filters */}
+      {/* Type Selector */}
+      <div className={styles["type-selector"]}>
+        <button 
+          className={`${styles["type-btn"]} ${activeType === "Old Item" ? styles.active : ""}`}
+          onClick={() => {
+            setActiveType("Old Item");
+            setActiveTab("Waiting");
+          }}
+        >
+          Old Item
+        </button>
+        <button 
+          className={`${styles["type-btn"]} ${activeType === "Trash" ? styles.active : ""}`}
+          onClick={() => {
+            setActiveType("Trash");
+            setActiveTab("Waiting");
+          }}
+        >
+          Trash Post
+        </button>
+      </div>
+
+      {/* Filters (Status) */}
       <div className={styles["filters-scroll"]}>
         {tabs.map((tab) => (
           <button
@@ -141,7 +180,7 @@ function History() {
             <div
               key={post.id}
               className={styles["post-card"]}
-              onClick={() => navigate(`/history/${post.id}`)}
+              onClick={() => navigate(post.post_type === 'trash_disposal' ? `/history/trash/${post.id}` : `/history/${post.id}`)}
             >
               <div className={styles["image-container"]}>
                 {post.images && post.images.length > 0 ? (

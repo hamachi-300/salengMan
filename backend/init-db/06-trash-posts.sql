@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS trash_posts (
     address_snapshot JSONB,
     contact_snapshot JSONB,
     -- contacts JSONB DEFAULT '[]'::JSONB,
+    driver_id UUID REFERENCES users(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'waiting',
     waiting_status VARCHAR(20) DEFAULT 'wait', -- 'wait' = no driver yet, 'accepted' = driver accepted
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

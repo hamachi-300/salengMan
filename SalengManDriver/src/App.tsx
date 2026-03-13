@@ -40,6 +40,8 @@ import EsgDriverTaskHistory from "./pages/esg/EsgDriverTaskHistory";
 import EsgDeposit from "./pages/esg/EsgDeposit";
 import EsgWeightStats from "./pages/esg/EsgWeightStats";
 import ExploreTrash from "./pages/jobs/ExploreTrash";
+import JobNavigation from "./pages/jobs/JobNavigation";
+import ArrivedJob from "./pages/jobs/ArrivedJob";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -84,6 +86,9 @@ function AppRoutes() {
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
         <Route path="/jobs/explore-trash" element={<ExploreTrash />} />
+        <Route path="/jobs/trash-navigation/:id" element={<JobNavigation />} />
+        <Route path="/jobs/arrived-job" element={<ArrivedJob />} />
+        <Route path="/jobs/arrived-job/:id" element={<ArrivedJob />} />
 
         {/* ESG Driver Routes */}
         <Route path="/esg/register" element={<EsgRegister />} />

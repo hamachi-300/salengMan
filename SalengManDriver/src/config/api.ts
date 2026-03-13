@@ -269,6 +269,57 @@ export const api = {
     return res.json();
   },
 
+  // Accept a trash post (job)
+  acceptTrashPost: async (token: string, id: number): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}/accept`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to accept trash post');
+    }
+
+    return res.json();
+  },
+
+  // Get single trash post by ID
+  getTrashPost: async (token: string, id: number | string): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch trash post');
+    return res.json();
+  },
+
+  // Mark trash post as received
+  receiveTrashPost: async (token: string, id: number | string): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/${id}/receive`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to receive trash post');
+    }
+    return res.json();
+  },
+
+
+  // Get all received trash posts for current driver
+  getReceivedTrashPosts: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-posts/status/received`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) 
+      {
+        console.log("f");
+        throw new Error('Failed to fetch received trash posts');
+      }
+    return res.json();
+  },
+
   // Get public user profile
   getPublicProfile: async (token: string, userId: string): Promise<UserResponse> => {
     const res = await fetch(`${API_URL}/users/${userId}/public`, {
