@@ -13,6 +13,7 @@ export interface User {
   phone?: string;
   avatar_url?: string;
   gender?: string;
+  coin?: number;
   default_address?: string;
 }
 

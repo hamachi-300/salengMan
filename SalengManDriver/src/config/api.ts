@@ -331,11 +331,17 @@ export const api = {
 
   // Mark all received trash posts as completed after disposal
   completeAllTrashPosts: async (token: string): Promise<any> => {
-    const res = await fetch(`${API_URL}/trash-posts/complete-all`, {
+    const url = `${API_URL}/trash-posts/complete-all`;
+    console.log("Calling API:", url);
+    const res = await fetch(url, {
       method: 'PATCH',
       headers: { 'Authorization': `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error('Failed to complete trash posts');
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error("completeAllTrashPosts fail:", errorData);
+        throw new Error(errorData.error || 'Failed to complete trash posts');
+    }
     return res.json();
   },
 

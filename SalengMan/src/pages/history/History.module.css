@@ -191,6 +191,12 @@
     border: 1px solid var(--pending-border);
 }
 
+.status-received {
+    background-color: var(--received-bg);
+    color: var(--received-text);
+    border: 1px solid var(--received-border);
+}
+
 .status-completed {
     background-color: var(--completed-bg);
     color: var(--completed-text);

@@ -43,6 +43,10 @@
   --pending-border: #629FAD;
   --pending-text: #EDEDCE;
 
+  --received-bg: #1a4e4e;
+  --received-border: #2a6e6e;
+  --received-text: #e0ffff;
+
   --completed-bg: #40513B;
   --completed-border: #628141;
   --completed-text: #E5D9B6;

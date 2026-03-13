@@ -1414,6 +1414,67 @@ app.delete('/old-item-posts/:id', authMiddleware, async (req, res) => {
 // TRASH POSTS ENDPOINTS
 // ============================================
 
+app.patch('/trash-posts/complete-all', authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const driverId = req.user.user_id;
+    console.log(`[TRASH] Starting completion and coin transfer for driver: ${driverId}`);
+    
+    await client.query('BEGIN');
+
+    // 1. Get posts that will be completed to calculate total coins
+    const postsToComplete = await client.query(
+      "SELECT id, coins_selected FROM trash_posts WHERE driver_id = $1 AND status = 'received' AND waiting_status = 'accepted' FOR UPDATE",
+      [driverId]
+    );
+
+    if (postsToComplete.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.json({ message: 'No received jobs found to complete', count: 0 });
+    }
+
+    const totalCoins = postsToComplete.rows.reduce((sum, post) => sum + (post.coins_selected || 0), 0);
+    const postIds = postsToComplete.rows.map(p => p.id);
+
+    // 2. Update trash posts status
+    await client.query(
+      "UPDATE trash_posts SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = ANY($1)",
+      [postIds]
+    );
+
+    // 3. Transfer coins to driver if any
+    if (totalCoins > 0) {
+      await client.query(
+        "UPDATE users SET coin = COALESCE(coin, 0) + $1 WHERE id = $2",
+        [totalCoins, driverId]
+      );
+
+      // 4. Record coin transaction for driver
+      await client.query(
+        "INSERT INTO coin_transactions (user_id, amount, type, reference_id) VALUES ($1, $2, 'earn', $3)",
+        [driverId, totalCoins, `TRASH_COMPLETED_${postIds.join('_')}`.substring(0, 50)]
+      );
+    }
+
+    await client.query('COMMIT');
+    
+    console.log(`[TRASH] Successfully completed ${postIds.length} posts. Earned ${totalCoins} coins for driver ${driverId}`);
+    res.json({ 
+      message: 'Jobs completed and coins transferred successfully', 
+      count: postIds.length, 
+      earned: totalCoins 
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('[TRASH] Error in complete-all transaction:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
+
 app.post('/trash-posts', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1706,18 +1767,6 @@ app.patch('/trash-posts/:id/receive', authMiddleware, async (req, res) => {
   }
 });
 
-app.patch('/trash-posts/complete-all', authMiddleware, async (req, res) => {
-  try {
-    const driverId = req.user.user_id;
-    const result = await pool.query(
-      "UPDATE trash_posts SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE driver_id = $1 AND status = 'received' AND waiting_status = 'accepted' RETURNING *",
-      [driverId]
-    );
-    res.json({ message: 'All received jobs marked as completed', count: result.rowCount });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
 
 // (Obsolete endpoints removed during refactor)
 

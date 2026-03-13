@@ -10,6 +10,7 @@ import { getToken } from "../../services/auth";
 import PageHeader from "../../components/PageHeader";
 import PageFooter from "../../components/PageFooter";
 import AlertPopup from "../../components/AlertPopup";
+import { useUser } from "../../context/UserContext";
 import logoIcon from "../../assets/icon/logo.svg";
 
 // Custom icons
@@ -47,6 +48,7 @@ function MapController({ center }: { center: [number, number] }) {
 
 const FindTrashBin = () => {
     const navigate = useNavigate();
+    const { refreshUser } = useUser();
     const [bins, setBins] = useState<any[]>([]);
     const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
     const [loading, setLoading] = useState(true);
@@ -121,11 +123,15 @@ const FindTrashBin = () => {
             const token = getToken();
             if (token) {
                 try {
-                    await api.completeAllTrashPosts(token);
+                    const result = await api.completeAllTrashPosts(token);
+                    
+                    // Refresh user data (especially coins)
+                    await refreshUser();
+
                     setAlert({
                         isOpen: true,
                         title: "Dispose Success",
-                        message: "You have successfully disposed of the trash at the bin location.",
+                        message: `You have successfully disposed of the trash. You earned ${result.earned || 0} coins!`,
                         type: "success"
                     });
                 } catch (error) {

@@ -51,20 +51,16 @@ function JobNavigation() {
         }
     };
 
-    const handleArrived = () => {
-        setShowArrivePopup(true);
-    };
-
-    const handleReceiveOrder = async () => {
+    const handleArrived = async () => {
         const token = getToken();
         if (!token || !id) return;
 
         try {
             await api.receiveTrashPost(token, id);
-            navigate(`/jobs/arrived-job/${id}`);
+            setShowArrivePopup(true);
         } catch (error) {
-            console.error("Failed to mark post as received:", error);
-            // Optionally show an error to the user
+            console.error("Failed to mark post as arrived & received:", error);
+            // Optional: alert user of failure
         }
     };
 
@@ -126,7 +122,7 @@ function JobNavigation() {
                             </button>
                             <button 
                                 className={styles.receivedOrderButton}
-                                onClick={handleReceiveOrder}
+                                onClick={() => navigate(`/jobs/arrived-job/${id}`)}
                             >
                                 Received order
                             </button>

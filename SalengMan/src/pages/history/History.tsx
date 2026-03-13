@@ -14,6 +14,7 @@ interface Post {
   remarks: string;
   created_at: string;
   status: string;
+  display_status?: string;
   images?: string[];
   post_type?: 'old_item' | 'trash_disposal';
 }
@@ -44,10 +45,27 @@ function History() {
         api.getTrashPosts(token)
       ]);
 
-      // Combine and add post_type if missing
+      // Combine and add post_type and display_status
       const combined = [
-        ...oldItemPosts.map((p: any) => ({ ...p, post_type: p.post_type || 'old_item' })),
-        ...trashPosts.map((p: any) => ({ ...p, post_type: p.post_type || 'trash_disposal' }))
+        ...oldItemPosts.map((p: any) => ({
+          ...p,
+          post_type: p.post_type || 'old_item',
+          display_status: p.status
+        })),
+        ...trashPosts.map((p: any) => {
+          let ds = p.status;
+          if (p.status === 'waiting') {
+            if (p.waiting_status === 'wait') ds = 'waiting';
+            else if (p.waiting_status === 'accepted') ds = 'received';
+          } else if (p.status === 'received' || p.status === 'completed') {
+            ds = 'completed';
+          }
+          return {
+            ...p,
+            post_type: 'trash_disposal',
+            display_status: ds
+          };
+        })
       ];
 
       // Sort by date descending
@@ -95,6 +113,8 @@ function History() {
         return styles["status-pending"];
       case "waiting":
         return styles["status-waiting"];
+      case "received":
+        return styles["status-received"];
       case "completed":
         return styles["status-completed"];
       case "cancelled":
@@ -112,7 +132,7 @@ function History() {
     if (activeType === "Old Item") {
       return ["Waiting", "Pending", "Completed", "Cancelled"];
     } else {
-      return ["Waiting", "Completed"];
+      return ["Waiting", "Received", "Completed"];
     }
   };
 
@@ -120,15 +140,14 @@ function History() {
 
   const filteredPosts = posts.filter((post) => {
     // Filter by type
-    const matchesType = activeType === "Old Item" 
-      ? post.post_type === 'old_item' 
+    const matchesType = activeType === "Old Item"
+      ? post.post_type === 'old_item'
       : post.post_type === 'trash_disposal';
-    
+
     if (!matchesType) return false;
 
-    // Filter by status
-    // if (activeTab === "All") return true;
-    return post.status.toLowerCase() === activeTab.toLowerCase();
+    // Filter by status using mapping
+    return (post.display_status || post.status).toLowerCase() === activeTab.toLowerCase();
   });
 
   return (
@@ -137,7 +156,7 @@ function History() {
 
       {/* Type Selector */}
       <div className={styles["type-selector"]}>
-        <button 
+        <button
           className={`${styles["type-btn"]} ${activeType === "Old Item" ? styles.active : ""}`}
           onClick={() => {
             setActiveType("Old Item");
@@ -146,7 +165,7 @@ function History() {
         >
           Old Item
         </button>
-        <button 
+        <button
           className={`${styles["type-btn"]} ${activeType === "Trash" ? styles.active : ""}`}
           onClick={() => {
             setActiveType("Trash");
@@ -203,9 +222,9 @@ function History() {
                     {getPostTypeLabel(post.post_type)}
                   </h3>
                   <span
-                    className={`${styles["status-badge"]} ${getStatusClass(post.status)}`}
+                    className={`${styles["status-badge"]} ${getStatusClass(post.display_status || post.status)}`}
                   >
-                    {post.status}
+                    {post.display_status || post.status}
                   </span>
                 </div>
                 <div className={styles["post-time"]}>
