@@ -43,6 +43,7 @@ import ExploreTrash from "./pages/jobs/ExploreTrash";
 import JobNavigation from "./pages/jobs/JobNavigation";
 import ArrivedJob from "./pages/jobs/ArrivedJob";
 import FindTrashBin from "./pages/jobs/FindTrashBin";
+import CoinDriver from "./pages/account/coin/CoinDriver";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -84,6 +85,7 @@ function AppRoutes() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/help-support" element={<HelpSupport />} />
         <Route path="/user-report" element={<UserReport />} />
+        <Route path="/account/coin" element={<CoinDriver />} />
         <Route path="/jobs/contacts" element={<ContactList />} />
         <Route path="/jobs/explore/:id" element={<ExploreMap />} />
         <Route path="/jobs/explore-trash" element={<ExploreTrash />} />

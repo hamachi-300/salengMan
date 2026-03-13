@@ -1,0 +1,206 @@
+.page {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    padding-bottom: 80px;
+}
+
+.container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.balanceCard {
+    background: linear-gradient(135deg, #FF7A30 0%, #FF9D66 100%);
+    border-radius: 24px;
+    padding: 30px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(255, 122, 48, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.balanceCard::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+}
+
+.balanceLabel {
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-family: var(--font-eng-fun);
+}
+
+.balanceValue {
+    font-size: 48px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-family: var(--font-eng-fun);
+}
+
+.coinIcon {
+    font-size: 36px;
+}
+
+.balanceSubtext {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 10px;
+    font-family: var(--font-thai-fun);
+}
+
+.historySection {
+    background: var(--color-bg-2);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.sectionTitle {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--color-text);
+    padding-left: 5px;
+    font-family: var(--font-eng-fun);
+}
+
+.transactionList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.transactionItem {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.transactionItem:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.txIconWrapper {
+    margin-right: 15px;
+}
+
+.txIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.txIcon.earn { background-color: rgba(76, 175, 80, 0.15); }
+.txIcon.deposit { background-color: rgba(33, 150, 243, 0.15); }
+.txIcon.buy { background-color: rgba(255, 193, 7, 0.15); }
+.txIcon.use { background-color: rgba(244, 67, 54, 0.15); }
+
+.txInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.txLabel {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    font-family: var(--font-eng-fun);
+}
+
+.txDate {
+    font-size: 12px;
+    color: #888;
+}
+
+.txAmount {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-eng-fun);
+}
+
+.txAmount.earn, .txAmount.deposit, .txAmount.buy {
+    color: #4CAF50;
+}
+
+.txAmount.use {
+    color: #F44336;
+}
+
+.loadingWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 0;
+    color: #888;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 122, 48, 0.1);
+    border-top: 3px solid #FF7A30;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.errorCard {
+    background: rgba(244, 67, 54, 0.1);
+    color: #F44336;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 40px 20px;
+    color: #888;
+}
+
+.emptyIcon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+@media (prefers-color-scheme: dark) {
+    .historySection {
+        background: #2a2a2a;
+    }
+    .transactionItem {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}

@@ -782,4 +782,13 @@ export const api = {
     }
     return res.json();
   },
+
+  // Get coin transaction history
+  getCoinHistory: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/coins/history`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch coin history');
+    return res.json();
+  },
 };

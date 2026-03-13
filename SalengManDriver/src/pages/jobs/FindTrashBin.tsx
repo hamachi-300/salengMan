@@ -134,13 +134,13 @@ const FindTrashBin = () => {
                         message: `You have successfully disposed of the trash. You earned ${result.earned || 0} coins!`,
                         type: "success"
                     });
-                } catch (error) {
+                } catch (error: any) {
                     console.error("Failed to complete posts:", error);
                     setAlert({
                         isOpen: true,
                         title: "Error",
-                        message: "Failed to update job status. Please try again.",
-                        type: "error"
+                        message: error.message || "Failed to update job status. Please try again.",
+                        type: "error" 
                     });
                 }
             }

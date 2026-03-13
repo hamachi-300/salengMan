@@ -121,7 +121,13 @@ async function runMigrations() {
       )
     `);
     await pool.query('CREATE INDEX IF NOT EXISTS idx_trash_bin_addresses_location ON trash_bin_addresses(lat, lng)');
-    console.log('Migration: trash_bin_addresses table checked/created');
+    
+    // Update coin_transactions table
+    await pool.query('ALTER TABLE coin_transactions DROP CONSTRAINT IF EXISTS coin_transactions_type_check');
+    await pool.query("ALTER TABLE coin_transactions ADD CONSTRAINT coin_transactions_type_check CHECK (type IN ('buy', 'use', 'earn', 'deposit'))");
+    await pool.query('ALTER TABLE coin_transactions ADD COLUMN IF NOT EXISTS reference_id TEXT');
+    
+    console.log('Migration: coin_transactions table updated and trash_bin_addresses index checked');
   } catch (err) {
     console.error('Migration error:', err);
   }
