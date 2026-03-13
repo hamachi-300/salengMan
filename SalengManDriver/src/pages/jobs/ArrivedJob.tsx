@@ -37,7 +37,7 @@ function ArrivedJob() {
     }, []);
 
     const handleConfirm = () => {
-        navigate("/home", { state: { successMessage: "All shifts completed!" } });
+        navigate("/jobs/find-trash-bin");
     };
 
     if (loading) {
@@ -91,7 +91,7 @@ function ArrivedJob() {
             </div>
 
             <PageFooter 
-                title="Finish All" 
+                title="Find Trash Bin" 
                 onClick={handleConfirm}
                 variant="orange"
             />

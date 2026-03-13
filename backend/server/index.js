@@ -103,6 +103,25 @@ async function runMigrations() {
       WHERE chat_id IS NULL
     `);
     console.log('Migration: chat_id added and backfilled in esg_tasks');
+
+    // Create trash_bin_addresses table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS trash_bin_addresses (
+        address_id TEXT PRIMARY KEY,
+        label VARCHAR(255) NOT NULL,
+        address TEXT NOT NULL,
+        lat DECIMAL(10, 8),
+        lng DECIMAL(11, 8),
+        note TEXT,
+        province VARCHAR(100),
+        district VARCHAR(100),
+        images TEXT[] DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP),
+        updated_at TIMESTAMPTZ DEFAULT timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+      )
+    `);
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_trash_bin_addresses_location ON trash_bin_addresses(lat, lng)');
+    console.log('Migration: trash_bin_addresses table checked/created');
   } catch (err) {
     console.error('Migration error:', err);
   }
@@ -1682,6 +1701,19 @@ app.patch('/trash-posts/:id/receive', authMiddleware, async (req, res) => {
     }
 
     res.json({ message: 'Post marked as received', post: result.rows[0] });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.patch('/trash-posts/complete-all', authMiddleware, async (req, res) => {
+  try {
+    const driverId = req.user.user_id;
+    const result = await pool.query(
+      "UPDATE trash_posts SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE driver_id = $1 AND status = 'received' AND waiting_status = 'accepted' RETURNING *",
+      [driverId]
+    );
+    res.json({ message: 'All received jobs marked as completed', count: result.rowCount });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -4176,6 +4208,107 @@ app.delete('/recycling-addresses/:id', adminAuthMiddleware, async (req, res) => 
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting recycling address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Trash Bin Addresses CRUD
+app.get('/trash-bin-addresses', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM trash_bin_addresses ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching trash bin addresses:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/trash-bin-addresses/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM trash_bin_addresses WHERE address_id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash bin address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/upload/trash-bin-image', adminAuthMiddleware, async (req, res) => {
+  try {
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const file = req.files.image;
+    const fileName = `trash-bins/${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+
+    await minioClient.putObject(BUCKET_NAME, fileName, file.data, file.size, {
+      'Content-Type': file.mimetype
+    });
+
+    const imageUrl = `${MINIO_PUBLIC_URL}/${BUCKET_NAME}/${fileName}`;
+    res.json({ url: imageUrl });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/trash-bin-addresses', adminAuthMiddleware, async (req, res) => {
+  try {
+    let { address_id, label, address, lat, lng, note, province, district, images } = req.body;
+
+    if (!address_id) {
+      address_id = `BIN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
+
+    const result = await pool.query(
+      `INSERT INTO trash_bin_addresses (address_id, label, address, lat, lng, note, province, district, images)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [address_id, label, address, lat, lng, note, province, district, images || []]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/trash-bin-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { label, address, lat, lng, note, province, district, images } = req.body;
+    const result = await pool.query(
+      `UPDATE trash_bin_addresses 
+       SET label = $1, address = $2, lat = $3, lng = $4, note = $5, province = $6, district = $7, images = $8, updated_at = timezone('Asia/Bangkok', CURRENT_TIMESTAMP)
+       WHERE address_id = $9
+       RETURNING *`,
+      [label, address, lat, lng, note, province, district, images || [], id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash bin address not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating trash bin address:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/trash-bin-addresses/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM trash_bin_addresses WHERE address_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Trash bin address not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting trash bin address:', error);
     res.status(500).json({ error: error.message });
   }
 });

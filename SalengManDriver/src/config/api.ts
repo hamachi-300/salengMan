@@ -320,6 +320,25 @@ export const api = {
     return res.json();
   },
 
+  // Get all public trash bin addresses
+  getTrashBinAddresses: async (token: string): Promise<any[]> => {
+    const res = await fetch(`${API_URL}/trash-bin-addresses`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch trash bin addresses');
+    return res.json();
+  },
+
+  // Mark all received trash posts as completed after disposal
+  completeAllTrashPosts: async (token: string): Promise<any> => {
+    const res = await fetch(`${API_URL}/trash-posts/complete-all`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to complete trash posts');
+    return res.json();
+  },
+
   // Get public user profile
   getPublicProfile: async (token: string, userId: string): Promise<UserResponse> => {
     const res = await fetch(`${API_URL}/users/${userId}/public`, {

@@ -42,6 +42,7 @@ import EsgWeightStats from "./pages/esg/EsgWeightStats";
 import ExploreTrash from "./pages/jobs/ExploreTrash";
 import JobNavigation from "./pages/jobs/JobNavigation";
 import ArrivedJob from "./pages/jobs/ArrivedJob";
+import FindTrashBin from "./pages/jobs/FindTrashBin";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ProtectedRoute, PublicRoute } from "./components/RouteGuards";
 
@@ -89,6 +90,7 @@ function AppRoutes() {
         <Route path="/jobs/trash-navigation/:id" element={<JobNavigation />} />
         <Route path="/jobs/arrived-job" element={<ArrivedJob />} />
         <Route path="/jobs/arrived-job/:id" element={<ArrivedJob />} />
+        <Route path="/jobs/find-trash-bin" element={<FindTrashBin />} />
 
         {/* ESG Driver Routes */}
         <Route path="/esg/register" element={<EsgRegister />} />
